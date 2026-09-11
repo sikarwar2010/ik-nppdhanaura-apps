@@ -34,7 +34,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - chhata_pg_data:/var/lib/postgresql/data
+      - mainpuri_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\"" ]
       interval: 5s
@@ -51,7 +51,7 @@ services:
       REDISCLI_AUTH: ${REDIS_PASSWORD}
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
-      - chhata_redis_data:/data
+      - mainpuri_redis_data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -82,7 +82,7 @@ services:
       CORS_ORIGIN: ${PUBLIC_PORTAL_URL},${PUBLIC_WEB_URL}
       PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
       SESSION_SECRET: ${SESSION_SECRET}
-      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-chhata_session}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mainpuri_session}
       API_BUILD_ID: ${API_BUILD_ID:-production}
       ATOM_RETURN_URL: ${PUBLIC_WEB_URL}/propertytax/payment/return
       # Atom server-to-server POST hits the citizen web domain; Next.js rewrites
@@ -90,7 +90,7 @@ services:
       # POST /api/v1/payments/gateway/callback on the API container.
       ATOM_CALLBACK_URL: ${PUBLIC_WEB_URL}/api/v1/payments/gateway/callback
     volumes:
-      - chhata_uploads:/app/uploads
+      - mainpuri_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
