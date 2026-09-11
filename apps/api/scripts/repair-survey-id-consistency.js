@@ -1,13 +1,18 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config");
-const types_1 = require("@workspace/types");
-const prisma_client_1 = require("../src/prisma/prisma.client");
-const survey_id_util_1 = require("../src/surveys/survey-id.util");
-const prisma = (0, prisma_client_1.createPrismaClient)();
+/**
+ * Dry-run (default) or fix surveyId / parcel / property inconsistencies.
+ *
+ * Usage:
+ *   pnpm --filter api repair:survey-ids
+ *   pnpm --filter api repair:survey-ids -- --fix
+ */
+import "dotenv/config";
+import { buildSurveyIdFromRecord, parseGisSurveyId } from "@workspace/types";
+import { createPrismaClient } from "../src/prisma/prisma.client";
+import { getUlbCode } from "../src/surveys/survey-id.util";
+const prisma = createPrismaClient();
 const fix = process.argv.includes("--fix");
 async function main() {
-    const ulbCode = (0, survey_id_util_1.getUlbCode)();
+    const ulbCode = getUlbCode();
     const surveys = await prisma.survey.findMany({
         where: { deletedAt: null },
         include: { ward: true },
@@ -16,8 +21,8 @@ async function main() {
     let fixed = 0;
     let skipped = 0;
     for (const survey of surveys) {
-        const parsed = (0, types_1.parseGisSurveyId)(survey.surveyId);
-        const expected = (0, types_1.buildSurveyIdFromRecord)({
+        const parsed = parseGisSurveyId(survey.surveyId);
+        const expected = buildSurveyIdFromRecord({
             surveyId: survey.surveyId,
             wardNumber: survey.ward.number,
             parcelNo: survey.parcelNo,
@@ -73,4 +78,3 @@ main()
     .finally(async () => {
     await prisma.$disconnect();
 });
-//# sourceMappingURL=repair-survey-id-consistency.js.map

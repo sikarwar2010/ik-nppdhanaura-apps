@@ -1,0 +1,32 @@
+/** Local sandbox provider for development without Atom credentials. */
+export class SandboxPaymentProvider {
+    name = "sandbox";
+    async createPayment(input) {
+        const base = process.env.ATOM_RETURN_URL ??
+            "http://localhost:3001/propertytax/payment/return";
+        const redirectUrl = `${base}?merchTxnId=${encodeURIComponent(input.merchTxnId)}&sandbox=1`;
+        return {
+            redirectUrl,
+            merchId: "SANDBOX",
+            encData: Buffer.from(JSON.stringify(input)).toString("base64"),
+            raw: { provider: "sandbox", input },
+        };
+    }
+    async requery(input) {
+        return {
+            statusCode: "OTS0000",
+            success: true,
+            atomTxnId: `SANDBOX-${input.merchTxnId}`,
+            amount: undefined,
+            raw: { provider: "sandbox", merchTxnId: input.merchTxnId },
+        };
+    }
+    async refund(input) {
+        return {
+            statusCode: "OTS0000",
+            success: true,
+            gatewayRefundId: `RFD-${input.merchTxnId}`,
+            raw: { provider: "sandbox", input },
+        };
+    }
+}

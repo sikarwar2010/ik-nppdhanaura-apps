@@ -1,10 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-require("dotenv/config");
-const seed_database_1 = require("../src/db/seed-database");
-const prisma_client_1 = require("../src/prisma/prisma.client");
-const prisma = (0, prisma_client_1.createPrismaClient)();
-(0, seed_database_1.seedDatabase)(prisma)
+import "dotenv/config";
+import { seedDatabase } from "../src/db/seed-database";
+import { createPrismaClient } from "../src/prisma/prisma.client";
+const prisma = createPrismaClient();
+seedDatabase(prisma)
     .catch((error) => {
     const message = error instanceof Error ? error.message : "Unknown seed error";
     console.error(`[seed] ${message}`);
@@ -13,4 +11,3 @@ const prisma = (0, prisma_client_1.createPrismaClient)();
     .finally(async () => {
     await prisma.$disconnect();
 });
-//# sourceMappingURL=seed.js.map
