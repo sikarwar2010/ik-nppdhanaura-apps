@@ -1,17 +1,13 @@
 import {
-  Banknote,
   BarChart3,
   ClipboardList,
   FileUp,
   History,
   LayoutDashboard,
-  Receipt,
-  RefreshCw,
   ScrollText,
   Settings,
   Shield,
   Users,
-  Wallet,
 } from "lucide-react"
 import type { ComponentType } from "react"
 
@@ -61,42 +57,6 @@ export const NAV_ITEMS: NavItem[] = [
         title: "Demand Notice",
         href: "/reports/notice",
         permission: "report:read",
-      },
-    ],
-  },
-  {
-    title: "Payments",
-    icon: Wallet,
-    permission: "payment:read",
-    children: [
-      { title: "All Payments", href: "/payments", permission: "payment:read" },
-      {
-        title: "Offline Collection",
-        href: "/payments/offline",
-        permission: "payment:offline:create",
-        icon: Banknote,
-      },
-      {
-        title: "Online Transactions",
-        href: "/payments/online",
-        permission: "payment:read",
-      },
-      {
-        title: "Failed Payments",
-        href: "/payments/failed",
-        permission: "payment:read",
-      },
-      {
-        title: "Refunds",
-        href: "/payments/refunds",
-        permission: "refund:read",
-        icon: RefreshCw,
-      },
-      {
-        title: "Settlements",
-        href: "/payments/settlements",
-        permission: "settlement:read",
-        icon: Receipt,
       },
     ],
   },
@@ -180,7 +140,6 @@ export function getBreadcrumbLabel(pathname: string): string {
   if (pathname.startsWith("/dashboard")) return "Dashboard"
   if (isSurveyNavActive(pathname)) return "Survey"
   if (pathname.startsWith("/reports")) return "Reports"
-  if (pathname.startsWith("/payments")) return "Payments"
   if (pathname.startsWith("/settings") || pathname.startsWith("/audit-logs")) {
     return "Settings"
   }

@@ -1,5 +1,10 @@
 import type { PublicPropertyTaxDues } from "@workspace/types"
 
+export function displayName(value: string | null | undefined): string {
+  const trimmed = value?.trim()
+  return trimmed && trimmed.length > 0 ? trimmed : "—"
+}
+
 export function formatHouseTaxMoney(n: number): string {
   return n.toLocaleString("en-IN", {
     minimumFractionDigits: 2,

@@ -17,7 +17,7 @@ const notoDevanagari = Noto_Sans_Devanagari({
 
 export const metadata = {
   title: "Nagar Panchayat Mainpuri",
-  description: "Survey, property data and payment management platform",
+  description: "Survey and property data platform",
 }
 
 export default function RootLayout({

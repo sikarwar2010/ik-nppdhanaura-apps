@@ -78,3 +78,15 @@ export function withCurrentOption(
   }
   return [value, ...options]
 }
+
+/** Catalog option when `current` matches (case-insensitive); otherwise empty. */
+export function knownCatalogValue(
+  options: readonly string[],
+  current?: string | null
+): string {
+  const value = current?.trim() ?? ""
+  if (!value) return ""
+  return (
+    options.find((option) => option.toLowerCase() === value.toLowerCase()) ?? ""
+  )
+}

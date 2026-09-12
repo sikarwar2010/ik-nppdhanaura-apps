@@ -40,9 +40,9 @@ const TRUST_ITEMS = [
   },
   {
     icon: Wallet,
-    title: "Payment collection",
-    titleHi: "भुगतान संग्रह",
-    description: "Offline counter and gateway reconciliation",
+    title: "Tax records",
+    titleHi: "कर अभिलेख",
+    description: "Demand notices and published ward tax rates",
   },
   {
     icon: ShieldCheck,
@@ -185,7 +185,7 @@ export default function LoginPage() {
 
             <div className="mt-12 max-w-lg">
               <p className="font-[family-name:var(--font-deva)] text-sm font-medium tracking-wide text-sky-200/90">
-                नगर पंचायत मैंपुरी · Mainpuri
+                नगर पालिका परिषद, मैनपुरी
               </p>
               <h1
                 id="login-hero-title"
@@ -194,10 +194,10 @@ export default function LoginPage() {
                 Staff portal
               </h1>
               <p className="mt-4 text-lg leading-relaxed text-slate-200/95">
-                Survey, property &amp; payment operations
+                Survey and property operations
               </p>
               <p className="mt-2 font-[family-name:var(--font-deva)] text-base leading-relaxed text-slate-300/90">
-                स्टाफ पोर्टल — सर्वेक्षण, संपत्ति एवं भुगतान संचालन
+                स्टाफ पोर्टल — सर्वेक्षण एवं संपत्ति संचालन
               </p>
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function LoginPage() {
           </ul>
 
           <p className="relative z-10 mt-10 text-xs leading-relaxed text-slate-400">
-            Official municipal operations portal for Nagar Panchayat Mainpuri.
+            Official municipal operations portal for Nagar Palika Parishad Mainpuri
             Unauthorized access is prohibited and monitored.
           </p>
         </section>
@@ -255,7 +255,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.15em] text-sky-900 uppercase">
-                  Nagar Panchayat Mainpuri
+                  Nagar Palika Parishad Mainpuri
                 </p>
                 <p className="font-[family-name:var(--font-deva)] text-sm text-slate-600">
                   स्टाफ पोर्टल

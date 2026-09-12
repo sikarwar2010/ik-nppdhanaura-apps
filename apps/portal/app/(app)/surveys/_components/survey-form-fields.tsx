@@ -23,7 +23,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { formatCatalogLabel } from "@/lib/catalog-labels"
 import { sqFtToSqM } from "@/lib/floors"
-import { withCurrentOption } from "@/lib/ward1-catalog"
+import { knownCatalogValue, withCurrentOption } from "@/lib/ward1-catalog"
 
 function toSelectValue(value: string): string | null {
   return value === "" ? null : value
@@ -135,6 +135,7 @@ export function CatalogField<T extends FieldValues>({
   error,
   hint,
   className,
+  includeCurrent = true,
   onValueChange,
 }: {
   id: string
@@ -146,6 +147,7 @@ export function CatalogField<T extends FieldValues>({
   error?: string
   hint?: string
   className?: string
+  includeCurrent?: boolean
   onValueChange?: (value: string) => void
 }) {
   return (
@@ -162,10 +164,16 @@ export function CatalogField<T extends FieldValues>({
         control={control}
         rules={required ? { required: `${label} is required` } : undefined}
         render={({ field }) => {
-          const optionList = withCurrentOption(options, field.value as string)
+          const raw = (field.value as string) ?? ""
+          const optionList = includeCurrent
+            ? withCurrentOption(options, raw)
+            : [...options]
+          const selectValue = includeCurrent
+            ? raw
+            : knownCatalogValue(options, raw)
           return (
             <Select
-              value={toSelectValue((field.value as string) ?? "")}
+              value={toSelectValue(selectValue)}
               items={buildStringSelectItems(optionList, formatCatalogLabel)}
               onValueChange={(value) => {
                 const next = value ?? ""

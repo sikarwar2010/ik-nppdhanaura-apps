@@ -41,6 +41,7 @@ import {
   WATER_SOURCES,
   YEARS_OF_CONSTRUCTION,
   YES_NO,
+  knownCatalogValue,
 } from "@/lib/ward1-catalog"
 
 import { FloorsEditor } from "../_components/floors-editor"
@@ -564,7 +565,7 @@ export default function SurveyFormPage() {
                 >
                   <SelectTrigger
                     id="wardId"
-                    className="w-full cursor-pointer"
+                    className="w-full cursor-pointer font-(family-name:--font-deva)"
                     aria-invalid={errors.wardId ? true : undefined}
                   >
                     <SelectValue placeholder="Select ward" />
@@ -575,6 +576,7 @@ export default function SurveyFormPage() {
                         key={ward.id}
                         value={ward.id}
                         label={`Ward ${ward.number} — ${ward.name}`}
+                        className="font-(family-name:--font-deva)"
                       >
                         Ward {ward.number} — {ward.name}
                       </SelectItem>
@@ -726,6 +728,7 @@ export default function SurveyFormPage() {
             control={control}
             name="propertyUse"
             options={PROPERTY_USES}
+            includeCurrent={false}
             onValueChange={(value) => {
               if (!isCommercialPropertyUse(value)) {
                 form.setValue("commercial", "", { shouldDirty: true })
@@ -967,7 +970,7 @@ function recordToForm(row: SurveyRecord): FormValues {
     colony: row.colony ?? "",
     taxRateZone: row.taxRateZone ?? "",
     propertyOwnership: row.propertyOwnership ?? "",
-    propertyUse: row.propertyUse ?? "",
+    propertyUse: knownCatalogValue(PROPERTY_USES, row.propertyUse),
     commercial: row.commercial ?? "",
     yearOfConstruction: row.yearOfConstruction ?? "",
     situation: row.situation ?? "",

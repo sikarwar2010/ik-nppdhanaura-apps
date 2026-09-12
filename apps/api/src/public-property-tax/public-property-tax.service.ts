@@ -82,6 +82,7 @@ export class PublicPropertyTaxService {
         id: true,
         surveyId: true,
         ownerName: true,
+        ownerFatherName: true,
         mobile: true,
         propertyNo: true,
         parcelNo: true,

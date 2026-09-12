@@ -31,6 +31,7 @@ import {
   citizenPropertyTaxUrl,
   getCitizenWebDisplayHost,
 } from "@/lib/citizen-web-url"
+import { formatParcelNo } from "@/lib/survey-format"
 import { ApiError } from "@workspace/api-client"
 import { generateDemandNoticeHtml } from "./_lib/notice-template"
 
@@ -40,7 +41,7 @@ type SurveyRow = {
   surveyId: string
   ownerName: string | null
   ward: { name: string; number: number } | null
-  propertyNo: string | null
+  parcelNo: string | null
   propertyUse: string | null
   dataQualityStatus: string
 }
@@ -261,7 +262,7 @@ export default function NoticePage() {
           <div className="w-56 space-y-1">
             <Label className="text-xs text-muted-foreground">Search</Label>
             <Input
-              placeholder="Owner, survey ID, property no..."
+              placeholder="Owner, survey ID, parcel number..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -280,7 +281,9 @@ export default function NoticePage() {
                 <th className="px-4 py-2 text-left font-medium">Survey ID</th>
                 <th className="px-4 py-2 text-left font-medium">Owner</th>
                 <th className="px-4 py-2 text-left font-medium">Ward</th>
-                <th className="px-4 py-2 text-left font-medium">Property No</th>
+                <th className="px-4 py-2 text-left font-medium">
+                  Parcel Number
+                </th>
                 <th className="px-4 py-2 text-left font-medium">Use</th>
                 <th className="px-4 py-2 text-left font-medium">Quality</th>
                 <th className="px-4 py-2 text-right font-medium">Actions</th>
@@ -297,7 +300,9 @@ export default function NoticePage() {
                   </td>
                   <td className="px-4 py-2">{row.ownerName ?? "—"}</td>
                   <td className="px-4 py-2">{row.ward?.name ?? "—"}</td>
-                  <td className="px-4 py-2">{row.propertyNo ?? "—"}</td>
+                  <td className="px-4 py-2 tabular-nums">
+                    {formatParcelNo(row.parcelNo, row.surveyId)}
+                  </td>
                   <td className="px-4 py-2">{row.propertyUse ?? "—"}</td>
                   <td className="px-4 py-2">
                     <Badge variant="secondary" className="text-xs">

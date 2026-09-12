@@ -2,6 +2,8 @@
 
 import type { PublicPropertyTaxDues } from "@workspace/types"
 
+import { displayName } from "@/lib/property-tax-format"
+
 function money(n: number): string {
   return n.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
@@ -133,7 +135,13 @@ export function DemandNoticeView({ dues }: { dues: PublicPropertyTaxDues }) {
             <div className="col-head">Owner Profile / स्वामी विवरण</div>
             <div className="row">
               <div className="lbl">Property Owner Name</div>
-              <div className="val">{dues.ownerName || "—"}</div>
+              <div className="val val-deva">{displayName(dues.ownerName)}</div>
+            </div>
+            <div className="row">
+              <div className="lbl">Father Name</div>
+              <div className="val val-deva">
+                {displayName(dues.ownerFatherName)}
+              </div>
             </div>
             <div className="row">
               <div className="lbl">Mobile Number</div>
@@ -141,7 +149,7 @@ export function DemandNoticeView({ dues }: { dues: PublicPropertyTaxDues }) {
             </div>
             <div className="row">
               <div className="lbl">Ward Name</div>
-              <div className="val">{dues.wardName}</div>
+              <div className="val val-deva">{dues.wardName}</div>
             </div>
             <div className="row">
               <div className="lbl">Monthly Base Rate</div>
@@ -426,6 +434,9 @@ const NOTICE_CSS = `
   display: flex;
   align-items: center;
   word-break: break-word;
+}
+.demand-notice-root .val-deva {
+  font-family: var(--font-deva), "Noto Sans Devanagari", sans-serif;
 }
 .demand-notice-root .sec {
   background: #e2e8f0;

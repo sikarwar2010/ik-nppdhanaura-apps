@@ -1,6 +1,7 @@
 import { taxRateKey } from "../tax/tax-calc"
 import {
   buildNoticeFloorLines,
+  computePublicDuesPayload,
   pickLatestPublishedConfig,
   type SurveyForDues,
   type TaxConfigForDues,
@@ -50,6 +51,7 @@ describe("buildNoticeFloorLines", () => {
       id: "s1",
       surveyId: "SUR-1",
       ownerName: "Ram",
+      ownerFatherName: "Shyam",
       mobile: "9876543210",
       propertyNo: "1",
       parcelNo: "2",
@@ -101,6 +103,7 @@ describe("buildNoticeFloorLines", () => {
       id: "s2",
       surveyId: "SUR-2",
       ownerName: "Shyam",
+      ownerFatherName: "Mohan",
       mobile: "9876543210",
       propertyNo: "1",
       parcelNo: "2",
@@ -152,6 +155,7 @@ describe("buildNoticeFloorLines", () => {
       id: "s3",
       surveyId: "249044-001-000131-001-C",
       ownerName: "Shyam",
+      ownerFatherName: "Mohan",
       mobile: "9876543210",
       propertyNo: "1",
       parcelNo: "2",
@@ -201,6 +205,7 @@ describe("buildNoticeFloorLines", () => {
       id: "s4",
       surveyId: "249044-001-000131-001-R",
       ownerName: "Ram",
+      ownerFatherName: "Shyam",
       mobile: "9876543210",
       propertyNo: "1",
       parcelNo: "2",
@@ -243,5 +248,45 @@ describe("buildNoticeFloorLines", () => {
     const lines = buildNoticeFloorLines(survey, rates)
     expect(lines[0]?.rate).toBe(0.6)
     expect(lines[0]?.tax).toBe(241.92)
+  })
+})
+
+describe("computePublicDuesPayload", () => {
+  it("includes ownerName and ownerFatherName from the survey", () => {
+    const survey: SurveyForDues = {
+      id: "s1",
+      surveyId: "SUR-1",
+      ownerName: "Ram",
+      ownerFatherName: "Shyam",
+      mobile: "9876543210",
+      propertyNo: "1",
+      parcelNo: "2",
+      houseNo: "3",
+      streetName: null,
+      locality: "Test",
+      colony: null,
+      city: "Chhata",
+      pincode: null,
+      propertyUse: "Residential",
+      taxRateZone: "BELOW_9M",
+      roadType: null,
+      hasMunicipalWaterSupply: true,
+      plotAreaSqFt: null,
+      plinthAreaSqFt: null,
+      totalBuiltUpAreaSqFt: null,
+      ward: { number: 1, name: "Ward 1" },
+      floors: [
+        {
+          floorLabel: "Ground",
+          usageType: "Residential",
+          usageFactor: "1",
+          buildingType: "RCC",
+          areaSqFt: 100,
+        },
+      ],
+    }
+    const payload = computePublicDuesPayload(survey, sampleRatesConfig())
+    expect(payload.ownerName).toBe("Ram")
+    expect(payload.ownerFatherName).toBe("Shyam")
   })
 })

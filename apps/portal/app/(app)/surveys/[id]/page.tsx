@@ -62,6 +62,7 @@ import {
   qualityLabel,
   toNumber,
 } from "@/lib/survey-format"
+import { PROPERTY_USES, knownCatalogValue } from "@/lib/ward1-catalog"
 
 type Neighbor = { id: string; surveyId: string }
 
@@ -367,7 +368,7 @@ export default function SurveyDetailPage() {
           </p>
           <h1 className="text-xl font-bold tracking-tight md:text-2xl">
             {ULB_NAME} — Ward {s.ward.number}
-            <span className="ml-2 text-base font-normal text-muted-foreground">
+            <span className="ml-2 font-(family-name:--font-deva) text-base font-normal text-muted-foreground">
               {s.ward.name}
             </span>
           </h1>
@@ -416,7 +417,7 @@ export default function SurveyDetailPage() {
           <SummaryCell label="ULB Name" value={ULB_NAME} />
           <SummaryCell label="Ward No" value={String(s.ward.number)} />
           <SummaryCell label="Parcel No" value={parcel} />
-          <SummaryCell label="Owner Name" value={s.ownerName} />
+          <SummaryCell label="Owner Name" value={s.ownerName} deva />
         </CardContent>
       </Card>
 
@@ -427,21 +428,13 @@ export default function SurveyDetailPage() {
             label="Date of Survey"
             value={s.surveyedAt ? new Date(s.surveyedAt).toLocaleString() : "—"}
           />
-          <Field
-            label="Owner Name"
-            value={displayWithFallback(s.ownerName, "N/A")}
-          />
-          <Field
-            label="Owner Father Name"
-            value={displayWithFallback(s.ownerFatherName, "N/A")}
-          />
-          <Field
-            label="Mobile No"
-            value={displayWithFallback(s.mobile, "—")}
-          />
+          <Field label="Owner Name" value={s.ownerName} deva />
+          <Field label="Owner Father Name" value={s.ownerFatherName} deva />
+          <Field label="Mobile No" value={s.mobile} />
           <Field
             label="Ward Name"
             value={`Ward ${s.ward.number} — ${s.ward.name}`}
+            deva
           />
           <Field label="Is Slum" value={yn(s.isSlum)} />
         </FieldGrid>
@@ -488,7 +481,9 @@ export default function SurveyDetailPage() {
           />
           <Field
             label="Property Use"
-            value={formatCatalogDisplay(s.propertyUse)}
+            value={formatCatalogDisplay(
+              knownCatalogValue(PROPERTY_USES, s.propertyUse)
+            )}
           />
           <Field
             label="Commercial subtype"
@@ -765,16 +760,23 @@ function FieldGrid({
 function Field({
   label,
   value,
+  deva,
 }: {
   label: string
   value?: string | number | null
+  deva?: boolean
 }) {
   return (
     <div className="min-w-0 rounded-xl border bg-muted/30 px-3 py-2.5 transition-colors duration-200">
       <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </p>
-      <p className="mt-1 text-sm font-semibold wrap-break-word text-foreground">
+      <p
+        className={cn(
+          "mt-1 text-sm font-semibold wrap-break-word text-foreground",
+          deva && "font-(family-name:--font-deva)"
+        )}
+      >
         {dash(value)}
       </p>
     </div>
@@ -785,10 +787,12 @@ function SummaryCell({
   label,
   value,
   mono,
+  deva,
 }: {
   label: string
   value?: string | null
   mono?: boolean
+  deva?: boolean
 }) {
   return (
     <div className="rounded-xl border bg-muted/20 px-3 py-2.5">
@@ -798,7 +802,8 @@ function SummaryCell({
       <p
         className={cn(
           "mt-1 text-sm font-semibold",
-          mono && "font-mono text-xs sm:text-sm"
+          mono && "font-mono text-xs sm:text-sm",
+          deva && "font-(family-name:--font-deva)"
         )}
       >
         {dash(value)}
@@ -819,17 +824,9 @@ function DetailSkeleton() {
 }
 
 function dash(value?: string | number | null) {
-  if (value == null || value === "") return "—"
-  return String(value)
-}
-
-/** Display-only fallback for Survey & Owner; never mutates API/form data. */
-function displayWithFallback(
-  value: string | null | undefined,
-  emptyFallback: string
-): string {
-  const trimmed = value?.trim()
-  return trimmed ? trimmed : emptyFallback
+  if (value == null) return "—"
+  const text = String(value).trim()
+  return text.length > 0 ? text : "—"
 }
 
 function yn(value?: boolean | null) {

@@ -5,6 +5,8 @@ import Image from "next/image"
 
 import type { PublicPropertyTaxReceipt } from "@workspace/types"
 
+import { displayName } from "@/lib/property-tax-format"
+
 function money(n: number): string {
   return n.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
@@ -21,11 +23,6 @@ function formatWhen(iso: string): string {
   } catch {
     return iso
   }
-}
-
-function displayName(value: string | null | undefined): string {
-  const trimmed = value?.trim()
-  return trimmed && trimmed.length > 0 ? trimmed : "—"
 }
 
 export function PaymentReceiptView({
@@ -406,6 +403,7 @@ const RECEIPT_CSS = `
   color: #0f172a;
   line-height: 1.35;
   word-break: break-word;
+  font-family: var(--font-deva), "Noto Sans Devanagari", sans-serif;
 }
 .receipt-root .cols {
   display: grid;

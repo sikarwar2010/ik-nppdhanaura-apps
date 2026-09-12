@@ -1,10 +1,15 @@
 import { cn } from "@/lib/utils"
 import type { Metadata } from "next"
-import { Geist } from "next/font/google"
+import { Geist, Noto_Sans_Devanagari } from "next/font/google"
 import "./globals.css"
 import QueryProvider from "@/components/providers/query-providers"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const notoDevanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  variable: "--font-deva",
+  weight: ["400", "500", "600", "700"],
+})
 
 export const metadata: Metadata = {
   title: "CHHATA, MATHURA",
@@ -23,7 +28,7 @@ export default function RootLayout({
       <html
         lang="en"
         suppressHydrationWarning
-        className={cn("font-sans", geist.variable)}
+        className={cn("font-sans", geist.variable, notoDevanagari.variable)}
       >
         <body className="flex min-h-screen flex-col bg-white text-slate-800">
           <QueryProvider>{children}</QueryProvider>

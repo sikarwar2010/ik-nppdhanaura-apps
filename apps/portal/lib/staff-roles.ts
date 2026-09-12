@@ -32,14 +32,14 @@ export const STAFF_ROLE_META: Record<
   CLERK: {
     name: "Clerk",
     summary:
-      "Office clerk — surveys, imports, reports, and counter collections.",
+      "Office clerk — surveys, imports, and reports.",
     access: "Scoped access",
     icon: ClipboardPen,
     accent: "bg-sky-500/10 text-sky-800 dark:text-sky-300",
   },
   OPERATOR: {
     name: "Operator",
-    summary: "Field / ops staff — surveys and offline payment collection.",
+    summary: "Field / ops staff — ward surveys and property records.",
     access: "Scoped access",
     icon: HardHat,
     accent: "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300",

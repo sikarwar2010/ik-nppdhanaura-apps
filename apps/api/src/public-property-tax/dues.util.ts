@@ -32,6 +32,7 @@ export type SurveyForDues = {
   id: string
   surveyId: string
   ownerName: string | null
+  ownerFatherName: string | null
   mobile: string | null
   propertyNo: string | null
   parcelNo: string | null
@@ -273,6 +274,7 @@ export function computePublicDuesPayload(
     wardNumber: survey.ward.number,
     wardName: survey.ward.name,
     ownerName: survey.ownerName,
+    ownerFatherName: survey.ownerFatherName,
     mobileMasked: maskMobile(survey.mobile),
     propertyNo: survey.propertyNo,
     parcelNo: survey.parcelNo,

@@ -3,7 +3,6 @@ import { ForbiddenException } from "@nestjs/common"
 import type { AuthUser } from "./auth.decorators"
 import {
   assertFileAccess,
-  assertPaymentAccess,
   assertSurveyAccess,
   parseSurveyIdFromObjectKey,
 } from "./resource-access"
@@ -17,7 +16,6 @@ const clerk: AuthUser = {
   permissions: [
     "survey:read",
     "survey:update",
-    "payment:read",
     "file:read",
     "file:create",
   ],
@@ -33,8 +31,6 @@ const operator: AuthUser = {
     "survey:read",
     "survey:create",
     "survey:update",
-    "payment:read",
-    "payment:offline:create",
     "file:read",
     "file:create",
   ],
@@ -62,26 +58,6 @@ describe("resource-access", () => {
         operator,
         { id: "s1", wardId: "w1", createdById: "other" },
         "update"
-      )
-    ).toThrow(ForbiddenException)
-  })
-
-  it("allows operator to read citizen payments", () => {
-    expect(() =>
-      assertPaymentAccess(
-        operator,
-        { id: "p1", collectedById: null },
-        "read"
-      )
-    ).not.toThrow()
-  })
-
-  it("blocks operator from reading another collector's payment", () => {
-    expect(() =>
-      assertPaymentAccess(
-        operator,
-        { id: "p1", collectedById: "other" },
-        "read"
       )
     ).toThrow(ForbiddenException)
   })

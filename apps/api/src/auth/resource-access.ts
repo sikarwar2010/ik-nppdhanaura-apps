@@ -5,25 +5,12 @@ import { assertPermission } from "./auth-permissions"
 
 export type SurveyAccessAction = "read" | "create" | "update" | "delete"
 
-export type PaymentAccessAction =
-  | "read"
-  | "create"
-  | "create_offline"
-  | "requery"
-  | "refund"
-
 export type FileAccessAction = "read" | "create"
 
 export type SurveyResource = {
   id: string
   wardId: string
   createdById?: string | null
-}
-
-export type PaymentResource = {
-  id: string
-  collectedById?: string | null
-  wardId?: string | null
 }
 
 export type FileResource = {
@@ -59,14 +46,6 @@ const SURVEY_ACTION_PERMISSION: Record<SurveyAccessAction, string> = {
   delete: "survey:delete",
 }
 
-const PAYMENT_ACTION_PERMISSION: Record<PaymentAccessAction, string> = {
-  read: "payment:read",
-  create: "payment:create",
-  create_offline: "payment:offline:create",
-  requery: "payment:requery",
-  refund: "refund:create",
-}
-
 /** Extract internal survey id from `surveys/{surveyId}/...` object keys. */
 export function parseSurveyIdFromObjectKey(objectKey: string): string | null {
   const normalized = objectKey.replaceAll("\\", "/").replace(/^\/+/, "")
@@ -89,23 +68,6 @@ export function assertSurveyAccess(
 
   if (survey.createdById !== user.id) {
     deny("You can only modify surveys you created")
-  }
-}
-
-export function assertPaymentAccess(
-  user: AuthUser,
-  payment: PaymentResource,
-  action: PaymentAccessAction
-): void {
-  assertPermission(user, PAYMENT_ACTION_PERMISSION[action])
-
-  if (hasBroadResourceAccess(user)) return
-
-  // Citizen / gateway payments have no staff collector.
-  if (!payment.collectedById) return
-
-  if (isScopedOperator(user) && payment.collectedById !== user.id) {
-    deny("You can only access payments you collected")
   }
 }
 
