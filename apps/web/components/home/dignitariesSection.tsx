@@ -23,13 +23,13 @@ export default function DignitariesSection() {
       id: "2",
       name: "Shri Arvind Kumar Sharma",
       designation: "Minister of Urban Development, UP",
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGnVLNIphcD463NPf9HTUAQsytvLyQR9lcEfQnUqxUGw&s=10",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSccuweW9do7mqLcHMMcW3eRvoX65bVC3oWdKmQ-xqRjA&s=10",
     },
     {
       id: "3",
       name: "Shri Rakesh Rathore Guru",
       designation: "State Minister of Urban Development, UP",
-      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSccuweW9do7mqLcHMMcW3eRvoX65bVC3oWdKmQ-xqRjA&s=10",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGnVLNIphcD463NPf9HTUAQsytvLyQR9lcEfQnUqxUGw&s=10",
     },
   ]
 
@@ -53,7 +53,7 @@ export default function DignitariesSection() {
             </h2>
           </div>
           <span className="hidden text-xs font-medium text-slate-400 sm:inline-block">
-            Nagar Panchayat Chhata • Official Desk
+            Nagar Palika Parishad Mainpuri • Official Desk
           </span>
         </div>
 

@@ -147,14 +147,14 @@ export default function Gallery() {
         {/* Page Title */}
         <div className="space-y-3 text-center">
           <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-bold tracking-wider text-amber-600 uppercase">
-            Nagar Panchayat , Chhata , Mathura Media
+            Nagar Palika Parishad, Mainpuri Media
           </span>
           <h1 className="font-serif text-3xl font-black tracking-tight text-slate-900 md:text-5xl">
             Gallery Photos
           </h1>
           <p className="mx-auto max-w-2xl text-sm font-medium text-slate-500 md:text-base">
             Visual highlights of developmental works, sanitation campaigns, and
-            official events in Nagar Panchayat , Chhata , Mathura.
+            official events in Nagar Palika Parishad, Mainpuri.
           </p>
           <div className="mx-auto mt-4 h-1 w-20 rounded-full bg-amber-500"></div>
         </div>

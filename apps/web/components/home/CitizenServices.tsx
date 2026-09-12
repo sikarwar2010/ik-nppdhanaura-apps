@@ -9,17 +9,15 @@ import {
   CreditCard,
   Download,
   Droplet,
-  FileCheck2,
   FileText,
   HelpCircle,
+  ShieldAlert,
   Sparkles,
   Store,
   X,
+  FileCheck2,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import React, { useState } from "react"
-
-import { CITIZEN_ONLINE_ROUTES } from "@/lib/citizen-service-routes"
 
 interface ServiceItem {
   id: string
@@ -31,11 +29,9 @@ interface ServiceItem {
   badgeColor: string
   glowColor: string
   pdfName: string
-  href?: string
 }
 
 export default function CitizenServices() {
-  const router = useRouter()
   const [activeService, setActiveService] = useState<ServiceItem | null>(null)
   const [downloading, setDownloading] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
@@ -51,8 +47,7 @@ export default function CitizenServices() {
       badgeColor: "bg-orange-50 text-orange-700 border-orange-200/60",
       glowColor:
         "group-hover:shadow-orange-500/20 group-hover:border-orange-400/50",
-      pdfName: "Chhata_Property_Tax_Assessment.pdf",
-      href: CITIZEN_ONLINE_ROUTES.propertyTax,
+      pdfName: "Mainpuri_Property_Tax_Assessment.pdf",
     },
     {
       id: "water-tax",
@@ -63,7 +58,7 @@ export default function CitizenServices() {
       color: "from-sky-500 via-blue-600 to-indigo-700",
       badgeColor: "bg-sky-50 text-sky-700 border-sky-200/60",
       glowColor: "group-hover:shadow-sky-500/20 group-hover:border-sky-400/50",
-      pdfName: "Chhata_Water_Connection_Form.pdf",
+      pdfName: "Mainpuri_Water_Connection_Form.pdf",
     },
     {
       id: "birth-cert",
@@ -75,7 +70,7 @@ export default function CitizenServices() {
       badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200/60",
       glowColor:
         "group-hover:shadow-emerald-500/20 group-hover:border-emerald-400/50",
-      pdfName: "Birth_Registration_Chhata.pdf",
+      pdfName: "Mainpuri_Birth_Registration.pdf",
     },
     {
       id: "death-cert",
@@ -87,19 +82,19 @@ export default function CitizenServices() {
       badgeColor: "bg-slate-100 text-slate-700 border-slate-200/60",
       glowColor:
         "group-hover:shadow-slate-500/20 group-hover:border-slate-400/50",
-      pdfName: "Death_Registration_Chhata.pdf",
+      pdfName: "Mainpuri_Death_Registration.pdf",
     },
     {
       id: "trade-lic",
       name: "Trade License",
       nameHi: "व्यापार लाइसेंस",
-      desc: "Obtain dynamic shop licenses or renew existing commercial permits in Chhata.",
+      desc: "Obtain dynamic shop licenses or renew existing commercial permits in Mainpuri.",
       icon: <Store className="h-6 w-6" />,
       color: "from-amber-500 via-yellow-600 to-orange-600",
       badgeColor: "bg-amber-50 text-amber-700 border-amber-200/60",
       glowColor:
         "group-hover:shadow-amber-500/20 group-hover:border-amber-400/50",
-      pdfName: "Trade_License_Application_Chhata.pdf",
+      pdfName: "Mainpuri_Trade_License_Application.pdf",
     },
     {
       id: "build-perm",
@@ -123,7 +118,7 @@ export default function CitizenServices() {
       badgeColor: "bg-teal-50 text-teal-700 border-teal-200/60",
       glowColor:
         "group-hover:shadow-teal-500/20 group-hover:border-teal-400/50",
-      pdfName: "RTI_Application_Form_Chhata.pdf",
+      pdfName: "RTI_Application_Form_Mainpuri.pdf",
     },
     {
       id: "grievance",
@@ -134,16 +129,11 @@ export default function CitizenServices() {
       color: "from-red-600 via-rose-600 to-pink-800",
       badgeColor: "bg-red-50 text-red-700 border-red-200/60",
       glowColor: "group-hover:shadow-red-500/20 group-hover:border-red-400/50",
-      pdfName: "Civic_Grievance_Form_Chhata.pdf",
-      href: CITIZEN_ONLINE_ROUTES.publicGrievance,
+      pdfName: "Civic_Grievance_Form_Mainpuri.pdf",
     },
   ]
 
   const handleCardClick = (service: ServiceItem) => {
-    if (service.href) {
-      router.push(service.href)
-      return
-    }
     setActiveService(service)
     setDownloading(false)
     setDownloaded(false)
@@ -180,16 +170,14 @@ export default function CitizenServices() {
             className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-4 py-1.5 text-xs font-extrabold tracking-wider text-orange-600 uppercase shadow-sm"
           >
             <Sparkles className="h-3.5 w-3.5 animate-pulse text-orange-500" />
-            <span>Nagar Panchayat Chhata • Mathura</span>
+            <span>Nagar Palika Parishad Mainpuri </span>
           </m.div>
 
           <h2 className="mt-4 font-serif text-3xl font-black tracking-tight text-slate-900 md:text-5xl">
             Unified Public Service Forms
           </h2>
           <p className="mt-3 text-sm leading-relaxed font-medium text-slate-600 md:text-base">
-            Search property tax records, pay dues online, and download
-            application forms for other municipal services at Nagar Panchayat
-            Chhata, Mathura.
+            Download official application forms and documents instantly for offline submission or review at Nagar Palika Parishad , Mainpuri.
           </p>
 
           <div className="mt-5 flex items-center justify-center gap-2">
@@ -228,7 +216,7 @@ export default function CitizenServices() {
                     <span
                       className={`rounded-full border px-2.5 py-1 text-[10px] font-extrabold tracking-wider uppercase ${service.badgeColor} shadow-2xs`}
                     >
-                      {service.href ? "Online" : "PDF Form"}
+                      PDF Form
                     </span>
                   </div>
 
@@ -316,8 +304,8 @@ export default function CitizenServices() {
                       </h4>
                       <p className="mt-1 text-xs font-medium text-slate-600">
                         Click below to download the official PDF application
-                        format for {activeService.name} from Nagar Panchayat
-                        Chhata.
+                        format for {activeService.name} from Nagar Palika Parishad
+                        Mainpuri.
                       </p>
                       <div className="mt-3 inline-block rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 font-mono text-[11px] font-bold text-slate-700 shadow-2xs">
                         {activeService.pdfName} (PDF)

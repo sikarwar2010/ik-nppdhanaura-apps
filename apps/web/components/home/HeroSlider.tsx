@@ -56,13 +56,13 @@ export default function HeroSlider() {
     },
     {
       id: 3,
-      headline: "Modern Infrastructure & Civic Utilities",
+      headline: "GOVT ENGINEERING COLLEGE , MAINPURI",
       tagline:
         "Accelerating city growth with high-capacity road networks, automated smart-lighting layouts, and modern public amenities.",
       badgeText: "Civic Infrastructure",
       icon: <Building2 className="h-4 w-4 text-cyan-300" />,
       bgImage:
-        "https://images.unsplash.com/photo-1541336032412-2048a678540d?auto=format&fit=crop&w=1920&q=80",
+        "https://cdn.s3waas.gov.in/s33644a684f98ea8fe223c713b77189a77/uploads/2018/02/2018021572.png",
       primaryAction: "Check Active Tenders",
       primaryTarget: "#news-notices",
       secondaryAction: "Project Milestones",

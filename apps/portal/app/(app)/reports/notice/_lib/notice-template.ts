@@ -620,8 +620,8 @@ table.alv tr.total td {
       />
     </div>
     <div class="header-center">
-      <div class="office-en">Office of Nagar Panchayat Chhata</div>
-      <div class="office-loc">Chhata, Mathura, Uttar Pradesh</div>
+      <div class="office-en">Office of Nagar Palika Parishad Mainpuri</div>
+      <div class="office-loc">Mainpuri, Uttar Pradesh</div>
       <div class="title-en">Property Tax Demand Notice</div>
       <div class="title-hi">संपत्ति कर मांग सूचना पत्र</div>
     </div>

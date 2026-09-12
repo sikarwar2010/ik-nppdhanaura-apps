@@ -6,77 +6,200 @@ export default function AnnouncementTicker() {
   const notices = [
     {
       id: "property-tax",
-      text: "संपत्ति कर सूचना: मूल्यांकन पर 10% शुरुआती छूट (Early-bird Rebate) का लाभ उठाने के लिए अंतिम तिथि से पहले भुगतान करें।",
+      text: "संपत्ति कर सूचना: नगर पालिका परिषद, मैनपुरी द्वारा संपत्ति कर भुगतान की सुविधा ऑनलाइन उपलब्ध है। नागरिक समय से अपना कर जमा करें।",
       link: "/propertytax",
     },
     {
       id: "water-tax",
-      text: "जल कर सूचना: छाता नगर वासियों के लिए जल कर भुगतान एवं बिल सुधार हेतु एकीकृत पोर्टल खुला है।",
+      text: "जल कर सूचना: मैनपुरी नगर क्षेत्र के नागरिकों के लिए जल कर भुगतान एवं जल संबंधी सेवाएं ऑनलाइन उपलब्ध हैं।",
       link: "/services",
     },
     {
-      id: "recruitment",
-      text: "भर्ती सूचना: प्रशासनिक सलाहकारों और स्वच्छता निरीक्षकों के पदों हेतु आवेदन आमंत्रित हैं।",
-      link: "#news-notices",
+      id: "public-grievance",
+      text: "जन शिकायत सूचना: नागरिक अपनी शिकायतें ऑनलाइन दर्ज कर सकते हैं तथा शिकायत की स्थिति की जानकारी प्राप्त कर सकते हैं।",
+      link: "/public-grievance",
     },
     {
-      id: "public-meeting",
-      text: "सार्वजनिक बैठक सूचना: टाउन हॉल में वार्ड समन्वय और विकास परियोजना ऑडिट का आयोजन निर्धारित है।",
+      id: "municipal-services",
+      text: "नागरिक सेवा सूचना: जन्म प्रमाण पत्र, मृत्यु प्रमाण पत्र, व्यापार लाइसेंस एवं अन्य नगर पालिका सेवाओं के लिए ऑनलाइन आवेदन करें।",
+      link: "/services",
+    },
+    {
+      id: "cleanliness",
+      text: "स्वच्छता सूचना: नगर पालिका परिषद, मैनपुरी द्वारा स्वच्छ एवं स्वस्थ मैनपुरी के लिए नागरिकों से सहयोग की अपील की जाती है।",
+      link: "/about",
+    },
+    {
+      id: "development",
+      text: "विकास सूचना: नगर क्षेत्र में सड़क, प्रकाश व्यवस्था, जलापूर्ति एवं अन्य नागरिक सुविधाओं के विकास कार्य निरंतर किए जा रहे हैं।",
       link: "#news-notices",
     },
     {
       id: "tender",
-      text: "टेंडर सूचना: स्मार्ट सोलर स्ट्रीट लाइट खरीद एवं वार्डवार स्थापना हेतु निविदाएं आमंत्रित हैं।",
-      link: "/news-notices",
+      text: "निविदा सूचना: नगर पालिका परिषद, मैनपुरी द्वारा विभिन्न विकास एवं नागरिक सुविधाओं से संबंधित कार्यों हेतु निविदाएं आमंत्रित की जाती हैं।",
+      link: "#news-notices",
+    },
+    {
+      id: "schemes",
+      text: "योजना सूचना: नागरिकों के हित में संचालित विभिन्न सरकारी एवं नगर पालिका योजनाओं की जानकारी आधिकारिक पोर्टल पर उपलब्ध है।",
+      link: "/schemes",
     },
   ]
 
   return (
-    <div className="relative z-30 flex flex-col items-stretch overflow-hidden border-y border-orange-800 bg-linear-to-r from-orange-700 via-amber-700 to-orange-800 text-white shadow-md md:flex-row">
-      {/* Title Segment */}
-      <div className="relative z-10 flex shrink-0 items-center gap-2 border-r border-orange-800 bg-slate-950 px-6 py-3 text-xs font-black tracking-wider uppercase shadow-md select-none md:-ml-3 md:skew-x-12 md:border-r-0 md:text-sm">
-        <div className="flex items-center gap-2 md:-skew-x-12">
-          <Megaphone className="h-4 w-4 animate-bounce text-orange-400" />
-          <span className="text-orange-200">Announcements</span>
-          <span className="ml-1 hidden font-serif text-[10px] text-amber-300 sm:inline">
-            / नवीनतम सूचनाएं (छाता)
-          </span>
+    <section
+      aria-label="Latest announcements"
+      className="relative z-30 flex w-full flex-col overflow-hidden border-y border-[#A96F22]/40 bg-[#123247] text-white shadow-[0_5px_20px_rgba(18,50,71,0.12)] md:flex-row"
+    >
+      {/* =====================================================
+          ANNOUNCEMENT TITLE
+      ====================================================== */}
+
+      <div className="relative z-20 flex shrink-0 items-center border-b border-white/10 bg-[#0B2637] px-5 py-3 md:border-b-0 md:border-r md:px-7">
+        <div className="flex items-center gap-3">
+          {/* Icon */}
+
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-[#D8B26A]/20 bg-[#C69A45]/10">
+            <span className="absolute inset-0 animate-ping rounded-lg bg-[#C69A45]/10" />
+
+            <Megaphone className="relative h-4 w-4 text-[#D8B26A]" />
+          </div>
+
+          {/* Text */}
+
+          <div className="whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.14em] text-white sm:text-[11px]">
+                Announcements
+              </span>
+
+              <span className="h-1.5 w-1.5 rounded-full bg-[#C69A45]" />
+            </div>
+
+            <p className="mt-0.5 text-[8px] font-semibold text-[#D8B26A] sm:text-[9px]">
+              नवीनतम सूचनाएं
+            </p>
+          </div>
         </div>
+
+        {/* Decorative edge */}
+
+        <div className="absolute right-0 top-0 hidden h-full w-px bg-linear-to-b from-transparent via-[#C69A45]/50 to-transparent md:block" />
       </div>
 
-      {/* Marquee Content */}
-      <div className="relative flex flex-1 items-center overflow-hidden py-2.5 md:py-0">
+      {/* =====================================================
+          TICKER CONTENT
+      ====================================================== */}
+
+      <div className="relative flex min-w-0 flex-1 items-center overflow-hidden bg-[#123247]">
+        {/* Left fade */}
+
+        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-linear-to-r from-[#123247] to-transparent" />
+
+        {/* Right fade */}
+
+        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-16 bg-linear-to-l from-[#123247] to-transparent" />
+
+        {/* Marquee */}
+
         <div
-          className="animate-marquee flex cursor-pointer items-center gap-16 whitespace-nowrap hover:paused"
-          style={{ animationDuration: "60s" }}
+          className="announcement-marquee flex min-w-max items-center gap-12 whitespace-nowrap py-3.5 pl-8 pr-12"
+          style={{
+            animationDuration: "70s",
+          }}
         >
-          {/* First iteration */}
+          {/* First Loop */}
+
           {notices.map((notice) => (
             <a
               key={notice.id}
               href={notice.link}
-              className="flex items-center gap-2 text-xs font-bold transition-colors hover:text-amber-200"
+              className="group flex items-center gap-2.5 text-[10px] font-semibold text-slate-200 transition-colors hover:text-white sm:text-[11px]"
             >
-              <span className="inline-block h-2 w-2 rounded-full bg-amber-300 shadow-sm"></span>
-              <span>{notice.text}</span>
-              <ArrowUpRight className="h-3 w-3 shrink-0 text-orange-200" />
+              {/* Bullet */}
+
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C69A45]/40" />
+
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#D8B26A]" />
+              </span>
+
+              {/* Notice */}
+
+              <span className="transition-colors group-hover:text-[#F0D49B]">
+                {notice.text}
+              </span>
+
+              {/* Arrow */}
+
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/4 transition-all duration-200 group-hover:border-[#C69A45]/40 group-hover:bg-[#C69A45]/10">
+                <ArrowUpRight className="h-3 w-3 text-[#D8B26A] transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </span>
             </a>
           ))}
 
-          {/* Second iteration (for seamless looping) */}
+          {/* Second Loop - seamless */}
+
           {notices.map((notice) => (
             <a
-              key={`${notice.id}-dup`}
+              key={`${notice.id}-duplicate`}
               href={notice.link}
-              className="flex items-center gap-2 text-xs font-bold transition-colors hover:text-amber-200"
+              aria-hidden="true"
+              tabIndex={-1}
+              className="group flex items-center gap-2.5 text-[10px] font-semibold text-slate-200 transition-colors hover:text-white sm:text-[11px]"
             >
-              <span className="inline-block h-2 w-2 rounded-full bg-amber-300 shadow-sm"></span>
-              <span>{notice.text}</span>
-              <ArrowUpRight className="h-3 w-3 shrink-0 text-orange-200" />
+              {/* Bullet */}
+
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#D8B26A]" />
+              </span>
+
+              {/* Notice */}
+
+              <span className="transition-colors group-hover:text-[#F0D49B]">
+                {notice.text}
+              </span>
+
+              {/* Arrow */}
+
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/4">
+                <ArrowUpRight className="h-3 w-3 text-[#D8B26A]" />
+              </span>
             </a>
           ))}
         </div>
       </div>
-    </div>
+
+      {/* =====================================================
+          INLINE STYLE FOR MARQUEE
+      ====================================================== */}
+
+      <style jsx>{`
+        .announcement-marquee {
+          animation: announcement-scroll linear infinite;
+          will-change: transform;
+        }
+
+        .announcement-marquee:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes announcement-scroll {
+          from {
+            transform: translateX(0);
+          }
+
+          to {
+            transform: translateX(-50%);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .announcement-marquee {
+            animation: none;
+          }
+        }
+      `}</style>
+    </section>
   )
 }

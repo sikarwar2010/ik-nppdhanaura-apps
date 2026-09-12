@@ -41,7 +41,6 @@ import {
   WATER_SOURCES,
   YEARS_OF_CONSTRUCTION,
   YES_NO,
-  knownCatalogValue,
 } from "@/lib/ward1-catalog"
 
 import { FloorsEditor } from "../_components/floors-editor"
@@ -728,7 +727,6 @@ export default function SurveyFormPage() {
             control={control}
             name="propertyUse"
             options={PROPERTY_USES}
-            includeCurrent={false}
             onValueChange={(value) => {
               if (!isCommercialPropertyUse(value)) {
                 form.setValue("commercial", "", { shouldDirty: true })
@@ -970,7 +968,7 @@ function recordToForm(row: SurveyRecord): FormValues {
     colony: row.colony ?? "",
     taxRateZone: row.taxRateZone ?? "",
     propertyOwnership: row.propertyOwnership ?? "",
-    propertyUse: knownCatalogValue(PROPERTY_USES, row.propertyUse),
+    propertyUse: row.propertyUse ?? "",
     commercial: row.commercial ?? "",
     yearOfConstruction: row.yearOfConstruction ?? "",
     situation: row.situation ?? "",

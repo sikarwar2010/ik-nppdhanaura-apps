@@ -62,8 +62,6 @@ import {
   qualityLabel,
   toNumber,
 } from "@/lib/survey-format"
-import { PROPERTY_USES, knownCatalogValue } from "@/lib/ward1-catalog"
-
 type Neighbor = { id: string; surveyId: string }
 
 type FloorRow = {
@@ -481,9 +479,7 @@ export default function SurveyDetailPage() {
           />
           <Field
             label="Property Use"
-            value={formatCatalogDisplay(
-              knownCatalogValue(PROPERTY_USES, s.propertyUse)
-            )}
+            value={formatCatalogDisplay(s.propertyUse)}
           />
           <Field
             label="Commercial subtype"

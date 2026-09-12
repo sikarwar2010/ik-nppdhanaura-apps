@@ -1,350 +1,524 @@
 "use client"
 
-import { Button } from "@workspace/ui/components/button"
-import { m, AnimatePresence } from "framer-motion"
-import { ArrowRight, CheckCircle2, Sparkles, X, MapPin } from "lucide-react"
+import { AnimatePresence, m } from "framer-motion"
+import {
+  ArrowRight,
+  CheckCircle2,
+  Home,
+  Leaf,
+  MapPin,
+  Sparkles,
+  Users,
+  Waves,
+  X,
+} from "lucide-react"
 import Link from "next/link"
 import React, { useState } from "react"
 
 interface SchemeItem {
+  id: string
   title: string
   titleHi: string
   desc: string
-  logoSvg: React.ReactNode
+  icon: React.ReactNode
   objectives: string[]
   badge: string
   theme: string
+  iconTheme: string
+  badgeTheme: string
+  glow: string
 }
 
 export default function Schemes() {
-  const [selectedScheme, setSelectedScheme] = useState<SchemeItem | null>(null)
+  const [selectedScheme, setSelectedScheme] =
+    useState<SchemeItem | null>(null)
 
   const schemes: SchemeItem[] = [
     {
-      title: "Pradhan Mantri Awas Yojana (Urban)",
-      titleHi: "प्रधानमंत्री आवास योजना (शहरी - छाता)",
-      desc: "Providing secure and affordable pucca houses to eligible EWS/LIG households across all wards of Nagar Panchayat Chhata.",
+      id: "pmay",
+      title: "Pradhan Mantri Awas Yojana",
+      titleHi: "प्रधानमंत्री आवास योजना (शहरी)",
+      desc:
+        "पात्र आर्थिक रूप से कमजोर एवं निम्न आय वर्ग के परिवारों को सुरक्षित और किफायती पक्का आवास उपलब्ध कराने के लिए आवासीय सहायता।",
+      icon: <Home className="h-7 w-7" />,
       badge: "आवास योजना",
-      theme: "from-orange-500 to-amber-600",
+      theme: "from-orange-400 via-amber-500 to-red-500",
+      iconTheme: "from-orange-400 to-red-500",
+      badgeTheme: "border-orange-200 bg-orange-50 text-orange-700",
+      glow: "bg-orange-400/20",
       objectives: [
-        "Financial assistance up to ₹2.5 Lakhs for construction",
-        "Direct Benefit Transfer (DBT) to beneficiary accounts",
-        "Priority for women co-ownership and specially-abled citizens",
+        "पात्र लाभार्थियों को आवास निर्माण हेतु वित्तीय सहायता",
+        "लाभार्थी बैंक खाते में DBT के माध्यम से सहायता",
+        "महिला सह-स्वामित्व को प्राथमिकता",
       ],
-      logoSvg: (
-        <svg
-          className="h-16 w-16"
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            stroke="#CBD5E1"
-            strokeWidth="2"
-            fill="#F8FAFC"
-          />
-          <rect x="36" y="52" width="28" height="22" fill="#134074" rx="2" />
-          <polygon points="32,52 68,52 50,34" fill="#FF9933" />
-          <rect x="46" y="60" width="8" height="14" fill="#FFFFFF" />
-          <circle cx="50" cy="24" r="5" fill="#F59E0B" />
-        </svg>
-      ),
     },
+
     {
-      title: "Swachh Bharat Mission (Urban)",
-      titleHi: "स्वच्छ भारत मिशन (छाता नगर पंचायत)",
-      desc: "Ensuring 100% door-to-door garbage collection, wet/dry waste segregation, and a cleaner Mathura highway corridor.",
+      id: "swachh-bharat",
+      title: "Swachh Bharat Mission",
+      titleHi: "स्वच्छ भारत मिशन (शहरी)",
+      desc:
+        "स्वच्छ मैनपुरी अभियान के अंतर्गत घर-घर कचरा संग्रहण, ठोस अपशिष्ट प्रबंधन, स्वच्छता जागरूकता एवं स्वच्छ सार्वजनिक स्थानों को बढ़ावा देना।",
+      icon: <Leaf className="h-7 w-7" />,
       badge: "स्वच्छता",
-      theme: "from-emerald-500 to-teal-700",
+      theme: "from-emerald-400 via-green-500 to-teal-600",
+      iconTheme: "from-emerald-400 to-teal-600",
+      badgeTheme: "border-emerald-200 bg-emerald-50 text-emerald-700",
+      glow: "bg-emerald-400/20",
       objectives: [
-        "Daily door-to-door solid waste collection vehicles",
-        "Plastic-free market campaigns across Chhata bazars",
-        "Community composting and sanitation awareness drives",
+        "घर-घर ठोस कचरा संग्रहण",
+        "गीले एवं सूखे कचरे का पृथक्करण",
+        "स्वच्छता एवं जन-जागरूकता अभियान",
       ],
-      logoSvg: (
-        <svg
-          className="h-16 w-16"
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            stroke="#CBD5E1"
-            strokeWidth="2"
-            fill="#F8FAFC"
-          />
-          <circle cx="36" cy="50" r="12" stroke="#475569" strokeWidth="3" />
-          <circle cx="64" cy="50" r="12" stroke="#475569" strokeWidth="3" />
-          <path d="M48 50 L52 50" stroke="#475569" strokeWidth="3" />
-          <path
-            d="M26 68 C 38 72, 62 72, 74 68"
-            stroke="#FF9933"
-            strokeWidth="2"
-            fill="none"
-          />
-        </svg>
-      ),
     },
+
     {
-      title: "Deendayal Antyodaya Yojana - NULM",
-      titleHi: "राष्ट्रीय शहरी आजीविका मिशन (DAY-NULM)",
-      desc: "Empowering urban poor women in Chhata through Self-Help Groups (SHGs), skill training, and easy micro-enterprise loans.",
+      id: "nulm",
+      title: "DAY-NULM",
+      titleHi: "राष्ट्रीय शहरी आजीविका मिशन",
+      desc:
+        "शहरी गरीब परिवारों को स्वरोजगार, कौशल विकास, स्वयं सहायता समूहों एवं छोटे व्यवसायों के माध्यम से आर्थिक रूप से सशक्त बनाने की पहल।",
+      icon: <Users className="h-7 w-7" />,
       badge: "आजीविका",
-      theme: "from-blue-600 to-indigo-700",
+      theme: "from-blue-500 via-indigo-500 to-violet-600",
+      iconTheme: "from-blue-500 to-violet-600",
+      badgeTheme: "border-blue-200 bg-blue-50 text-blue-700",
+      glow: "bg-blue-400/20",
       objectives: [
-        "Formation and revolving fund support for Mahila SHGs",
-        "Free certified skill development training for youth",
-        "Subsidized bank credit linkages for small businesses",
+        "महिला स्वयं सहायता समूहों को प्रोत्साहन",
+        "युवाओं के लिए कौशल विकास प्रशिक्षण",
+        "स्वरोजगार हेतु ऋण एवं बैंक लिंकेज",
       ],
-      logoSvg: (
-        <svg
-          className="h-16 w-16"
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            stroke="#CBD5E1"
-            strokeWidth="2"
-            fill="#F8FAFC"
-          />
-          <circle cx="50" cy="50" r="40" stroke="#E07A1D" strokeWidth="1.5" />
-          <circle cx="50" cy="50" r="10" fill="#134074" />
-          <circle cx="50" cy="50" r="6" fill="#FF9933" />
-        </svg>
-      ),
     },
+
     {
-      title: "Jal Jeevan & Urban Water Supply",
-      titleHi: "अमृत योजना एवं शहरी पेयजल वितरण",
-      desc: "Upgrading pipeline networks and overhead water tanks to guarantee safe drinking water access to every household in Chhata.",
+      id: "water",
+      title: "Urban Water Supply",
+      titleHi: "शहरी पेयजल एवं जल आपूर्ति",
+      desc:
+        "नगर क्षेत्र में सुरक्षित पेयजल की उपलब्धता सुनिश्चित करने के लिए जल पाइपलाइन, जल टैंक, कनेक्शन एवं जल गुणवत्ता से संबंधित सुविधाएं।",
+      icon: <Waves className="h-7 w-7" />,
       badge: "पेयजल",
-      theme: "from-sky-500 to-blue-600",
+      theme: "from-cyan-400 via-sky-500 to-blue-600",
+      iconTheme: "from-cyan-400 to-blue-600",
+      badgeTheme: "border-cyan-200 bg-cyan-50 text-cyan-700",
+      glow: "bg-cyan-400/20",
       objectives: [
-        "Functional household tap connections in all wards",
-        "Regular water quality testing and chlorination",
-        "Overhead tank boost pumps for tail-end localities",
+        "नगर के वार्डों में घरेलू जल कनेक्शन",
+        "जल गुणवत्ता परीक्षण एवं क्लोरीनेशन",
+        "जल आपूर्ति व्यवस्था का सुधार",
       ],
-      logoSvg: (
-        <svg
-          className="h-16 w-16"
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            stroke="#CBD5E1"
-            strokeWidth="2"
-            fill="#F8FAFC"
-          />
-          <path
-            d="M50 25 C50 25, 66 43, 66 57 C66 67, 58 75, 50 75 C42 75, 34 67, 34 57 C34 43, 50 25, 50 25 Z"
-            fill="#0EA5E9"
-          />
-        </svg>
-      ),
     },
   ]
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-slate-50 px-4 py-24 font-sans text-slate-900 md:px-8">
-      {/* Background Glow Accents */}
-      <div className="pointer-events-none absolute top-1/3 left-1/4 h-125 w-125 -translate-x-1/2 rounded-full bg-orange-500/5 blur-[150px]" />
-      <div className="pointer-events-none absolute right-1/4 bottom-10 h-125 w-125 translate-x-1/2 rounded-full bg-blue-500/5 blur-[150px]" />
+    <section
+      id="government-schemes"
+      className="relative overflow-hidden bg-linear-to-br from-[#fffdf8] via-[#f7fbff] to-[#fbf7ff] px-4 py-20 font-sans text-slate-900 md:px-8 md:py-24"
+    >
+      {/* =====================================================
+          PREMIUM BACKGROUND GRID
+      ====================================================== */}
 
-      <div className="relative z-10 mx-auto max-w-7xl space-y-16">
-        {/* Page Header */}
-        <div className="mx-auto max-w-3xl space-y-3 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-bold tracking-wider text-orange-600 uppercase shadow-sm backdrop-blur-md">
-            <Sparkles className="h-4 w-4 animate-pulse text-orange-600" />
-            <span>Nagar Panchayat Chhata • Mathura</span>
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage:
+            "linear-gradient(#17384b 1px, transparent 1px), linear-gradient(90deg, #17384b 1px, transparent 1px)",
+          backgroundSize: "42px 42px",
+        }}
+      />
+
+      {/* =====================================================
+          COLORFUL BACKGROUND GLOWS
+      ====================================================== */}
+
+      <div className="pointer-events-none absolute -left-40 top-20 h-105 w-105 rounded-full bg-orange-300/20 blur-[140px]" />
+
+      <div className="pointer-events-none absolute -right-40 top-1/3 h-112.5 w-112.5 rounded-full bg-sky-300/20 blur-[140px]" />
+
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-100 w-100 rounded-full bg-violet-300/15 blur-[140px]" />
+
+      <div className="relative z-10 mx-auto max-w-7xl">
+        {/* =====================================================
+            HEADER
+        ====================================================== */}
+
+        <m.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mx-auto mb-16 max-w-3xl text-center"
+        >
+          {/* Badge */}
+
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-[10px] font-black tracking-[0.15em] text-orange-700 uppercase shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-orange-400 to-pink-500 text-white shadow-sm">
+              <Sparkles className="h-3.5 w-3.5" />
+            </span>
+
+            नगर पालिका परिषद, मैनपुरी
           </div>
 
-          <h1 className="font-serif text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Major Government Schemes in Chhata, Mathura
+          {/* Heading */}
+
+          <h1 className="font-serif text-3xl font-black tracking-tight text-[#123247] md:text-5xl">
+            Government{" "}
+            <span className="bg-linear-to-r from-orange-500 via-pink-500 to-violet-600 bg-clip-text text-transparent">
+              Schemes
+            </span>
           </h1>
 
-          <p className="text-sm leading-relaxed font-medium text-slate-600 md:text-base">
-            क्षेत्र के नागरिकों के विकास, आवास, स्वच्छता और आजीविका सशक्तिकरण के
-            लिए संचालित केंद्रीय एवं राज्य योजनाएं।
-          </p>
-          <div className="mx-auto mt-4 h-1.5 w-24 rounded-full bg-linear-to-r from-orange-500 to-blue-600"></div>
-        </div>
+          {/* Hindi heading */}
 
-        {/* Schemes Cards Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {schemes.map((scheme, idx) => (
-            <m.div
-              key={scheme.title}
-              initial={{ opacity: 0, y: 20 }}
+          <p className="mt-3 text-sm font-bold text-slate-500 md:text-base">
+            नागरिक कल्याण एवं विकास योजनाएं
+          </p>
+
+          {/* Description */}
+
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 font-medium text-slate-600 md:text-base">
+            नगर पालिका परिषद, मैनपुरी के नागरिकों के विकास,
+            आवास, स्वच्छता, पेयजल एवं आजीविका सशक्तिकरण के
+            लिए संचालित प्रमुख सरकारी योजनाओं की जानकारी।
+          </p>
+
+          {/* Separator */}
+
+          <div className="mx-auto mt-7 flex items-center justify-center gap-2">
+            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-orange-400 to-pink-500" />
+
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-violet-200 bg-violet-50">
+              <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+            </span>
+
+            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-sky-500 to-violet-600" />
+          </div>
+        </m.div>
+
+        {/* =====================================================
+            SCHEMES GRID
+        ====================================================== */}
+
+        <div className="grid grid-cols-1 gap-7 md:grid-cols-2 lg:grid-cols-4">
+          {schemes.map((scheme, index) => (
+            <m.article
+              key={scheme.id}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.08, duration: 0.4 }}
-              className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-xl transition-all duration-300 hover:-translate-y-2 hover:border-orange-500/50 hover:shadow-2xl"
+              transition={{
+                delay: index * 0.08,
+                duration: 0.5,
+              }}
+              className="group relative flex min-h-117.5 flex-col justify-between overflow-hidden rounded-[28px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_12px_35px_rgba(18,50,71,0.06)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-slate-300 hover:shadow-[0_25px_65px_rgba(18,50,71,0.13)]"
             >
-              {/* Top Accent Gradient Line */}
+              {/* Top accent */}
+
               <div
-                className={`absolute top-0 right-0 left-0 h-1 bg-linear-to-r ${scheme.theme} opacity-80 transition-opacity group-hover:opacity-100`}
+                className={`absolute inset-x-0 top-0 h-1.5 bg-linear-to-r ${scheme.theme} transition-all duration-500 group-hover:h-2`}
               />
 
-              <div>
-                {/* Header Icon & Badge */}
-                <div className="mb-5 flex items-center justify-between">
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-1 shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-                    {scheme.logoSvg}
+              {/* Card glow */}
+
+              <div
+                className={`pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full ${scheme.glow} opacity-60 blur-3xl transition-all duration-500 group-hover:scale-150 group-hover:opacity-100`}
+              />
+
+              {/* Decorative circle */}
+
+              <div
+                className={`pointer-events-none absolute -right-10 top-12 h-28 w-28 rounded-full border-18 border-transparent bg-linear-to-br ${scheme.theme} opacity-[0.035] transition-all duration-500 group-hover:scale-125 group-hover:opacity-[0.08]`}
+              />
+
+              <div className="relative z-10">
+                {/* Icon + Badge */}
+
+                <div className="mb-6 flex items-start justify-between gap-3">
+                  <div
+                    className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br ${scheme.iconTheme} text-white shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 group-hover:shadow-xl`}
+                  >
+                    {scheme.icon}
                   </div>
-                  <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[10px] font-extrabold text-slate-700 transition-colors group-hover:bg-orange-500/20 group-hover:text-orange-700">
+
+                  <span
+                    className={`rounded-full border px-3 py-1.5 text-[9px] font-black tracking-wide transition-all duration-300 group-hover:scale-105 ${scheme.badgeTheme}`}
+                  >
                     {scheme.badge}
                   </span>
                 </div>
 
-                {/* Titles */}
-                <div>
-                  <span className="mb-1 block text-[10px] font-extrabold tracking-widest text-orange-600 uppercase">
-                    {scheme.titleHi}
-                  </span>
-                  <h3 className="font-serif text-lg font-bold tracking-tight text-slate-900 transition-colors group-hover:text-orange-600">
-                    {scheme.title}
-                  </h3>
-                </div>
+                {/* Hindi */}
+
+                <span className="block text-[9px] font-black tracking-[0.13em] text-orange-600 uppercase">
+                  {scheme.titleHi}
+                </span>
+
+                {/* English */}
+
+                <h3 className="mt-1.5 font-serif text-xl font-black leading-tight tracking-tight text-[#123247] transition-colors duration-300 group-hover:text-orange-600">
+                  {scheme.title}
+                </h3>
 
                 {/* Description */}
-                <p className="mt-3 line-clamp-3 text-xs leading-relaxed font-medium text-slate-600">
+
+                <p className="mt-4 text-xs leading-6 font-medium text-slate-600">
                   {scheme.desc}
                 </p>
 
-                {/* Mandates Preview List */}
-                <div className="mt-5 space-y-2 border-t border-slate-100 pt-4">
-                  <p className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                    मुख्य विशेषताएँ:
+                {/* Objectives */}
+
+                <div className="mt-6 border-t border-slate-100 pt-5">
+                  <p className="mb-3 text-[9px] font-black tracking-[0.14em] text-slate-400 uppercase">
+                    मुख्य विशेषताएं
                   </p>
-                  {scheme.objectives.map((obj) => (
-                    <div
-                      key={obj}
-                      className="flex items-start gap-1.5 text-[11px] leading-normal font-medium text-slate-700"
-                    >
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
-                      <span className="line-clamp-1">{obj}</span>
-                    </div>
-                  ))}
+
+                  <div className="space-y-3">
+                    {scheme.objectives.map((objective) => (
+                      <div
+                        key={objective}
+                        className="flex items-start gap-2.5 text-[11px] leading-5 font-semibold text-slate-700"
+                      >
+                        <span className="mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        </span>
+
+                        <span>{objective}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Action Button */}
-              <div className="mt-6 border-t border-slate-100 pt-4">
-                <Button
+              {/* CTA */}
+
+              <div className="relative z-10 mt-7 border-t border-slate-100 pt-4">
+                <button
+                  type="button"
                   onClick={() => setSelectedScheme(scheme)}
-                  className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-xs font-bold text-slate-800 shadow-none transition-all duration-300 hover:bg-orange-600 hover:text-white"
+                  className={`group/btn flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-linear-to-r ${scheme.iconTheme} px-4 py-3 text-[10px] font-black tracking-wide text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl`}
                 >
                   <span>विस्तृत जानकारी</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Button>
+
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                </button>
               </div>
-            </m.div>
+
+              {/* Bottom glow line */}
+
+              <div
+                className={`absolute bottom-0 left-1/2 h-1 w-0 -translate-x-1/2 rounded-full bg-linear-to-r ${scheme.theme} opacity-0 blur-sm transition-all duration-500 group-hover:w-3/4 group-hover:opacity-100`}
+              />
+            </m.article>
           ))}
         </div>
 
-        {/* Informative Help Card */}
-        <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-orange-500/30 bg-linear-to-r from-orange-500/10 via-white to-blue-500/10 p-6 text-slate-900 shadow-2xl backdrop-blur-xl md:flex-row md:p-8">
-          <div className="flex items-center gap-4 text-center md:text-left">
-            <div className="shrink-0 rounded-2xl border border-orange-500/30 bg-orange-500/10 p-4 text-orange-600 backdrop-blur-md">
-              <MapPin className="h-8 w-8 animate-bounce" />
+        {/* =====================================================
+            HELP / OFFICE CARD
+        ====================================================== */}
+
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="group relative mt-12 overflow-hidden rounded-[28px] border border-orange-200 bg-linear-to-r from-orange-50 via-white to-blue-50 p-6 shadow-[0_15px_45px_rgba(18,50,71,0.06)] transition-all duration-500 hover:shadow-[0_25px_60px_rgba(249,115,22,0.12)] md:p-8"
+        >
+          {/* Background grid */}
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "linear-gradient(#123247 1px, transparent 1px), linear-gradient(90deg, #123247 1px, transparent 1px)",
+              backgroundSize: "34px 34px",
+            }}
+          />
+
+          {/* Glow */}
+
+          <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-orange-300/20 blur-3xl transition-all duration-500 group-hover:bg-pink-300/25" />
+
+          <div className="relative z-10 flex flex-col items-center gap-6 md:flex-row">
+            {/* Icon */}
+
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-orange-400 to-pink-500 text-white shadow-lg transition-all duration-500 group-hover:rotate-6 group-hover:scale-110">
+              <MapPin className="h-6 w-6" />
             </div>
-            <div className="space-y-1">
-              <h4 className="font-serif text-base font-bold text-slate-900">
-                छाता नगर पंचायत कार्यालय में सहायता केंद्र
+
+            {/* Content */}
+
+            <div className="flex-1 text-center md:text-left">
+              <p className="text-[9px] font-black tracking-[0.15em] text-orange-600 uppercase">
+                Citizen Assistance
+              </p>
+
+              <h4 className="mt-1 font-serif text-xl font-black text-[#123247]">
+                योजना से संबंधित सहायता चाहिए?
               </h4>
-              <p className="max-w-xl text-xs leading-relaxed font-medium text-slate-600">
-                यदि आप पात्र हैं (EWS/LIG श्रेणी) और पीएम आवास, स्वच्छता अनुदान
-                या आजीविका मिशन के लिए पंजीकरण में मार्गदर्शन चाहते हैं, तो छाता
-                टाउन हॉल हेल्पडेस्क पर संपर्क करें।
+
+              <p className="mt-2 max-w-3xl text-xs leading-6 font-medium text-slate-600 md:text-sm">
+                यदि आपको किसी सरकारी योजना की पात्रता, आवेदन प्रक्रिया
+                या आवश्यक दस्तावेजों के संबंध में सहायता चाहिए, तो
+                नगर पालिका परिषद, मैनपुरी कार्यालय से संपर्क करें।
               </p>
             </div>
+
+            {/* CTA */}
+
+            <Link
+              href="/contact"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-pink-500 px-5 py-3 text-[10px] font-black tracking-wide text-white shadow-lg shadow-orange-200 transition-all duration-300 hover:-translate-y-1 hover:from-pink-500 hover:to-violet-600 hover:shadow-xl"
+            >
+              संपर्क कार्यालय
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
-          <Link
-            href="/contact"
-            className="shrink-0 cursor-pointer rounded-2xl bg-linear-to-r from-orange-500 to-amber-600 px-6 py-3 text-center text-xs font-extrabold tracking-wider text-white uppercase shadow-lg shadow-orange-500/25 transition-all duration-300 hover:scale-105 hover:brightness-110"
-          >
-            हेल्पडेस्क से संपर्क करें
-          </Link>
-        </div>
+        </m.div>
       </div>
 
-      {/* Scheme Detail Modal */}
+      {/* =====================================================
+          DETAIL MODAL
+      ====================================================== */}
+
       <AnimatePresence>
         {selectedScheme && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <m.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-100 flex items-center justify-center bg-[#102a3a]/60 p-4 backdrop-blur-md"
+            onClick={() => setSelectedScheme(null)}
+          >
             <m.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg space-y-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl md:p-8"
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                y: 20,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.94,
+                y: 20,
+              }}
+              transition={{ duration: 0.25 }}
+              onClick={(event) => event.stopPropagation()}
+              className="relative w-full max-w-lg overflow-hidden rounded-[30px] border border-white/60 bg-white shadow-[0_30px_100px_rgba(0,0,0,0.25)]"
             >
-              {/* Close Button */}
-              <button
-                onClick={() => setSelectedScheme(null)}
-                className="absolute top-6 right-6 cursor-pointer rounded-full bg-slate-100 p-2 text-slate-600 transition-colors hover:bg-slate-200 hover:text-slate-900"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              {/* Top gradient */}
 
-              <div className="flex items-center gap-4">
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-1 shadow-sm">
-                  {selectedScheme.logoSvg}
+              <div
+                className={`h-1.5 bg-linear-to-r ${selectedScheme.theme}`}
+              />
+
+              {/* Header */}
+
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 md:px-7">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-xl bg-linear-to-br ${selectedScheme.iconTheme} text-white shadow-lg`}
+                  >
+                    {selectedScheme.icon}
+                  </div>
+
+                  <div>
+                    <p className="text-[9px] font-black tracking-[0.13em] text-orange-600 uppercase">
+                      Nagar Palika Parishad
+                    </p>
+
+                    <h3 className="mt-0.5 text-base font-black text-[#123247]">
+                      {selectedScheme.title}
+                    </h3>
+
+                    <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
+                      {selectedScheme.titleHi}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-[10px] font-extrabold tracking-widest text-orange-600 uppercase">
-                    {selectedScheme.titleHi}
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-slate-900">
-                    {selectedScheme.title}
-                  </h3>
-                </div>
-              </div>
 
-              <p className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed font-medium text-slate-700">
-                {selectedScheme.desc}
-              </p>
-
-              <div className="space-y-3">
-                <h4 className="text-xs font-extrabold tracking-wider text-slate-900 uppercase">
-                  योजना की मुख्य विशेषताएं:
-                </h4>
-                <div className="space-y-2">
-                  {selectedScheme.objectives.map((obj) => (
-                    <div
-                      key={obj}
-                      className="flex items-center gap-2 rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 text-xs font-medium text-slate-800"
-                    >
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-orange-600" />
-                      <span>{obj}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
                 <button
+                  type="button"
                   onClick={() => setSelectedScheme(null)}
-                  className="flex-1 cursor-pointer rounded-2xl bg-orange-600 py-3 text-xs font-bold text-white shadow-lg transition-all hover:bg-orange-700"
+                  aria-label="Close"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-500 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600"
                 >
-                  बंद करें (Close)
+                  <X className="h-4 w-4" />
                 </button>
               </div>
+
+              {/* Body */}
+
+              <div className="p-6 md:p-7">
+                <div className="rounded-2xl border border-slate-200 bg-linear-to-br from-slate-50 to-white p-4">
+                  <p className="text-xs leading-6 font-medium text-slate-700">
+                    {selectedScheme.desc}
+                  </p>
+                </div>
+
+                {/* Objectives */}
+
+                <div className="mt-6">
+                  <h4 className="text-[10px] font-black tracking-[0.14em] text-[#123247] uppercase">
+                    योजना की मुख्य विशेषताएं
+                  </h4>
+
+                  <div className="mt-3 space-y-2.5">
+                    {selectedScheme.objectives.map((objective) => (
+                      <div
+                        key={objective}
+                        className="group flex items-start gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3.5 transition-all duration-300 hover:border-emerald-200 hover:bg-emerald-50/60"
+                      >
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                        </span>
+
+                        <span className="text-xs leading-5 font-semibold text-slate-700">
+                          {objective}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer */}
+
+                <div className="mt-6 flex gap-3 border-t border-slate-100 pt-5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedScheme(null)}
+                    className="flex-1 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-3 text-xs font-black text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-100 hover:text-[#123247]"
+                  >
+                    बंद करें
+                  </button>
+
+                  <Link
+                    href="/contact"
+                    onClick={() => setSelectedScheme(null)}
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl bg-linear-to-r ${selectedScheme.iconTheme} py-3 text-xs font-black text-white shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl`}
+                  >
+                    सहायता लें
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Bottom */}
+
+              <div className="border-t border-slate-100 bg-slate-50/80 px-6 py-3 text-center">
+                <p className="text-[9px] font-semibold text-slate-400">
+                  नगर पालिका परिषद, मैनपुरी • Digital Citizen Services
+                </p>
+              </div>
             </m.div>
-          </div>
+          </m.div>
         )}
       </AnimatePresence>
     </section>

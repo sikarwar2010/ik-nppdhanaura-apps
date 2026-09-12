@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Schemes",
   description:
-    " Schemes page for Nagar Panchayat Chhata, Mathura, Uttar Pradesh, India. Discover the various government schemes and initiatives available for our community.",
+    " Schemes page for Nagar Palika Parishad,Mainpuri, Uttar Pradesh, India. Discover the various government schemes and initiatives available for our community.",
 }
 
 export default function () {

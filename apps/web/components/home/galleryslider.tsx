@@ -111,7 +111,7 @@ export default function CertificationsSlider() {
             <span>Gallery</span>
           </div>
           <h2 className="font-serif text-3xl font-extrabold tracking-tight text-emerald-500 md:text-4xl">
-            Our Nagar Panchayat Achievements & Recognitions
+            Our Nagar Palika Achievements & Recognitions
           </h2>
           <p className="text-black-600 mt-2 text-sm font-medium md:text-base">
             Achievements and recognitions for excellence, compliance, and
