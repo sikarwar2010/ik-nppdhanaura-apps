@@ -153,7 +153,7 @@ export function AppSidebar() {
               Nagar Panchayat
             </p>
             <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              Chhata · Mathura
+              Mainpuri
             </p>
           </div>
         </div>

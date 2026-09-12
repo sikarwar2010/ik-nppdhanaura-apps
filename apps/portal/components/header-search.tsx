@@ -60,9 +60,6 @@ export function HeaderSearch({ className }: { className?: string }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <kbd className="pointer-events-none absolute top-1/2 right-2.5 hidden -translate-y-1/2 items-center gap-0.5 rounded-md border bg-background px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground sm:inline-flex">
-          <span className="text-xs">⌘</span>K
-        </kbd>
       </form>
 
       <div className="md:hidden">
