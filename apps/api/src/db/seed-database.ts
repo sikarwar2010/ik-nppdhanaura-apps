@@ -61,6 +61,7 @@ const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "survey:create": "Create surveys",
   "survey:update": "Update surveys",
   "survey:delete": "Delete surveys",
+  "survey:bulk-delete": "Clear all live surveys in a ward",
   "survey:pii:read": "View survey PII",
   "import:read": "View imports",
   "import:create": "Run imports",
@@ -100,12 +101,22 @@ function buildPermissionRow(code: string): {
 
 const PERMISSIONS = PERMISSION_CODES.map(buildPermissionRow)
 
+const DEPARTMENT_ADMIN_DENIED = new Set([
+  "role:create",
+  "role:update",
+  "role:delete",
+  "survey:bulk-delete",
+])
+
+/** Department Admin gets operational access, not user/role write or ward wipe. */
+export function isGrantedToDepartmentAdmin(code: string): boolean {
+  return !code.startsWith("user:") && !DEPARTMENT_ADMIN_DENIED.has(code)
+}
+
 const ROLE_PERMISSIONS: Record<string, string[] | "*"> = {
   SUPER_ADMIN: "*",
   DEPARTMENT_ADMIN: PERMISSIONS.map((p) => p.code).filter(
-    (code) =>
-      !code.startsWith("user:") &&
-      !["role:create", "role:update", "role:delete"].includes(code)
+    isGrantedToDepartmentAdmin
   ),
   CLERK: [
     "dashboard:read",

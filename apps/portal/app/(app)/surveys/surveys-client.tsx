@@ -43,6 +43,8 @@ import { usePermission } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 import { formatParcelNo, formatSurveyId } from "@/lib/survey-format"
 
+import { ClearWardButton } from "./_components/clear-ward-dialog"
+
 type SurveyRow = {
   id: string
   surveyId: string
@@ -147,6 +149,7 @@ export default function SurveysClientPage() {
   const canCreate = can("survey:create")
   const canImport = can("import:create")
   const canExport = can("report:export")
+  const canBulkDelete = can("survey:bulk-delete")
 
   const qParam = searchParams.get("q") ?? ""
   const wardId = searchParams.get("wardId")
@@ -381,6 +384,9 @@ export default function SurveysClientPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {canBulkDelete && selectedWard && selectedWard.surveyCount > 0 ? (
+            <ClearWardButton ward={selectedWard} />
+          ) : null}
           {canExport ? (
             <Button
               variant="outline"

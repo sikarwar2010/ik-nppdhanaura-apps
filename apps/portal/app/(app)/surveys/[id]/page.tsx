@@ -572,7 +572,7 @@ export default function SurveyDetailPage() {
                         ? formatCatalogLabel(floor.usageFactor)
                         : "—"}
                     </TableCell>
-                    <TableCell className="max-w-[16rem] whitespace-normal break-words">
+                    <TableCell className="max-w-[16rem] whitespace-normal wrap-break-word">
                       {floor.buildingType
                         ? formatCatalogLabel(floor.buildingType)
                         : "—"}

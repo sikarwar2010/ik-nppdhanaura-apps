@@ -1,11 +1,20 @@
-import { Controller, Get } from "@nestjs/common"
+import { Body, Controller, Get, Param, Post } from "@nestjs/common"
 
-import { RequirePermission } from "../auth/auth.decorators"
+import {
+  CurrentUser,
+  RequirePermission,
+  type AuthUser,
+} from "../auth/auth.decorators"
 import { PrismaService } from "../prisma/prisma.service"
+import { ClearWardSurveysDto } from "./dto/clear-ward-surveys.dto"
+import { WardsService } from "./wards.service"
 
 @Controller("api/v1/wards")
 export class WardsController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly wardsService: WardsService
+  ) {}
 
   @Get()
   @RequirePermission("survey:read")
@@ -34,5 +43,16 @@ export class WardsController {
         surveyCount: ward._count.surveys,
       })),
     }
+  }
+
+  @Post(":wardId/clear-surveys")
+  @RequirePermission("survey:bulk-delete")
+  async clearSurveys(
+    @Param("wardId") wardId: string,
+    @Body() dto: ClearWardSurveysDto,
+    @CurrentUser() user: AuthUser
+  ) {
+    const data = await this.wardsService.clearSurveys(wardId, dto, user)
+    return { success: true, data }
   }
 }

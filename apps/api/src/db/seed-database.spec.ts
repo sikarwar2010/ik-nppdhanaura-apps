@@ -1,6 +1,7 @@
+import { PERMISSIONS } from "@workspace/types"
 import type { PrismaClient } from "@prisma/client"
 
-import { seedDatabase } from "./seed-database"
+import { isGrantedToDepartmentAdmin, seedDatabase } from "./seed-database"
 
 function createPrismaMock() {
   const users = new Map<
@@ -104,6 +105,16 @@ const seedEnv = {
   SEED_ADMIN_NAME: "Super Admin",
   SEED_ADMIN_PASSWORD: "strong-pass-1",
 }
+
+describe("isGrantedToDepartmentAdmin", () => {
+  it("does not grant survey:bulk-delete or user/role write", () => {
+    expect(isGrantedToDepartmentAdmin("survey:delete")).toBe(true)
+    expect(isGrantedToDepartmentAdmin("survey:bulk-delete")).toBe(false)
+    expect(isGrantedToDepartmentAdmin("user:create")).toBe(false)
+    expect(isGrantedToDepartmentAdmin("role:update")).toBe(false)
+    expect(PERMISSIONS).toContain("survey:bulk-delete")
+  })
+})
 
 describe("seedDatabase", () => {
   it("creates a Super Admin with passwordHash on user", async () => {

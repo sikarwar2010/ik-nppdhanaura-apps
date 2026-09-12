@@ -31,6 +31,7 @@ export const PERMISSIONS = [
   "survey:create",
   "survey:update",
   "survey:delete",
+  "survey:bulk-delete",
   "survey:pii:read",
   "import:read",
   "import:create",

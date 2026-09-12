@@ -673,13 +673,13 @@ export default function SurveyFormPage() {
             id="pincode"
             label="Pincode"
             inputMode="numeric"
-            className="sm:max-w-[10rem]"
+            className="sm:max-w-40"
             register={form.register("pincode")}
           />
           <TextField
             id="houseNo"
             label="House No"
-            className="sm:max-w-[10rem]"
+            className="sm:max-w-40"
             register={form.register("houseNo")}
           />
           <TextField
