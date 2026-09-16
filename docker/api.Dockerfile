@@ -58,5 +58,5 @@ RUN if [ -x /usr/bin/chromium-browser ] && [ ! -x /usr/bin/chromium ]; then \
 RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
 USER nestjs
 EXPOSE 4000
-      me DATABASE_URL for migrate, seed, and the API process.
+# Same DATABASE_URL for migrate, seed, and the API process.
 CMD ["sh", "-c", "echo 'Validating environment...' && node dist/startup-env-cli.js && echo 'Running database migrations...' && npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/seed-cli.js && node dist/main.js"]

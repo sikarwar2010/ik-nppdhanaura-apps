@@ -5,10 +5,26 @@ import {
   sortDemandNoticeSurveys,
 } from "./demand-notice-sort"
 import { duesPayloadToNoticeViewModel } from "./demand-notice-view-model"
+import { chunkDemandNoticeSurveyIds } from "./demand-notice.constants"
 import {
   partitionDemandNoticeValidation,
   validateSurveyForDemandNotice,
 } from "./demand-notice.validation"
+
+describe("chunkDemandNoticeSurveyIds", () => {
+  it("splits 5000 ids into five chunks of 1000", () => {
+    const ids = Array.from({ length: 5000 }, (_, i) => `id-${i}`)
+    const chunks = chunkDemandNoticeSurveyIds(ids, 1000)
+    expect(chunks).toHaveLength(5)
+    expect(chunks.every((c) => c.length === 1000)).toBe(true)
+    expect(chunks[0]?.[0]).toBe("id-0")
+    expect(chunks[4]?.[999]).toBe("id-4999")
+  })
+
+  it("keeps a short list as a single chunk", () => {
+    expect(chunkDemandNoticeSurveyIds(["a", "b"], 1000)).toEqual([["a", "b"]])
+  })
+})
 
 function baseSurvey(
   overrides: Partial<SurveyForDues & { id: string }> = {}

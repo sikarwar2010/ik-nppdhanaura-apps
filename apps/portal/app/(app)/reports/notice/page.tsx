@@ -83,6 +83,9 @@ type DemandNoticeJob = {
   errorDownloadUrl: string | null
   paperSize: string
   orientation: string
+  batchId: string | null
+  batchIndex: number | null
+  batchTotal: number | null
   createdAt: string
   completedAt: string | null
 }
@@ -172,7 +175,7 @@ export default function NoticePage() {
   const [validation, setValidation] = React.useState<ValidationResult | null>(
     null
   )
-  const [activeJobId, setActiveJobId] = React.useState<string | null>(null)
+  const [activeJobIds, setActiveJobIds] = React.useState<string[]>([])
   const [busyId, setBusyId] = React.useState<string | null>(null)
 
   const wardsQuery = useQuery({
@@ -257,26 +260,52 @@ export default function NoticePage() {
   const meta = candidatesQuery.data?.meta
 
   const jobQuery = useQuery({
-    queryKey: ["demand-notice-job", activeJobId],
-    enabled: Boolean(activeJobId),
+    queryKey: ["demand-notice-jobs", activeJobIds],
+    enabled: activeJobIds.length > 0,
     refetchInterval: (q) => {
-      const status = q.state.data?.data.uiStatus
-      if (
-        status === "QUEUED" ||
-        status === "PENDING" ||
-        status === "PROCESSING"
-      ) {
-        return 2000
-      }
-      return false
+      const jobs = q.state.data
+      if (!jobs?.length) return 2000
+      const busy = jobs.some(
+        (j) =>
+          j.uiStatus === "QUEUED" ||
+          j.status === "PENDING" ||
+          j.uiStatus === "PROCESSING"
+      )
+      return busy ? 2000 : false
     },
-    queryFn: async () =>
-      (await api.get<DemandNoticeJob>(
-        `/api/v1/reports/demand-notices/jobs/${activeJobId}`
-      )) as { data: DemandNoticeJob },
+    queryFn: async () => {
+      const results = await Promise.all(
+        activeJobIds.map(
+          async (id) =>
+            (
+              await api.get<DemandNoticeJob>(
+                `/api/v1/reports/demand-notices/jobs/${id}`
+              )
+            ).data
+        )
+      )
+      return results.sort(
+        (a, b) => (a.batchIndex ?? 0) - (b.batchIndex ?? 0)
+      )
+    },
   })
 
-  const job = jobQuery.data?.data
+  const jobs = jobQuery.data ?? []
+  const job = jobs[0]
+  const batchTotalProperties = jobs.reduce(
+    (sum, j) => sum + (j.propertyCount ?? 0),
+    0
+  )
+  const batchProcessed = jobs.reduce(
+    (sum, j) => sum + (j.processedCount ?? 0),
+    0
+  )
+  const anyJobBusy = jobs.some(
+    (j) =>
+      j.uiStatus === "QUEUED" ||
+      j.status === "PENDING" ||
+      j.uiStatus === "PROCESSING"
+  )
 
   React.useEffect(() => {
     setSelected(new Set())
@@ -314,6 +343,7 @@ export default function NoticePage() {
       const allIds: string[] = []
       let p = 1
       let totalPages = 1
+      // pageSize 100 → up to 200 pages covers 20k properties (API max selection 10k)
       do {
         const params = new URLSearchParams()
         params.set("wardId", wardId)
@@ -327,10 +357,10 @@ export default function NoticePage() {
           propertiesFound: number
         }>(`/api/v1/reports/demand-notices/candidates?${params}`)
         for (const item of res.data.items) allIds.push(item.id)
-        const meta = res.meta as { totalPages?: number } | undefined
-        totalPages = meta?.totalPages ?? 1
+        const pageMeta = res.meta as { totalPages?: number } | undefined
+        totalPages = pageMeta?.totalPages ?? 1
         p += 1
-      } while (p <= totalPages && p <= 25)
+      } while (p <= totalPages && p <= 200)
       setSelected(new Set(allIds))
       setValidation(null)
       toast.success(`Selected ${allIds.length} properties`)
@@ -398,15 +428,32 @@ export default function NoticePage() {
           sortBy: "parcelNo",
         }
       )
-      return res.data
+      const metaJobs = (res.meta?.jobs as DemandNoticeJob[] | undefined) ?? null
+      const jobList =
+        metaJobs && metaJobs.length > 0 ? metaJobs : res.data ? [res.data] : []
+      return {
+        jobs: jobList,
+        chunked: Boolean(res.meta?.chunked),
+        chunkCount: Number(res.meta?.chunkCount ?? jobList.length),
+        totalProperties: Number(
+          res.meta?.totalProperties ?? jobList[0]?.propertyCount ?? ids.length
+        ),
+      }
     },
     onSuccess: (data) => {
-      setActiveJobId(data.id)
-      toast.success(
-        data.uiStatus === "QUEUED" || data.status === "PENDING"
-          ? "Demand notice PDF job queued"
-          : "Demand notice job started"
-      )
+      setActiveJobIds(data.jobs.map((j) => j.id))
+      if (data.chunked && data.chunkCount > 1) {
+        toast.success(
+          `Queued ${data.chunkCount} PDF parts for ${data.totalProperties} properties (max 1000 per file)`
+        )
+      } else {
+        const first = data.jobs[0]
+        toast.success(
+          first?.uiStatus === "QUEUED" || first?.status === "PENDING"
+            ? "Demand notice PDF job queued"
+            : "Demand notice job started"
+        )
+      }
     },
     onError: (err) => {
       toast.error(err instanceof ApiError ? err.message : "Generate failed")
@@ -414,12 +461,22 @@ export default function NoticePage() {
   })
 
   const cancelMutation = useMutation({
-    mutationFn: async (jobId: string) => {
-      const res = await api.post<DemandNoticeJob>(
-        `/api/v1/reports/demand-notices/jobs/${jobId}/cancel`,
-        {}
+    mutationFn: async () => {
+      const results = await Promise.all(
+        activeJobIds.map(async (jobId) => {
+          try {
+            return (
+              await api.post<DemandNoticeJob>(
+                `/api/v1/reports/demand-notices/jobs/${jobId}/cancel`,
+                {}
+              )
+            ).data
+          } catch {
+            return null
+          }
+        })
       )
-      return res.data
+      return results.filter(Boolean)
     },
     onSuccess: () => {
       toast.message("Job cancelled")
@@ -466,10 +523,7 @@ export default function NoticePage() {
   }
 
   const generating =
-    generateMutation.isPending ||
-    job?.uiStatus === "QUEUED" ||
-    job?.status === "PENDING" ||
-    job?.uiStatus === "PROCESSING"
+    generateMutation.isPending || anyJobBusy
 
   const canGenerate =
     selected.size > 0 &&
@@ -483,8 +537,9 @@ export default function NoticePage() {
         <CardContent className="flex flex-col gap-2 pt-(--card-spacing) sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Bulk Property Tax Demand Notices use the same tax calculation as
-            citizen dues. Output is a combined A4 portrait PDF (one property per
-            page).
+            citizen dues. Output is A4 portrait PDF (one property per page).
+            Large wards are split automatically into files of up to 1,000
+            properties each (example: 5,000 properties → 5 PDF downloads).
           </p>
           <Button
             variant="outline"
@@ -666,75 +721,109 @@ export default function NoticePage() {
         </CardContent>
       </Card>
 
-      {job && (
+      {jobs.length > 0 && (
         <Card className="rounded-xl border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
+            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
               Generation job
-              <Badge variant={statusBadgeVariant(job.uiStatus)}>
-                {job.uiStatus}
-              </Badge>
+              {jobs.length > 1 ? (
+                <Badge variant="secondary">
+                  {jobs.length} PDF parts
+                </Badge>
+              ) : (
+                <Badge variant={statusBadgeVariant(job?.uiStatus ?? "QUEUED")}>
+                  {job?.uiStatus}
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="space-y-3 text-sm">
             <p>
-              Properties: {job.propertyCount} · Processed: {job.processedCount}
-              {job.pageCount != null ? ` · Pages: ${job.pageCount}` : ""}
-              {job.failedCount > 0 ? ` · Failed: ${job.failedCount}` : ""}
+              Properties: {batchTotalProperties} · Processed: {batchProcessed}
+              {jobs.length > 1
+                ? ` · Split into ${jobs.length} files (1000 properties max per PDF)`
+                : ""}
             </p>
-            {job.errorMessage && (
-              <p className="text-destructive">{job.errorMessage}</p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {job.downloadUrl && (
-                <>
-                  <Button
-                    size="sm"
-                    className="cursor-pointer"
-                    render={
-                      <a
-                        href={job.downloadUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download={job.fileName ?? undefined}
-                      />
-                    }
-                  >
-                    <Download className="size-3.5" />
-                    Download PDF
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="cursor-pointer"
-                    render={
-                      <a
-                        href={job.downloadUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      />
-                    }
-                  >
-                    <Printer className="size-3.5" />
-                    Open / Print
-                  </Button>
-                </>
-              )}
-              {(job.uiStatus === "QUEUED" ||
-                job.uiStatus === "PROCESSING" ||
-                job.status === "PENDING") && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="cursor-pointer"
-                    disabled={cancelMutation.isPending}
-                    onClick={() => cancelMutation.mutate(job.id)}
-                  >
-                    <XSquare className="size-3.5" />
-                    Cancel
-                  </Button>
-                )}
+            <div className="space-y-3">
+              {jobs.map((part) => (
+                <div
+                  key={part.id}
+                  className="rounded-lg border border-border/70 p-3"
+                >
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="font-medium">
+                      {part.batchTotal && part.batchTotal > 1
+                        ? `Part ${part.batchIndex ?? "?"} of ${part.batchTotal}`
+                        : "PDF"}
+                    </span>
+                    <Badge variant={statusBadgeVariant(part.uiStatus)}>
+                      {part.uiStatus}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      {part.processedCount}/{part.propertyCount}
+                      {part.pageCount != null ? ` · Pages: ${part.pageCount}` : ""}
+                      {part.failedCount > 0
+                        ? ` · Failed: ${part.failedCount}`
+                        : ""}
+                    </span>
+                  </div>
+                  {part.errorMessage && (
+                    <p className="mb-2 text-destructive">{part.errorMessage}</p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {part.downloadUrl && (
+                      <>
+                        <Button
+                          size="sm"
+                          className="cursor-pointer"
+                          render={
+                            <a
+                              href={part.downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download={part.fileName ?? undefined}
+                            />
+                          }
+                        >
+                          <Download className="size-3.5" />
+                          Download
+                          {part.batchTotal && part.batchTotal > 1
+                            ? ` part ${part.batchIndex}`
+                            : " PDF"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="cursor-pointer"
+                          render={
+                            <a
+                              href={part.downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            />
+                          }
+                        >
+                          <Printer className="size-3.5" />
+                          Open / Print
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
+            {anyJobBusy && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer"
+                disabled={cancelMutation.isPending}
+                onClick={() => cancelMutation.mutate()}
+              >
+                <XSquare className="size-3.5" />
+                Cancel all
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}

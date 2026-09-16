@@ -6,39 +6,41 @@ import {
   NotFoundException,
   OnModuleDestroy,
 } from "@nestjs/common"
+import { ExportJobStatus, type Prisma } from "@prisma/client"
+import { Queue } from "bullmq"
+import IORedis from "ioredis"
 import { createHash, createHmac } from "node:crypto"
 import { existsSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
-import { ExportJobStatus, type Prisma } from "@prisma/client"
-import { Queue } from "bullmq"
-import IORedis from "ioredis"
 
 import { AuditService } from "../../audit/audit.service"
 import type { AuthUser } from "../../auth/auth.decorators"
+import { PrismaService } from "../../prisma/prisma.service"
 import {
   computePublicDuesPayload,
   type SurveyForDues,
   type TaxConfigForDues,
 } from "../../public-property-tax/dues.util"
-import { PrismaService } from "../../prisma/prisma.service"
 import { StorageService } from "../../storage/storage.service"
 import { TaxConfigsService } from "../../tax-configs/tax-configs.service"
+import { generateDemandNoticeDocumentHtml } from "./demand-notice-html"
+import { renderDemandNoticePdfFromHtml } from "./demand-notice-pdf"
+import { sortDemandNoticeSurveys } from "./demand-notice-sort"
+import { duesPayloadToNoticeViewModel } from "./demand-notice-view-model"
 import {
+  chunkDemandNoticeSurveyIds,
+  DEMAND_NOTICE_CHUNK_SIZE,
   DEMAND_NOTICE_JOB_TYPE,
   DEMAND_NOTICE_MAX_PROPERTIES,
   DEMAND_NOTICE_ORIENTATION,
   DEMAND_NOTICE_PAPER,
   DEMAND_NOTICE_QUEUE,
 } from "./demand-notice.constants"
-import { generateDemandNoticeDocumentHtml } from "./demand-notice-html"
-import { renderDemandNoticePdfFromHtml } from "./demand-notice-pdf"
-import { sortDemandNoticeSurveys } from "./demand-notice-sort"
 import {
   partitionDemandNoticeValidation,
   type DemandNoticeValidationError,
 } from "./demand-notice.validation"
-import { duesPayloadToNoticeViewModel } from "./demand-notice-view-model"
 
 const SURVEY_DUES_SELECT = {
   id: true,
@@ -74,7 +76,9 @@ const SURVEY_DUES_SELECT = {
   },
 } satisfies Prisma.SurveySelect
 
-type SurveyDuesRow = Prisma.SurveyGetPayload<{ select: typeof SURVEY_DUES_SELECT }>
+type SurveyDuesRow = Prisma.SurveyGetPayload<{
+  select: typeof SURVEY_DUES_SELECT
+}>
 
 export type DemandNoticeFiltersJson = {
   type: typeof DEMAND_NOTICE_JOB_TYPE
@@ -85,6 +89,11 @@ export type DemandNoticeFiltersJson = {
   paperSize: typeof DEMAND_NOTICE_PAPER
   orientation: typeof DEMAND_NOTICE_ORIENTATION
   idempotencyKey: string
+  /** Shared key for the whole select-all / multi-chunk request. */
+  batchKey?: string
+  batchId?: string
+  batchIndex?: number
+  batchTotal?: number
   validCount?: number
   invalidCount?: number
   pageCount?: number
@@ -258,10 +267,7 @@ export class DemandNoticeService implements OnModuleDestroy {
       })
     }
 
-    const config = await this.loadConfigOrNull(
-      survey.ward.id,
-      assessmentYearId
-    )
+    const config = await this.loadConfigOrNull(survey.ward.id, assessmentYearId)
     if (!config) {
       throw new ConflictException({
         code: "TAX_CONFIG_NOT_PUBLISHED",
@@ -309,7 +315,11 @@ export class DemandNoticeService implements OnModuleDestroy {
   ) {
     const wardId = input.wardId?.trim()
     const assessmentYearId = input.assessmentYearId?.trim()
-    const surveyIds = [...new Set((input.surveyIds ?? []).map((id) => id.trim()).filter(Boolean))]
+    const surveyIds = [
+      ...new Set(
+        (input.surveyIds ?? []).map((id) => id.trim()).filter(Boolean)
+      ),
+    ]
 
     if (!wardId || !assessmentYearId) {
       throw new BadRequestException({
@@ -326,7 +336,7 @@ export class DemandNoticeService implements OnModuleDestroy {
     if (surveyIds.length > DEMAND_NOTICE_MAX_PROPERTIES) {
       throw new BadRequestException({
         code: "TOO_MANY_PROPERTIES",
-        message: `Maximum ${DEMAND_NOTICE_MAX_PROPERTIES} properties per job`,
+        message: `Maximum ${DEMAND_NOTICE_MAX_PROPERTIES} properties per generate request. Split the selection or filter by ward/parcel.`,
       })
     }
     if (
@@ -366,11 +376,15 @@ export class DemandNoticeService implements OnModuleDestroy {
     }
 
     const sortedIds = validation.data.validIds
-    const idempotencyKey = this.buildIdempotencyKey(
+    const batchKey = this.buildIdempotencyKey(
       user.id,
       wardId,
       assessmentYearId,
       sortedIds
+    )
+    const idChunks = chunkDemandNoticeSurveyIds(
+      sortedIds,
+      DEMAND_NOTICE_CHUNK_SIZE
     )
 
     const activeCandidates = await this.prisma.exportJob.findMany({
@@ -380,67 +394,128 @@ export class DemandNoticeService implements OnModuleDestroy {
         createdById: user.id,
       },
       orderBy: { createdAt: "desc" },
-      take: 20,
+      take: 50,
     })
-    const active = activeCandidates.find((row) => {
+    const activeForBatch = activeCandidates.filter((row) => {
       const f = row.filters as DemandNoticeFiltersJson | null
-      return f?.idempotencyKey === idempotencyKey
+      return f?.batchKey === batchKey || f?.idempotencyKey === batchKey
     })
-    if (active) {
+    if (activeForBatch.length > 0) {
+      const sortedActive = [...activeForBatch].sort((a, b) => {
+        const af = a.filters as DemandNoticeFiltersJson | null
+        const bf = b.filters as DemandNoticeFiltersJson | null
+        return (af?.batchIndex ?? 0) - (bf?.batchIndex ?? 0)
+      })
+      const jobs = await Promise.all(
+        sortedActive.map((row) => this.toJobResponse(row))
+      )
       return {
         success: true as const,
-        data: await this.toJobResponse(active),
-        meta: { deduplicated: true },
+        data: jobs[0]!,
+        meta: {
+          deduplicated: true,
+          chunked: jobs.length > 1,
+          batchId:
+            (sortedActive[0]?.filters as DemandNoticeFiltersJson | null)
+              ?.batchId ?? null,
+          totalProperties: sortedIds.length,
+          chunkCount: jobs.length,
+          chunkSize: DEMAND_NOTICE_CHUNK_SIZE,
+          jobs,
+        },
       }
     }
 
-    const filters: DemandNoticeFiltersJson = {
-      type: DEMAND_NOTICE_JOB_TYPE,
-      assessmentYearId,
-      wardId,
-      surveyIds: sortedIds,
-      sortBy: "parcelNo",
-      paperSize: DEMAND_NOTICE_PAPER,
-      orientation: DEMAND_NOTICE_ORIENTATION,
-      idempotencyKey,
-      validCount: sortedIds.length,
-      invalidCount: 0,
-    }
+    const batchId = createHash("sha256")
+      .update(`${batchKey}:${Date.now()}`)
+      .digest("hex")
+      .slice(0, 24)
+    const createdJobs = []
 
-    const job = await this.prisma.exportJob.create({
-      data: {
-        jobType: DEMAND_NOTICE_JOB_TYPE,
-        status: ExportJobStatus.PENDING,
-        filters: filters as unknown as Prisma.InputJsonValue,
-        rowCount: sortedIds.length,
-        processedCount: 0,
-        createdById: user.id,
-      },
-    })
+    for (let i = 0; i < idChunks.length; i += 1) {
+      const chunkIds = idChunks[i]!
+      const idempotencyKey =
+        idChunks.length === 1
+          ? batchKey
+          : this.buildIdempotencyKey(
+              user.id,
+              wardId,
+              assessmentYearId,
+              chunkIds
+            )
 
-    await this.audit.log({
-      action: "CREATE",
-      entity: "DemandNoticeExportJob",
-      entityId: job.id,
-      actorId: user.id,
-      newValue: {
+      const filters: DemandNoticeFiltersJson = {
+        type: DEMAND_NOTICE_JOB_TYPE,
         assessmentYearId,
         wardId,
-        propertyCount: sortedIds.length,
-      },
-    })
+        surveyIds: chunkIds,
+        sortBy: "parcelNo",
+        paperSize: DEMAND_NOTICE_PAPER,
+        orientation: DEMAND_NOTICE_ORIENTATION,
+        idempotencyKey,
+        batchKey,
+        batchId,
+        batchIndex: i + 1,
+        batchTotal: idChunks.length,
+        validCount: chunkIds.length,
+        invalidCount: 0,
+      }
 
-    if (this.queue) {
-      await this.queue.add("process", { jobId: job.id }, { removeOnComplete: 50 })
-    } else {
-      void this.processJob(job.id).catch((err) => {
-        this.logger.error(`Inline demand notice job failed: ${String(err)}`)
+      const job = await this.prisma.exportJob.create({
+        data: {
+          jobType: DEMAND_NOTICE_JOB_TYPE,
+          status: ExportJobStatus.PENDING,
+          filters: filters as unknown as Prisma.InputJsonValue,
+          rowCount: chunkIds.length,
+          processedCount: 0,
+          createdById: user.id,
+        },
       })
+      createdJobs.push(job)
+
+      await this.audit.log({
+        action: "CREATE",
+        entity: "DemandNoticeExportJob",
+        entityId: job.id,
+        actorId: user.id,
+        newValue: {
+          assessmentYearId,
+          wardId,
+          propertyCount: chunkIds.length,
+          batchId,
+          batchIndex: i + 1,
+          batchTotal: idChunks.length,
+        },
+      })
+
+      if (this.queue) {
+        await this.queue.add(
+          "process",
+          { jobId: job.id },
+          { removeOnComplete: 50 }
+        )
+      } else {
+        void this.processJob(job.id).catch((err) => {
+          this.logger.error(`Inline demand notice job failed: ${String(err)}`)
+        })
+      }
     }
+
+    const jobs = await Promise.all(
+      createdJobs.map((job) => this.toJobResponse(job))
+    )
 
     return {
       success: true as const,
-      data: await this.toJobResponse(job),
+      data: jobs[0]!,
+      meta: {
+        chunked: jobs.length > 1,
+        batchId,
+        totalProperties: sortedIds.length,
+        chunkCount: jobs.length,
+        chunkSize: DEMAND_NOTICE_CHUNK_SIZE,
+        jobs,
+      },
     }
   }
 
@@ -530,7 +605,11 @@ export class DemandNoticeService implements OnModuleDestroy {
     if (job.status === ExportJobStatus.COMPLETED) return
 
     const filters = job.filters as DemandNoticeFiltersJson | null
-    if (!filters?.surveyIds?.length || !filters.wardId || !filters.assessmentYearId) {
+    if (
+      !filters?.surveyIds?.length ||
+      !filters.wardId ||
+      !filters.assessmentYearId
+    ) {
       await this.failJob(jobId, "Invalid job filters")
       return
     }
@@ -541,7 +620,9 @@ export class DemandNoticeService implements OnModuleDestroy {
     })
 
     try {
-      const fresh = await this.prisma.exportJob.findUnique({ where: { id: jobId } })
+      const fresh = await this.prisma.exportJob.findUnique({
+        where: { id: jobId },
+      })
       if (fresh?.status === ExportJobStatus.CANCELLED) return
 
       const { surveys, config } = await this.loadSurveysAndConfig({
@@ -732,6 +813,9 @@ export class DemandNoticeService implements OnModuleDestroy {
       orientation: DEMAND_NOTICE_ORIENTATION,
       assessmentYearId: filters.assessmentYearId ?? null,
       wardId: filters.wardId ?? null,
+      batchId: filters.batchId ?? null,
+      batchIndex: filters.batchIndex ?? null,
+      batchTotal: filters.batchTotal ?? null,
       createdAt: job.createdAt,
       completedAt: job.completedAt,
       updatedAt: job.updatedAt,
@@ -745,7 +829,9 @@ export class DemandNoticeService implements OnModuleDestroy {
   }) {
     const wardId = input.wardId.trim()
     const assessmentYearId = input.assessmentYearId.trim()
-    const surveyIds = [...new Set(input.surveyIds.map((id) => id.trim()).filter(Boolean))]
+    const surveyIds = [
+      ...new Set(input.surveyIds.map((id) => id.trim()).filter(Boolean)),
+    ]
 
     if (surveyIds.length === 0) {
       throw new BadRequestException({
@@ -778,7 +864,10 @@ export class DemandNoticeService implements OnModuleDestroy {
     return { surveys, config }
   }
 
-  private async assertPublishedConfig(wardId: string, assessmentYearId: string) {
+  private async assertPublishedConfig(
+    wardId: string,
+    assessmentYearId: string
+  ) {
     const config = await this.loadConfigOrNull(wardId, assessmentYearId)
     if (!config) {
       throw new ConflictException({
@@ -825,7 +914,9 @@ export class DemandNoticeService implements OnModuleDestroy {
     }
   }
 
-  private toSurveyForDues(survey: SurveyDuesRow): SurveyForDues & { id: string } {
+  private toSurveyForDues(
+    survey: SurveyDuesRow
+  ): SurveyForDues & { id: string } {
     return {
       id: survey.id,
       surveyId: survey.surveyId,
