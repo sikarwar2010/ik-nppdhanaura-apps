@@ -113,6 +113,7 @@ type SurveyDetail = {
   locality: string | null
   colony: string | null
   pincode: string | null
+  propertyType: string | null
   propertyUse: string | null
   commercial: string | null
   taxRateZone: string | null
@@ -476,6 +477,10 @@ export default function SurveyDetailPage() {
           <Field
             label="Property Ownership"
             value={formatCatalogDisplay(s.propertyOwnership)}
+          />
+          <Field
+            label="Property Type"
+            value={formatCatalogDisplay(s.propertyType)}
           />
           <Field
             label="Property Use"

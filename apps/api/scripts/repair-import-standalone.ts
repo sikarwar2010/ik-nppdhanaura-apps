@@ -13,15 +13,13 @@ import path from "node:path"
 
 import {
   cell,
-  detectPresetFromHeaders,
   extractWardNumber,
-  getMapping,
   normalizeParcelNo,
   normalizePropertyNo,
   parseBool,
   parseNumber,
   parseSurveyedAt,
-  type MappingPreset,
+  resolveColumnMap,
 } from "../src/imports/column-maps"
 import { createPrismaClient } from "../src/prisma/prisma.client"
 import { computeDataQuality, parseFloorsRaw } from "../src/surveys/floors.util"
@@ -62,10 +60,7 @@ async function main() {
   for (let col = 1; col <= columnCount; col++) {
     headers[col - 1] = cell([headerRow.getCell(col).value], 0)
   }
-  const preset =
-    (job.mappingPreset as MappingPreset) ||
-    detectPresetFromHeaders(headers, columnCount)
-  const map = getMapping(preset)
+  const { preset, map } = resolveColumnMap(headers, columnCount)
   const wards = await prisma.ward.findMany()
   const wardByNumber = new Map(wards.map((w) => [w.number, w]))
 
@@ -128,6 +123,7 @@ async function main() {
         colony: cell(values, map.colony) || null,
         taxRateZone: cell(values, map.taxRateZone) || null,
         propertyOwnership: cell(values, map.propertyOwnership) || null,
+        propertyType: cell(values, map.propertyType) || null,
         propertyUse: cell(values, map.propertyUse) || null,
         commercial: cell(values, map.commercial) || null,
         yearOfConstruction: cell(values, map.yearOfConstruction) || null,

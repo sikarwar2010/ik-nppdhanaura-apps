@@ -9,6 +9,7 @@ import {
   CHHATA_V2_HEADERS,
   detectExportPreset,
   getExportHeaders,
+  MAINPURI_V1_HEADERS,
   SURVEY_EXPORT_SHEET_NAME,
   surveyToExcelRow,
   type SurveyExportRecord,
@@ -33,13 +34,13 @@ async function loadFixture(fileName: string) {
 }
 
 describe("survey-excel-export", () => {
-  it("detects export preset from ward number", () => {
-    expect(detectExportPreset(1)).toBe("chhata-v1-38")
-    expect(detectExportPreset(2)).toBe("chhata-v2-55")
-    expect(detectExportPreset(undefined)).toBe("chhata-v2-55")
+  it("detects export preset as Mainpuri for this municipality", () => {
+    expect(detectExportPreset(1)).toBe("mainpuri-v1-41")
+    expect(detectExportPreset(2)).toBe("mainpuri-v1-41")
+    expect(detectExportPreset(undefined)).toBe("mainpuri-v1-41")
   })
 
-  it("matches Ward 1 and Ward 2 fixture headers", async () => {
+  it("matches Ward 1 and Ward 2 fixture headers for Chhata presets", async () => {
     const w1 = await loadFixture("Ward 1.xlsx")
     const w2 = await loadFixture("Ward 2.xlsx")
 
@@ -47,6 +48,83 @@ describe("survey-excel-export", () => {
     expect([...CHHATA_V2_HEADERS]).toEqual(w2.headers)
     expect(getExportHeaders("chhata-v1-38")).toEqual(w1.headers)
     expect(getExportHeaders("chhata-v2-55")).toEqual(w2.headers)
+  })
+
+  it("exports Mainpuri Property Type and Property Uses without cross-map", () => {
+    const map = getMapping("mainpuri-v1-41")
+    const survey: SurveyExportRecord = {
+      surveyId: "205001-001-00001-001-M",
+      surveyedAt: null,
+      ownerName: "Test",
+      ownerFatherName: null,
+      mobile: null,
+      ownerAadhaar: null,
+      isSlum: false,
+      remark: null,
+      parcelNo: "00001",
+      propertyNo: "001",
+      electricityId: null,
+      khasraNo: null,
+      registryNo: null,
+      constructedDate: null,
+      respondentName: null,
+      respondentRelationship: null,
+      city: "Mainpuri",
+      pincode: "205001",
+      houseNo: null,
+      streetName: null,
+      locality: null,
+      colony: "Nagla Pajwa",
+      presentHouseNo: null,
+      presentStreetName: null,
+      presentLocality: null,
+      presentColony: null,
+      presentCity: null,
+      presentPincode: null,
+      isSameAsProperty: null,
+      taxRateZone: "RATE ZONE 3 (12 meters and upto 24 meters)",
+      propertyOwnership: "Individual (Single/Joint)",
+      propertyType: "Mix",
+      propertyUse: "Residential/Commercial",
+      commercial: null,
+      yearOfConstruction: "After 1997",
+      exemptionType: null,
+      exemptionApplicable: null,
+      situation: "Main Road",
+      roadType: "Dambar Road",
+      floorsRaw: null,
+      plotAreaSqFt: null,
+      plotAreaSqMeter: null,
+      plinthAreaSqFt: null,
+      plinthAreaSqMeter: null,
+      totalBuiltUpAreaSqFt: null,
+      totalBuiltUpAreaSqMeter: null,
+      hasMunicipalWaterSupply: null,
+      hasAlternateWater: null,
+      waterSourceType: null,
+      totalWaterConnections: null,
+      waterConnectionIdType: null,
+      toiletType: null,
+      hasMunicipalWasteService: null,
+      ward: { name: "वार्ड नंबर 01 - नगला पजावा", number: 1 },
+    }
+
+    const exported = surveyToExcelRow(survey, "mainpuri-v1-41")
+    const headers = getExportHeaders("mainpuri-v1-41")
+
+    expect(headers[map.pincode]).toBe("Pincode")
+    expect(headers[map.propertyType!]).toBe("Property Type")
+    expect(headers[map.propertyUse]).toBe("Property Uses")
+    expect(exported[map.pincode]).toBe("205001")
+    expect(exported[map.propertyType!]).toBe("Mix")
+    expect(exported[map.propertyUse]).toBe("Residential/Commercial")
+    expect(exported[map.taxRateZone]).toContain("RATE ZONE 3")
+    expect(exported[map.colony]).toBe("Nagla Pajwa")
+    expect(exported[map.propertyUse]).not.toBe(exported[map.pincode])
+    expect(exported[map.propertyUse]).not.toBe(exported[map.colony])
+    expect(exported[map.surveyId]).toBe("205001-001-00001-001-M")
+    expect(exported[map.parcelNo]).toBe("00001")
+    expect(getExportHeaders("mainpuri-v1-41")).toEqual([...MAINPURI_V1_HEADERS])
   })
 
   it("exports Ward 1 fixture row values at mapped columns", async () => {
@@ -86,6 +164,7 @@ describe("survey-excel-export", () => {
       isSameAsProperty: null,
       taxRateZone: cell(row2, map.taxRateZone),
       propertyOwnership: cell(row2, map.propertyOwnership),
+      propertyType: null,
       propertyUse: cell(row2, map.propertyUse),
       commercial: cell(row2, map.commercial),
       yearOfConstruction: cell(row2, map.yearOfConstruction),

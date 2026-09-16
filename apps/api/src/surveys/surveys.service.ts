@@ -495,6 +495,7 @@ export class SurveysService {
       isSameAsProperty: dto.isSameAsProperty,
       taxRateZone: dto.taxRateZone,
       propertyOwnership: dto.propertyOwnership,
+      propertyType: dto.propertyType,
       propertyUse: dto.propertyUse,
       commercial: dto.commercial,
       yearOfConstruction: dto.yearOfConstruction,
@@ -571,6 +572,7 @@ export class SurveysService {
     assign("isSameAsProperty")
     assign("taxRateZone")
     assign("propertyOwnership")
+    assign("propertyType")
     assign("propertyUse")
     assign("commercial")
     assign("yearOfConstruction")

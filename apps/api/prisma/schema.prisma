@@ -229,6 +229,7 @@ model Survey {
 
   taxRateZone         String?
   propertyOwnership   String?
+  propertyType        String?
   propertyUse         String?
   commercial          String?
   yearOfConstruction  String?

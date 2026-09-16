@@ -106,6 +106,51 @@ export const CHHATA_V2_HEADERS: readonly string[] = [
   "Is Muncipal Water Supply",
 ]
 
+/** Mainpuri GIS workbook headers (41 columns) — matches Ward 01.xlsx */
+export const MAINPURI_V1_HEADERS: readonly string[] = [
+  "Assessment Year",
+  "Survey Id",
+  "Date of Survey",
+  "Owner Name",
+  "Owner Father Name",
+  "Mobile No",
+  "Ward Name",
+  "Is Slum",
+  "Remark",
+  "Parcel No",
+  "Property No",
+  "Respondent Name",
+  "Respondent Relationship",
+  "City",
+  "Pincode",
+  "Is Same As Property",
+  "House No",
+  "Street Name",
+  "Locality",
+  "Colony",
+  "Tax Rate Zone",
+  "Property Ownership",
+  "Property Type",
+  "Property Uses",
+  "Year of Construction",
+  "Situation",
+  "Road Type",
+  "Floors",
+  "Plot Area SqFt",
+  "Plot Area SqMeter",
+  "Plinth Area SqFt",
+  "Plinth Area SqMeter",
+  "Total Built Up Area SqFt",
+  "Total Built Up Area SqMeter",
+  "Is Muncipal Water Supply",
+  "Total Water Connection",
+  "Water Connection Id/Type",
+  "Toilet Type",
+  "Is Muncipal Waste Service",
+  "Is Muncipal Water Supply",
+  "Is Muncipal Water Supply",
+]
+
 /** v2 trailing duplicate headers map to alternate water fields (not in ColumnMap). */
 const V2_ALTERNATE_WATER_COL = 53
 const V2_WATER_SOURCE_COL = 54
@@ -157,6 +202,7 @@ export type SurveyExportRecord = {
   isSameAsProperty: boolean | null
   taxRateZone: string | null
   propertyOwnership: string | null
+  propertyType: string | null
   propertyUse: string | null
   commercial: string | null
   yearOfConstruction: string | null
@@ -181,12 +227,20 @@ export type SurveyExportRecord = {
   ward: { name: string; number: number }
 }
 
-export function detectExportPreset(wardNumber?: number): MappingPreset {
-  return wardNumber === 1 ? "chhata-v1-38" : "chhata-v2-55"
+/**
+ * Default export layout for this municipality is Mainpuri GIS (Ward 01.xlsx).
+ * Chhata presets remain available when callers pass them explicitly.
+ */
+export function detectExportPreset(_wardNumber?: number): MappingPreset {
+  return "mainpuri-v1-41"
 }
 
 export function getExportHeaders(preset: MappingPreset): readonly string[] {
-  return preset === "chhata-v1-38" ? CHHATA_V1_HEADERS : CHHATA_V2_HEADERS
+  if (preset === "mainpuri-v1-41") return MAINPURI_V1_HEADERS
+  if (preset === "chhata-v1-38" || preset === "chhata-v1-39") {
+    return CHHATA_V1_HEADERS
+  }
+  return CHHATA_V2_HEADERS
 }
 
 export function formatSurveyedAtForExcel(date: Date): string {
@@ -219,7 +273,8 @@ export function formatDecimalForExcel(
 function setCell(row: unknown[], index: number, value: unknown) {
   if (index < 0) return
   if (value === "" || value == null) return
-  row[index] = value
+  // Keep Survey Id / parcel-like identifiers as strings (avoid Excel numeric coercion).
+  row[index] = typeof value === "number" ? value : String(value)
 }
 
 function applyMappedFields(
@@ -250,6 +305,9 @@ function applyMappedFields(
   setCell(row, map.colony, survey.colony ?? "")
   setCell(row, map.taxRateZone, survey.taxRateZone ?? "")
   setCell(row, map.propertyOwnership, survey.propertyOwnership ?? "")
+  if (map.propertyType != null && map.propertyType >= 0) {
+    setCell(row, map.propertyType, survey.propertyType ?? "")
+  }
   setCell(row, map.propertyUse, survey.propertyUse ?? "")
   setCell(row, map.commercial, survey.commercial ?? "")
   setCell(row, map.yearOfConstruction, survey.yearOfConstruction ?? "")

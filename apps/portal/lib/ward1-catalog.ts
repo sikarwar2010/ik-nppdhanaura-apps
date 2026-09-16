@@ -27,6 +27,14 @@ export const PROPERTY_OWNERSHIPS = [
   "HFA (Awasiy Makan)",
 ] as const
 
+/** Mainpuri GIS high-level property type (Excel "Property Type"). */
+export const PROPERTY_TYPES = [
+  "Residential",
+  "Commercial",
+  "Mix",
+  "Open Land",
+] as const
+
 export const PROPERTY_USES = [
   "Residential Self",
   "Residential Rented",

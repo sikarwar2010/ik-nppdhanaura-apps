@@ -14,9 +14,55 @@ import {
   parseBool,
   parseNumber,
   parseSurveyedAt,
+  resolveColumnMap,
 } from "./column-maps"
 
 const FIXTURES = path.join(__dirname, "../../../../fixtures/survey")
+
+/** Exact header row from Ward 01.xlsx (Mainpuri GIS, 41 columns). */
+const MAINPURI_WARD01_HEADERS = [
+  "Assessment Year",
+  "Survey Id",
+  "Date of Survey",
+  "Owner Name",
+  "Owner Father Name",
+  "Mobile No",
+  "Ward Name",
+  "Is Slum",
+  "Remark",
+  "Parcel No",
+  "Property No",
+  "Respondent Name",
+  "Respondent Relationship",
+  "City",
+  "Pincode",
+  "Is Same As Property",
+  "House No",
+  "Street Name",
+  "Locality",
+  "Colony",
+  "Tax Rate Zone",
+  "Property Ownership",
+  "Property Type",
+  "Property Uses",
+  "Year of Construction",
+  "Situation",
+  "Road Type",
+  "Floors",
+  "Plot Area SqFt",
+  "Plot Area SqMeter",
+  "Plinth Area SqFt",
+  "Plinth Area SqMeter",
+  "Total Built Up Area SqFt",
+  "Total Built Up Area SqMeter",
+  "Is Muncipal Water Supply",
+  "Total Water Connection",
+  "Water Connection Id/Type",
+  "Toilet Type",
+  "Is Muncipal Waste Service",
+  "Is Muncipal Water Supply",
+  "Is Muncipal Water Supply",
+] as const
 
 describe("column-maps", () => {
   it("detects presets by column count", () => {
@@ -32,6 +78,9 @@ describe("column-maps", () => {
       "chhata-v2-55"
     )
     expect(detectPresetFromHeaders(["S.No", "Actions"])).toBe("chhata-v2-55")
+    expect(
+      detectPresetFromHeaders([...MAINPURI_WARD01_HEADERS])
+    ).toBe("mainpuri-v1-41")
   })
 
   it("extracts ward numbers from Hindi names and GIS ids", () => {
@@ -122,5 +171,100 @@ describe("column-maps", () => {
     expect(
       normalizeParcelNo(cell(values, map.parcelNo), cell(values, map.surveyId))
     ).toBe("000001")
+  })
+
+  it("resolves Mainpuri Ward 01 headers without cross-mapping Use/Commercial", () => {
+    const { preset, map } = resolveColumnMap([...MAINPURI_WARD01_HEADERS])
+    expect(preset).toBe("mainpuri-v1-41")
+    expect(MAINPURI_WARD01_HEADERS[map.pincode]).toBe("Pincode")
+    expect(MAINPURI_WARD01_HEADERS[map.taxRateZone]).toBe("Tax Rate Zone")
+    expect(MAINPURI_WARD01_HEADERS[map.propertyOwnership]).toBe(
+      "Property Ownership"
+    )
+    expect(MAINPURI_WARD01_HEADERS[map.propertyType!]).toBe("Property Type")
+    expect(MAINPURI_WARD01_HEADERS[map.propertyUse]).toBe("Property Uses")
+    expect(map.commercial).toBe(-1)
+    expect(MAINPURI_WARD01_HEADERS[map.colony]).toBe("Colony")
+    expect(MAINPURI_WARD01_HEADERS[map.yearOfConstruction]).toBe(
+      "Year of Construction"
+    )
+    expect(MAINPURI_WARD01_HEADERS[map.situation]).toBe("Situation")
+    expect(MAINPURI_WARD01_HEADERS[map.roadType]).toBe("Road Type")
+
+    const sample: unknown[] = new Array(MAINPURI_WARD01_HEADERS.length).fill("")
+    sample[map.pincode] = 205001
+    sample[map.colony] = "Nagla Pajwa"
+    sample[map.taxRateZone] =
+      "RATE ZONE 3 (12 meters and upto 24 meters)"
+    sample[map.propertyOwnership] = "Individual (Single/Joint)"
+    sample[map.propertyType!] = "Mix"
+    sample[map.propertyUse] = "Residential/Commercial"
+    sample[map.yearOfConstruction] = "After 1997"
+    sample[map.situation] = "Main Road"
+    sample[map.roadType] = "Dambar Road"
+
+    const pincode = cell(sample, map.pincode)
+    const propertyUse = cell(sample, map.propertyUse)
+    const propertyType = cell(sample, map.propertyType)
+    const commercial = cell(sample, map.commercial)
+    const taxRateZone = cell(sample, map.taxRateZone)
+    const colony = cell(sample, map.colony)
+
+    expect(pincode).toBe("205001")
+    expect(propertyUse).toBe("Residential/Commercial")
+    expect(propertyType).toBe("Mix")
+    expect(commercial).toBe("")
+    expect(taxRateZone).toContain("RATE ZONE 3")
+    expect(propertyUse).not.toBe(pincode)
+    expect(propertyUse).not.toBe(taxRateZone)
+    expect(propertyUse).not.toBe(colony)
+    expect(commercial).not.toBe(taxRateZone)
+  })
+
+  it("keeps Chhata Property Use/Commercial when refining v1 headers", () => {
+    const headers = [
+      "Survey Id",
+      "Date of Survey",
+      "Owner Name",
+      "Owner Father Name",
+      "Mobile No",
+      "Ward Name",
+      "Is Slum",
+      "Parcel No",
+      "Property No",
+      "Respondent Name",
+      "Respondent Relationship",
+      "City",
+      "Pincode",
+      "House No",
+      "Street Name",
+      "Locality",
+      "Colony",
+      "Tax Rate Zone",
+      "Property Ownership",
+      "Property Use",
+      "Commercial",
+      "Year of Construction",
+      "Situation",
+      "Road Type",
+      "Floors",
+      "Plot Area SqFt",
+      "Plot Area SqMeter",
+      "Plinth Area SqFt",
+      "Plinth Area SqMeter",
+      "Total Built Up Area SqFt",
+      "Total Built Up Area SqMeter",
+      "Is Muncipal Water Supply",
+      "Total Water Connection",
+      "Water Connection Id/Type",
+      "Toilet Type",
+      "Is Muncipal Waste Service",
+      "Is Muncipal Water Supply",
+      "Is Muncipal Water Supply",
+    ]
+    const { map } = resolveColumnMap(headers)
+    expect(headers[map.propertyUse]).toBe("Property Use")
+    expect(headers[map.commercial]).toBe("Commercial")
+    expect(map.propertyType == null || map.propertyType < 0).toBe(true)
   })
 })

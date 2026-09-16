@@ -172,6 +172,10 @@ export class CreateSurveyDto {
 
   @IsOptional()
   @IsString()
+  propertyType?: string
+
+  @IsOptional()
+  @IsString()
   propertyUse?: string
 
   @IsOptional()

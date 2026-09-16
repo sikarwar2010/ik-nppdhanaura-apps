@@ -394,6 +394,7 @@ export class ImportsService {
           isSameAsProperty: parseBool(cell(values, map.isSameAsProperty)),
           taxRateZone: cell(values, map.taxRateZone) || null,
           propertyOwnership: cell(values, map.propertyOwnership) || null,
+          propertyType: cell(values, map.propertyType) || null,
           propertyUse: cell(values, map.propertyUse) || null,
           commercial: cell(values, map.commercial) || null,
           yearOfConstruction: cell(values, map.yearOfConstruction) || null,

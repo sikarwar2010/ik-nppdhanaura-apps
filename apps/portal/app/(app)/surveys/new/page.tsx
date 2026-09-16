@@ -32,6 +32,7 @@ import {
   CITIES,
   COMMERCIAL_USES,
   PROPERTY_OWNERSHIPS,
+  PROPERTY_TYPES,
   PROPERTY_USES,
   RESPONDENT_RELATIONSHIPS,
   ROAD_TYPES,
@@ -80,6 +81,7 @@ type FormValues = {
   colony: string
   taxRateZone: string
   propertyOwnership: string
+  propertyType: string
   propertyUse: string
   commercial: string
   yearOfConstruction: string
@@ -155,6 +157,7 @@ type SurveyRecord = {
   isSameAsProperty?: boolean | null
   taxRateZone?: string | null
   propertyOwnership?: string | null
+  propertyType?: string | null
   propertyUse?: string | null
   commercial?: string | null
   yearOfConstruction?: string | null
@@ -200,6 +203,7 @@ const emptyForm: FormValues = {
   colony: "",
   taxRateZone: "",
   propertyOwnership: "",
+  propertyType: "",
   propertyUse: "",
   commercial: "",
   yearOfConstruction: "",
@@ -722,6 +726,13 @@ export default function SurveyFormPage() {
             options={PROPERTY_OWNERSHIPS}
           />
           <CatalogField
+            id="propertyType"
+            label="Property Type"
+            control={control}
+            name="propertyType"
+            options={PROPERTY_TYPES}
+          />
+          <CatalogField
             id="propertyUse"
             label="Property Use"
             control={control}
@@ -968,6 +979,7 @@ function recordToForm(row: SurveyRecord): FormValues {
     colony: row.colony ?? "",
     taxRateZone: row.taxRateZone ?? "",
     propertyOwnership: row.propertyOwnership ?? "",
+    propertyType: row.propertyType ?? "",
     propertyUse: row.propertyUse ?? "",
     commercial: row.commercial ?? "",
     yearOfConstruction: row.yearOfConstruction ?? "",
@@ -1064,6 +1076,7 @@ function toPayload(values: FormValues, isEdit: boolean) {
     colony: emptyToUndef(values.colony),
     taxRateZone: emptyToUndef(values.taxRateZone),
     propertyOwnership: emptyToUndef(values.propertyOwnership),
+    propertyType: emptyToUndef(values.propertyType),
     propertyUse: emptyToUndef(values.propertyUse),
     commercial: emptyToUndef(values.commercial),
     yearOfConstruction: emptyToUndef(values.yearOfConstruction),

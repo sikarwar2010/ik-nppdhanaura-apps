@@ -39,6 +39,8 @@ export type ColumnMap = {
   waterConnectionIdType: number
   toiletType: number
   hasMunicipalWasteService: number
+  /** Mainpuri GIS: high-level type (Residential / Mix / Commercial / Open Land). */
+  propertyType?: number
   remark?: number
   electricityId?: number
   khasraNo?: number
@@ -56,6 +58,8 @@ export type ColumnMap = {
   exemptionApplicable?: number
   hasAlternateWater?: number
   waterSourceType?: number
+  /** Present only on Mainpuri Assessment-Year-first layouts (not read into Survey). */
+  assessmentYear?: number
 }
 
 /** Ward 1 workbook: 38 cols, starts with Survey Id (no SN / Actions). */
@@ -202,16 +206,31 @@ export const CHHATA_V2_55: ColumnMap = {
   hasMunicipalWasteService: 52,
 }
 
-export type MappingPreset = "chhata-v1-38" | "chhata-v1-39" | "chhata-v2-55"
+export type MappingPreset =
+  | "chhata-v1-38"
+  | "chhata-v1-39"
+  | "chhata-v2-55"
+  | "mainpuri-v1-41"
 
 const EMPTY_CELL = /^(n\/a|na|null|-|none)$/i
 
-function normHeader(value: string): string {
+/** Keys set from trailing duplicate water headers — not cleared as "unmatched". */
+const WATER_SPECIAL_KEYS = new Set<keyof ColumnMap>([
+  "hasAlternateWater",
+  "waterSourceType",
+])
+
+export function normHeader(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "")
 }
 
-/** Exact header tokens → ColumnMap keys (Present* fields use distinct tokens). */
+/**
+ * Exact header tokens → ColumnMap keys (Present* fields use distinct tokens).
+ * Multiple tokens may map to the same key (first match wins); aliases listed after
+ * primary names (e.g. Property Use before Property Uses).
+ */
 const HEADER_FIELD_TOKENS: Array<{ key: keyof ColumnMap; token: string }> = [
+  { key: "assessmentYear", token: "assessmentyear" },
   { key: "surveyId", token: "surveyid" },
   { key: "surveyedAt", token: "dateofsurvey" },
   { key: "ownerName", token: "ownername" },
@@ -244,7 +263,9 @@ const HEADER_FIELD_TOKENS: Array<{ key: keyof ColumnMap; token: string }> = [
   { key: "isSameAsProperty", token: "issameasproperty" },
   { key: "taxRateZone", token: "taxratezone" },
   { key: "propertyOwnership", token: "propertyownership" },
+  { key: "propertyType", token: "propertytype" },
   { key: "propertyUse", token: "propertyuse" },
+  { key: "propertyUse", token: "propertyuses" },
   { key: "commercial", token: "commercial" },
   { key: "yearOfConstruction", token: "yearofconstruction" },
   { key: "exemptionType", token: "exemptiontype" },
@@ -265,9 +286,15 @@ const HEADER_FIELD_TOKENS: Array<{ key: keyof ColumnMap; token: string }> = [
   { key: "hasMunicipalWasteService", token: "ismuncipalwasteservice" },
 ]
 
+const HEADER_TOKEN_KEYS = new Set<keyof ColumnMap>(
+  HEADER_FIELD_TOKENS.map((t) => t.key)
+)
+
 /**
  * Override preset indexes using actual header row labels.
  * Prevents Floors/areas/zone corruption when Excel variants insert columns.
+ * Unmatched token keys that existed on the preset are set to -1 so `cell()`
+ * returns empty instead of reading a shifted neighbor column.
  */
 export function refineMappingFromHeaders(
   base: ColumnMap,
@@ -275,11 +302,14 @@ export function refineMappingFromHeaders(
 ): ColumnMap {
   const refined: ColumnMap = { ...base }
   const normalized = headers.map((h) => normHeader(h ?? ""))
+  const matched = new Set<keyof ColumnMap>()
 
   for (const { key, token } of HEADER_FIELD_TOKENS) {
+    if (matched.has(key)) continue
     const idx = normalized.findIndex((h) => h === token)
     if (idx >= 0) {
       refined[key] = idx as never
+      matched.add(key)
     }
   }
 
@@ -289,9 +319,18 @@ export function refineMappingFromHeaders(
     .filter((i) => i >= 0)
   if (waterSupplyIdxs.length >= 2 && waterSupplyIdxs[1] != null) {
     refined.hasAlternateWater = waterSupplyIdxs[1]
+    matched.add("hasAlternateWater")
   }
   if (waterSupplyIdxs.length >= 3 && waterSupplyIdxs[2] != null) {
     refined.waterSourceType = waterSupplyIdxs[2]
+    matched.add("waterSourceType")
+  }
+
+  for (const key of HEADER_TOKEN_KEYS) {
+    if (matched.has(key) || WATER_SPECIAL_KEYS.has(key)) continue
+    if (Object.prototype.hasOwnProperty.call(refined, key)) {
+      refined[key] = -1 as never
+    }
   }
 
   return refined
@@ -307,6 +346,15 @@ export function detectPresetFromHeaders(
 ): MappingPreset {
   const first = (headers[0] ?? "").toLowerCase().replace(/[.\s]/g, "")
   if (first === "sn" || first === "sno") return "chhata-v2-55"
+  // Mainpuri GIS: Assessment Year first, Property Type + Property Uses (no Commercial).
+  if (first === "assessmentyear") return "mainpuri-v1-41"
+  const normalized = headers.map((h) => normHeader(h ?? ""))
+  if (
+    normalized.includes("propertyuses") ||
+    normalized.includes("propertytype")
+  ) {
+    return "mainpuri-v1-41"
+  }
   if (first.includes("surveyid")) {
     const hasAadhaar = headers.some((h) => /aadhaar/i.test(h ?? ""))
     const floorsIdx = headers.findIndex(
@@ -319,9 +367,56 @@ export function detectPresetFromHeaders(
   return detectPreset(columnCount)
 }
 
+/** Mainpuri Ward 01 layout indexes (0-based) — Assessment Year first. */
+export const MAINPURI_V1_41: ColumnMap = {
+  assessmentYear: 0,
+  surveyId: 1,
+  surveyedAt: 2,
+  ownerName: 3,
+  ownerFatherName: 4,
+  mobile: 5,
+  wardName: 6,
+  isSlum: 7,
+  remark: 8,
+  parcelNo: 9,
+  propertyNo: 10,
+  respondentName: 11,
+  respondentRelationship: 12,
+  city: 13,
+  pincode: 14,
+  isSameAsProperty: 15,
+  houseNo: 16,
+  streetName: 17,
+  locality: 18,
+  colony: 19,
+  taxRateZone: 20,
+  propertyOwnership: 21,
+  propertyType: 22,
+  propertyUse: 23,
+  commercial: -1,
+  yearOfConstruction: 24,
+  situation: 25,
+  roadType: 26,
+  floorsRaw: 27,
+  plotAreaSqFt: 28,
+  plotAreaSqMeter: 29,
+  plinthAreaSqFt: 30,
+  plinthAreaSqMeter: 31,
+  totalBuiltUpAreaSqFt: 32,
+  totalBuiltUpAreaSqMeter: 33,
+  hasMunicipalWaterSupply: 34,
+  totalWaterConnections: 35,
+  waterConnectionIdType: 36,
+  toiletType: 37,
+  hasMunicipalWasteService: 38,
+  hasAlternateWater: 39,
+  waterSourceType: 40,
+}
+
 export function getMapping(preset: MappingPreset): ColumnMap {
   if (preset === "chhata-v2-55") return CHHATA_V2_55
   if (preset === "chhata-v1-39") return CHHATA_V1_39
+  if (preset === "mainpuri-v1-41") return MAINPURI_V1_41
   return CHHATA_V1_38
 }
 
