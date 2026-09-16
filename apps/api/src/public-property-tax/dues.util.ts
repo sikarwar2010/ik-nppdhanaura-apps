@@ -150,7 +150,14 @@ export function buildNoticeFloorLines(
       String(survey.propertyUse ?? "")
         .toLowerCase()
         .includes("open"))
-  if (lines.length === 0 && openLand) {
+  // Match computeSurveyExportTax: plot/plinth/built-up when no floor has area
+  // (empty floors OR stub floors with zero areaSqFt).
+  const floorsHaveArea = survey.floors.some((f) => toTaxNumber(f.areaSqFt) > 0)
+  const noticeAlvSum = lines.reduce((s, l) => s + l.alv, 0)
+  if (
+    (lines.length === 0 || (!floorsHaveArea && noticeAlvSum === 0)) &&
+    (openLand || !floorsHaveArea)
+  ) {
     const area =
       toTaxNumber(survey.plotAreaSqFt) ||
       toTaxNumber(survey.totalBuiltUpAreaSqFt) ||
@@ -159,22 +166,36 @@ export function buildNoticeFloorLines(
       rates.rateByZoneAndConstruction.get(taxRateKey(zoneCode, "OPEN_LAND")) ??
       rates.anyRateByZone.get(zoneCode) ??
       0
-    const { assessableAlv, propertyTax } = computeFloorAlv(
-      area,
-      annualRate,
-      100,
-      rates.propertyTaxPct
-    )
-    lines.push({
-      floorLabel: "Open Land / Plot",
-      usageType: survey.propertyUse ?? "Open Land",
-      usageFactor: "—",
-      construction: "OPEN_LAND",
-      areaSqFt: roundMoney(area),
-      rate: annualRate,
-      alv: assessableAlv,
-      tax: propertyTax,
-    })
+    if (area > 0 && annualRate > 0) {
+      const floorAssessablePct = openLand
+        ? 100
+        : resolveAssessablePct(
+            survey.propertyUse,
+            null,
+            null,
+            assessableOpts,
+            gisClass
+          )
+      const { assessableAlv, propertyTax } = computeFloorAlv(
+        area,
+        annualRate,
+        floorAssessablePct,
+        rates.propertyTaxPct
+      )
+      // Replace zero-area stub rows with a single plot line so the notice
+      // table matches demand totals.
+      lines.length = 0
+      lines.push({
+        floorLabel: openLand ? "Open Land / Plot" : "Plot / Built-up",
+        usageType: survey.propertyUse ?? (openLand ? "Open Land" : "—"),
+        usageFactor: "—",
+        construction: "OPEN_LAND",
+        areaSqFt: roundMoney(area),
+        rate: annualRate,
+        alv: assessableAlv,
+        tax: propertyTax,
+      })
+    }
   }
 
   return lines
@@ -226,47 +247,6 @@ export function computePublicDuesPayload(
     }
     return typeof summary.plotRate === "number" ? summary.plotRate : null
   })()
-
-  // #region agent log
-  {
-    const stubFloorCount = survey.floors.filter(
-      (f) => toTaxNumber(f.areaSqFt) <= 0
-    ).length
-    const noticeAreaSum = floors.reduce((s, f) => s + f.areaSqFt, 0)
-    fetch("http://127.0.0.1:7787/ingest/931237b4-c66c-490a-b4d4-33ab324d8e01", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "de1763",
-      },
-      body: JSON.stringify({
-        sessionId: "de1763",
-        runId: "pre-fix",
-        hypothesisId: "A,C,D",
-        location: "dues.util.ts:computePublicDuesPayload",
-        message: "dues floor vs tax summary",
-        data: {
-          wardNumber: survey.ward.number,
-          surveyIdSuffix: survey.surveyId.slice(-20),
-          taxRateZone: survey.taxRateZone,
-          zoneCode,
-          floorCount: survey.floors.length,
-          stubFloorCount,
-          floorAreas: survey.floors.map((f) => toTaxNumber(f.areaSqFt)),
-          floorLabels: survey.floors.map((f) => f.floorLabel),
-          noticeAreaSum,
-          noticeAlvSum: floors.reduce((s, f) => s + f.alv, 0),
-          plot: toTaxNumber(survey.plotAreaSqFt),
-          plinth: toTaxNumber(survey.plinthAreaSqFt),
-          built: toTaxNumber(survey.totalBuiltUpAreaSqFt),
-          propertyTax: summary.propertyTax,
-          totalDemand: summary.totalDemand,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {})
-  }
-  // #endregion
 
   return {
     id: survey.id,

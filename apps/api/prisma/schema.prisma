@@ -396,20 +396,25 @@ enum ExportJobStatus {
 }
 
 model ExportJob {
-  id          String          @id @default(cuid())
-  filters     Json?
-  status      ExportJobStatus @default(PENDING)
-  fileKey     String?
-  fileName    String?
-  rowCount    Int?
-  createdById String?
-  createdBy   User?           @relation(fields: [createdById], references: [id])
-  createdAt   DateTime        @default(now())
-  completedAt DateTime?
-  updatedAt   DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  /// e.g. DEMAND_NOTICE_PDF; null/legacy for survey Excel exports
+  jobType        String?
+  filters        Json?
+  status         ExportJobStatus @default(PENDING)
+  fileKey        String?
+  fileName       String?
+  errorFileKey   String?
+  rowCount       Int?
+  processedCount Int?
+  createdById    String?
+  createdBy      User?           @relation(fields: [createdById], references: [id])
+  createdAt      DateTime        @default(now())
+  completedAt    DateTime?
+  updatedAt      DateTime        @updatedAt
 
   @@index([status])
   @@index([createdById])
+  @@index([jobType, status])
   @@map("export_job")
 }
 

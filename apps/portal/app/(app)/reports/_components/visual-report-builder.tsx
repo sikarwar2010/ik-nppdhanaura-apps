@@ -133,8 +133,9 @@ export function VisualReportBuilder({
     },
     {
       id: "notice",
-      title: "Demand Notice Panel",
-      description: "Filtered demand register with printable property notices.",
+      title: "Property Tax Demand Notice",
+      description:
+        "Bulk A4 demand notices by ward and assessment year — validate, generate PDF, print.",
       icon: ScrollText,
       actions: [
         {

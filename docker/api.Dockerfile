@@ -11,6 +11,7 @@ RUN turbo prune api --docker
 FROM base AS installer
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 RUN pnpm install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
 # Prisma 7 prisma.config.ts requires DATABASE_URL even for `generate`.
@@ -34,10 +35,28 @@ WORKDIR /app
 ENV NODE_ENV=production
 ARG API_BUILD_ID=unknown
 ENV API_BUILD_ID=$API_BUILD_ID
+# Chromium + Devanagari fonts for Property Tax Demand Notice PDF (Playwright).
+RUN apk add --no-cache \
+      chromium \
+      nss \
+      freetype \
+      harfbuzz \
+      ca-certificates \
+      ttf-freefont \
+      font-noto
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV CHROMIUM_PATH=/usr/bin/chromium
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nestjs
 COPY --from=installer --chown=nestjs:nodejs /out .
+COPY --chown=nestjs:nodejs apps/portal/public/branding/up-government-logo.png /app/assets/up-government-logo.png
+ENV DEMAND_NOTICE_LOGO_PATH=/app/assets/up-government-logo.png
+# Alpine chromium package may install as chromium or chromium-browser.
+RUN if [ -x /usr/bin/chromium-browser ] && [ ! -x /usr/bin/chromium ]; then \
+      ln -sf /usr/bin/chromium-browser /usr/bin/chromium; \
+      fi
 RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
 USER nestjs
 EXPOSE 4000
-# Same DATABASE_URL for migrate, seed, and the API process.
+      me DATABASE_URL for migrate, seed, and the API process.
 CMD ["sh", "-c", "echo 'Validating environment...' && node dist/startup-env-cli.js && echo 'Running database migrations...' && npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/seed-cli.js && node dist/main.js"]
