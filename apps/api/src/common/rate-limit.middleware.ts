@@ -5,6 +5,20 @@ import { getRedisClient } from "./redis.client"
 
 const WINDOW_MS = 60_000
 
+/** Docker / ops probes must not depend on Redis being reachable. */
+const HEALTH_PROBE_PATHS = new Set([
+  "/health",
+  "/api/v1/health",
+  "/api/v1/health/live",
+  "/api/v1/health/ready",
+  "/api/v1/ready",
+])
+
+export function isHealthProbePath(path: string): boolean {
+  const normalized = path.split("?")[0] || path
+  return HEALTH_PROBE_PATHS.has(normalized)
+}
+
 export function getRateLimitMax(path: string): number {
   if (
     path.includes("/auth/login") ||
@@ -33,6 +47,11 @@ export class RateLimitMiddleware implements NestMiddleware {
   private readonly logger = new Logger(RateLimitMiddleware.name)
 
   use(req: Request, res: Response, next: NextFunction) {
+    if (isHealthProbePath(req.path) || isHealthProbePath(req.originalUrl)) {
+      next()
+      return
+    }
+
     const key = `${req.ip}:${req.path}`
     const max = getRateLimitMax(req.path)
     try {
