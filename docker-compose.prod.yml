@@ -5,8 +5,9 @@
 # Do NOT add Traefik labels, Caddy, or host port bindings — Dokploy Traefik
 # attaches domains in the UI (Domains tab → service name + container port).
 #
-# API startup (same DATABASE_URL for all three steps):
-#   PostgreSQL healthy → prisma migrate deploy → Super Admin seed → Nest
+# API startup (same DATABASE_URL for all steps):
+#   PostgreSQL healthy → P3009 self-heal (no-op if healthy) →
+#   prisma migrate deploy → Super Admin seed → Nest
 #
 # Dokploy UI:
 #   Compose path: docker-compose.prod.yml

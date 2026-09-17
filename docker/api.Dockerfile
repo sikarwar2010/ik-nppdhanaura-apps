@@ -51,6 +51,8 @@ ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
 ENV CHROMIUM_PATH=/usr/bin/chromium
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nestjs
 COPY --from=installer --chown=nestjs:nodejs /out .
+# Ensure P3009 self-heal script is present even if pnpm deploy omits scripts/.
+COPY --chown=nestjs:nodejs apps/api/scripts/resolve-failed-survey-property-type-migration.mjs /app/scripts/resolve-failed-survey-property-type-migration.mjs
 COPY --chown=nestjs:nodejs apps/portal/public/branding/up-government-logo.png /app/assets/up-government-logo.png
 ENV DEMAND_NOTICE_LOGO_PATH=/app/assets/up-government-logo.png
 # Alpine chromium package may install as chromium or chromium-browser.
@@ -61,4 +63,6 @@ RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
 USER nestjs
 EXPOSE 4000
 # Same DATABASE_URL for migrate, seed, and the API process.
-CMD ["sh", "-c", "echo 'Validating environment...' && node dist/startup-env-cli.js && echo 'Running database migrations...' && ./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma && node dist/seed-cli.js && node dist/main.js"]
+# Recovery script is a no-op unless _prisma_migrations has a failed
+# 20260916140000_survey_property_type row; then it resolves from live schema.
+CMD ["sh", "-c", "echo 'Validating environment...' && node dist/startup-env-cli.js && echo 'Checking failed migration recovery...' && node scripts/resolve-failed-survey-property-type-migration.mjs && echo 'Running database migrations...' && ./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma && node dist/seed-cli.js && node dist/main.js"]
