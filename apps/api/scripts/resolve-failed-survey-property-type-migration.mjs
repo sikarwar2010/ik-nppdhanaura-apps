@@ -24,7 +24,8 @@ const MIG = "20260916140000_survey_property_type"
 const SCHEMA = process.env.PRISMA_SCHEMA ?? "prisma/schema.prisma"
 
 function runPrisma(args) {
-  const result = spawnSync("npx", ["prisma", ...args, `--schema=${SCHEMA}`], {
+  const prismaBin = "./node_modules/.bin/prisma"
+  const result = spawnSync(prismaBin, [...args, `--schema=${SCHEMA}`], {
     stdio: "inherit",
     env: process.env,
     shell: process.platform === "win32",

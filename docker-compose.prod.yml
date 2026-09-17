@@ -83,6 +83,9 @@ services:
       PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
       SESSION_SECRET: ${SESSION_SECRET}
       SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mainpuri_session}
+      # Override env_file so a pasted PAYMENT_PROVIDER=sandbox from apps/api/.env.example
+      # cannot fail production startup validation (compose environment wins over env_file).
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-atom}
       API_BUILD_ID: ${API_BUILD_ID:-production}
       ATOM_RETURN_URL: ${PUBLIC_WEB_URL}/propertytax/payment/return
       # Atom server-to-server POST hits the citizen web domain; Next.js rewrites

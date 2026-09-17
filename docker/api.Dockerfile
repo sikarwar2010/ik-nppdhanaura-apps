@@ -24,7 +24,9 @@ RUN pnpm --filter api prisma:generate
 RUN pnpm --filter @workspace/types build
 RUN pnpm --filter api build
 # Include prisma CLI so migrate deploy works at container start.
-# pnpm 10+ requires --legacy unless inject-workspace-packages is enabled.
+# prisma is a production dependency so `pnpm deploy --legacy` copies it
+# into /out for the runner image (pnpm 10+ needs --legacy unless
+# inject-workspace-packages is enabled).
 # Skip Prisma's install-time generate: deploy copies the schema after
 # postinstall, which otherwise emits a client with no enums/models.
 RUN PRISMA_SKIP_POSTINSTALL_GENERATE=1 pnpm --filter api deploy --legacy /out
@@ -59,4 +61,4 @@ RUN mkdir -p /app/uploads && chown nestjs:nodejs /app/uploads
 USER nestjs
 EXPOSE 4000
 # Same DATABASE_URL for migrate, seed, and the API process.
-CMD ["sh", "-c", "echo 'Validating environment...' && node dist/startup-env-cli.js && echo 'Running database migrations...' && npx prisma migrate deploy --schema=prisma/schema.prisma && node dist/seed-cli.js && node dist/main.js"]
+CMD ["sh", "-c", "echo 'Validating environment...' && node dist/startup-env-cli.js && echo 'Running database migrations...' && ./node_modules/.bin/prisma migrate deploy --schema=prisma/schema.prisma && node dist/seed-cli.js && node dist/main.js"]
