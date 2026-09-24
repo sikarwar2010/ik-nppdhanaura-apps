@@ -84,9 +84,9 @@ describe("production compose uses unique API DNS alias", () => {
   )
   const src = readFileSync(composePath, "utf8")
 
-  it("registers chhata-api on the API service and uses it for portal/web", () => {
-    assert.match(src, /aliases:\s*\n\s+- chhata-api/)
-    assert.match(src, /API_INTERNAL_URL: http:\/\/chhata-api:4000/)
+  it("registers goverdhan-api on the API service and uses it for portal/web", () => {
+    assert.match(src, /aliases:\s*\n\s+- goverdhan-api/)
+    assert.match(src, /API_INTERNAL_URL: http:\/\/goverdhan-api:4000/)
     assert.doesNotMatch(src, /API_INTERNAL_URL: http:\/\/api:4000/)
     assert.doesNotMatch(src, /container_name:/)
   })

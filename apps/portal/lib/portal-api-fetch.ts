@@ -129,7 +129,7 @@ export async function upstreamApiRequest(
   if (!isIP(hostname)) {
     // Windows: Node resolves `localhost` to ::1 first, but Nest listens on
     // 0.0.0.0 (IPv4). Prefer IPv4 for localhost only — Docker/production
-    // hosts like `chhata-api` are unchanged.
+    // hosts like `goverdhan-api` are unchanged.
     const isLocalhost = hostname === "localhost" || hostname === "localhost."
     const lookedUp = isLocalhost
       ? await dns.lookup(hostname, { family: 4 })

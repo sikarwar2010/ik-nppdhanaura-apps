@@ -19,7 +19,7 @@
 # Do not publish Postgres or Redis. Do not add container_name
 # (Isolated Deployments suffixes resources).
 #
-# Internal API DNS: portal/web MUST use http://chhata-api:4000, not
+# Internal API DNS: portal/web MUST use http://goverdhan-api:4000, not
 # http://api:4000. Dokploy Traefik attaches a shared network to portal/web;
 # Docker then merges A records for the short name `api` across every network
 # the container is on. Another Compose stack named `api` on that shared
