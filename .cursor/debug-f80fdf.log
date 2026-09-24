@@ -1,0 +1,2 @@
+{"sessionId":"f80fdf","runId":"post-fix","hypothesisId":"A","location":"resolve-failed-survey-property-type-migration.mjs:migrationsTable","message":"prisma migrations table presence","data":{"migrationsTableOk":false,"migration":"20260916140000_survey_property_type"},"timestamp":1790259614121}
+{"sessionId":"f80fdf","runId":"post-fix","hypothesisId":"B","location":"main.ts:listen","message":"Nest API listening","data":{"port":4000,"host":"0.0.0.0","buildId":"production"},"timestamp":1790259620523}
