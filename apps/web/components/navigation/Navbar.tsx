@@ -645,7 +645,7 @@ export default function Navbar() {
                                             items-center
                                             justify-center
                                             rounded-xl
-                                            bg-gradient-to-br
+                                            bg-linear-to-br
                                             ${subItem.color}
                                             text-white
                                             shadow-md

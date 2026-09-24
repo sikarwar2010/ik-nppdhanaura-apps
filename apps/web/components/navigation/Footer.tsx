@@ -139,7 +139,7 @@ export default function Footer() {
 
               <div className="group mt-7 flex max-w-md items-center gap-3 rounded-r-2xl border-l-2 border-emerald-500 bg-emerald-50/60 px-4 py-3 transition-all duration-300 hover:bg-emerald-100/70">
 
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm transition-transform duration-300 group-hover:scale-110">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-500 text-white shadow-sm transition-transform duration-300 group-hover:scale-110">
                   <ShieldCheck className="h-4 w-4" />
                 </div>
 

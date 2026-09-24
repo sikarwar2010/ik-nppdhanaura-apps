@@ -201,7 +201,7 @@ function OfficerRow({ data }: { data: OfficerRowProps }) {
 
             {/* Header gradient */}
 
-            <div className={`h-1 bg-gradient-to-r ${data.theme}`} />
+            <div className={`h-1 bg-linear-to-r ${data.theme}`} />
 
             {/* =================================================
                 TABS
@@ -219,7 +219,7 @@ function OfficerRow({ data }: { data: OfficerRowProps }) {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex shrink-0 cursor-pointer items-center gap-2 ronuded-xl px-4 py-2.5 text-[10px] font-black tracking-wide transition-all duration-300 ${
                         active
-                          ? `bg-gradient-to-r ${data.iconTheme} text-white shadow-lg`
+                          ? `bg-linear-to-r ${data.iconTheme} text-white shadow-lg`
                           : "border border-slate-200 bg-slate-50 text-slate-600 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
                       }`}
                     >
@@ -240,7 +240,7 @@ function OfficerRow({ data }: { data: OfficerRowProps }) {
                 TAB CONTENT
             ================================================== */}
 
-            <div className="min-h-[350px] px-5 py-6 md:px-7 md:py-7">
+            <div className="min-h-87.5 px-5 py-6 md:px-7 md:py-7">
               <AnimatePresence mode="wait">
 
                 {/* ================= WELCOME ================= */}
@@ -670,13 +670,13 @@ export default function Staff() {
           AMBIENT COLORFUL GLOWS
       ====================================================== */}
 
-      <div className="pointer-events-none absolute -left-40 top-10 h-[430px] w-[430px] rounded-full bg-emerald-300/20 blur-[140px]" />
+      <div className="pointer-events-none absolute -left-40 top-10 h-107.5 w-107.5 rounded-full bg-emerald-300/20 blur-[140px]" />
 
-      <div className="pointer-events-none absolute -right-40 top-1/3 h-[450px] w-[450px] rounded-full bg-cyan-300/20 blur-[140px]" />
+      <div className="pointer-events-none absolute -right-40 top-1/3 h-112.5 w-112.5 rounded-full bg-cyan-300/20 blur-[140px]" />
 
-      <div className="pointer-events-none absolute bottom-0 left-1/3 h-[400px] w-[400px] rounded-full bg-orange-300/15 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-100 w-100 rounded-full bg-orange-300/15 blur-[140px]" />
 
-      <div className="pointer-events-none absolute right-1/4 bottom-10 h-[350px] w-[350px] rounded-full bg-violet-300/10 blur-[130px]" />
+      <div className="pointer-events-none absolute right-1/4 bottom-10 h-87.5 w-87.5 rounded-full bg-violet-300/10 blur-[130px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
 
