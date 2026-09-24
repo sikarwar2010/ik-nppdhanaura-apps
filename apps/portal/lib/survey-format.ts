@@ -8,7 +8,7 @@ import {
   parseGisSurveyId as parseGisSurveyIdShared,
 } from "@workspace/types"
 
-export const ULB_NAME = "Nagar Panchayat Chhata"
+export const ULB_NAME = "Nagar Panchayat Goverdhan,Mathura"
 
 /** Portal-compatible shape (legacy field names). */
 export type GisSurveyParts = {

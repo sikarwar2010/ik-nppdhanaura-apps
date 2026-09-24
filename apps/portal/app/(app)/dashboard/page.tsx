@@ -271,7 +271,7 @@ export default function DashboardPage() {
             </ol>
           </nav>
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-            Nagar Palika Parishad Mainpuri
+            Nagar Panchayat Goverdhan,Mathura
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Ward-wise survey progress and assessed tax demand

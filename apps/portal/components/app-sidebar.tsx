@@ -150,10 +150,10 @@ export function AppSidebar() {
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <p className="truncate text-sm font-semibold tracking-tight text-foreground">
-              Nagar Palika Parishad
+              Nagar Panchayat
             </p>
             <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              Mainpuri
+              Goverdhan,Mathura
             </p>
           </div>
         </div>
