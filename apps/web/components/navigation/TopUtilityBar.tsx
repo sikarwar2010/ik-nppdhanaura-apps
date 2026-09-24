@@ -48,7 +48,7 @@ export default function TopUtilityBar() {
 
   return (
     <div className="relative z-50 border-b border-white/10 bg-[#203746] text-slate-200">
-      <div className="mx-auto flex min-h-10 max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
+      <div className="mx-auto flex min-h-[40px] max-w-7xl items-center justify-between gap-4 px-4 md:px-8">
         {/* =====================================================
             LEFT SIDE
         ====================================================== */}

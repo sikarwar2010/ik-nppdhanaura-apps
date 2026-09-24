@@ -30,39 +30,38 @@ export default function HeroSlider() {
   const carouselSlides: Slide[] = [
     {
       id: 1,
-      headline: "Empowering Citizens Through Digital Governance",
+      headline: "GOVERDHAN PARVAT, MATHURA",
       tagline:
         "Access fast-track municipal permissions, clear utility dues, and download verified civic certificates.",
       badgeText: "Digital Portal 2.0",
       icon: <Activity className="h-4 w-4 text-amber-300" />,
-      bgImage:
-        "https://cbpssubscriber.mygov.in/assets/uploads/juGajmc1gOVBUtt5",
+      bgImage:"/goverdhan.jpg",
       primaryAction: "Explore Services",
       primaryTarget: "#citizen-services",
       secondaryAction: "Get Mobile App",
     },
     {
       id: 2,
-      headline: "Sustainable Urban Ecosystem Development",
+      headline: "Nagar Panchayat Goverdhan",
       tagline:
         "Witness our ongoing transformation featuring oxygen-rich urban parks and green highway corridor plantation drives.",
       badgeText: "Eco Initiative",
       icon: <Trees className="h-4 w-4 text-emerald-300" />,
       bgImage:
-        "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=1920&q=80",
+        "/nagarpanchayatgoverdhan.jpg",
       primaryAction: "Join Tree Plantation",
       primaryTarget: "/contact-us",
       secondaryAction: "View Green Report",
     },
     {
       id: 3,
-      headline: "GOVT ENGINEERING COLLEGE , MAINPURI",
+      headline: "GOVERDHAN , MATHURA",
       tagline:
         "Accelerating city growth with high-capacity road networks, automated smart-lighting layouts, and modern public amenities.",
       badgeText: "Civic Infrastructure",
       icon: <Building2 className="h-4 w-4 text-cyan-300" />,
       bgImage:
-        "https://cdn.s3waas.gov.in/s33644a684f98ea8fe223c713b77189a77/uploads/2018/02/2018021572.png",
+        "/madir.jpg",
       primaryAction: "Check Active Tenders",
       primaryTarget: "#news-notices",
       secondaryAction: "Project Milestones",
@@ -91,7 +90,7 @@ export default function HeroSlider() {
 
   return (
     <section
-      className="relative h-131.25 w-full overflow-hidden bg-slate-950 font-sans select-none md:h-156.25"
+      className="relative h-[525px] w-full overflow-hidden bg-slate-950 font-sans select-none md:h-[625px]"
       aria-label="Featured Highlights"
     >
       {/* Background Slides with Fade Cross-fade */}
@@ -112,7 +111,7 @@ export default function HeroSlider() {
               }}
             />
 
-            <div className="absolute inset-0 bg-linear-to-r from-slate-950/90 via-slate-950/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent" />
             <div className="absolute inset-0 bg-black/20" />
           </m.div>
         </AnimatePresence>
@@ -176,7 +175,7 @@ export default function HeroSlider() {
             >
               <a
                 href={currentSlide?.primaryTarget}
-                className="group inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-amber-500 to-orange-500 px-5 py-2.5 text-xs font-extrabold tracking-wider text-slate-950 uppercase shadow-lg shadow-orange-500/20 transition-all duration-300 hover:scale-105 active:scale-95 md:text-sm"
+                className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2.5 text-xs font-extrabold tracking-wider text-slate-950 uppercase shadow-lg shadow-orange-500/20 transition-all duration-300 hover:scale-105 active:scale-95 md:text-sm"
               >
                 <span>{currentSlide?.primaryAction}</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

@@ -21,7 +21,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed": "prisma generate && tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "repair:survey-ids": "tsx scripts/repair-survey-id-consistency.ts",
     "playwright:install": "playwright install chromium"

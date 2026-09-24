@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - mainpuri_pg_data:/var/lib/postgresql/data
+      - goverdhan_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\"" ]
       interval: 5s
@@ -52,7 +52,7 @@ services:
       REDISCLI_AUTH: ${REDIS_PASSWORD}
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
-      - mainpuri_redis_data:/data
+      - goverdhan_redis_data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -83,7 +83,7 @@ services:
       CORS_ORIGIN: ${PUBLIC_PORTAL_URL},${PUBLIC_WEB_URL}
       PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
       SESSION_SECRET: ${SESSION_SECRET}
-      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mainpuri_session}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-goverdhan_session}
       # Override env_file so a pasted PAYMENT_PROVIDER=sandbox from apps/api/.env.example
       # cannot fail production startup validation (compose environment wins over env_file).
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-atom}
@@ -94,7 +94,7 @@ services:
       # POST /api/v1/payments/gateway/callback on the API container.
       ATOM_CALLBACK_URL: ${PUBLIC_WEB_URL}/api/v1/payments/gateway/callback
     volumes:
-      - mainpuri_uploads:/app/uploads
+      - goverdhan_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,14 +112,14 @@ services:
     networks:
       default:
         aliases:
-          - mainpuri-api
+          - goverdhan-api
 
   portal:
     build:
       context: .
       dockerfile: docker/portal.Dockerfile
       args:
-        API_INTERNAL_URL: http://mainpuri-api:4000
+        API_INTERNAL_URL: http://goverdhan-api:4000
         NEXT_PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
         NEXT_PUBLIC_CITIZEN_WEB_URL: ${PUBLIC_WEB_URL}
     restart: unless-stopped
@@ -128,10 +128,10 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
-      API_INTERNAL_URL: http://mainpuri-api:4000
+      API_INTERNAL_URL: http://goverdhan-api:4000
       NEXT_PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
       NEXT_PUBLIC_CITIZEN_WEB_URL: ${PUBLIC_WEB_URL}
-      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-mainpuri_session}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-goverdhan_session}
     depends_on:
       api:
         condition: service_healthy
@@ -149,14 +149,14 @@ services:
       context: .
       dockerfile: docker/web.Dockerfile
       args:
-        API_INTERNAL_URL: http://mainpuri-api:4000
+        API_INTERNAL_URL: http://goverdhan-api:4000
     restart: unless-stopped
     env_file: .env
     environment:
       NODE_ENV: production
       PORT: "3001"
       HOSTNAME: 0.0.0.0
-      API_INTERNAL_URL: http://mainpuri-api:4000
+      API_INTERNAL_URL: http://goverdhan-api:4000
     depends_on:
       api:
         condition: service_healthy
@@ -170,6 +170,6 @@ services:
       - "3001"
 
 volumes:
-  mainpuri_pg_data:
-  mainpuri_redis_data:
-  mainpuri_uploads:
+  goverdhan_pg_data:
+  goverdhan_redis_data:
+  goverdhan_uploads:

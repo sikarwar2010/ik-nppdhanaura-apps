@@ -4,7 +4,6 @@ import { AnimatePresence, m } from "framer-motion"
 import {
   AlertOctagon,
   Award,
-  Building2,
   CheckCircle,
   Construction,
   CreditCard,
@@ -45,40 +44,40 @@ export default function Services() {
       id: "property-tax",
       name: "Property Tax Assessment",
       nameHi: "संपत्ति कर एवं मूल्यांकन",
-      desc: "नगर पालिका परिषद, मैनपुरी क्षेत्र की आवासीय एवं व्यावसायिक संपत्तियों के संपत्ति कर का आकलन, भुगतान एवं डिजिटल रसीद सुविधा।",
+      desc: "नगर पंचायत गोवर्धन, मथुरा क्षेत्र की आवासीय एवं व्यावसायिक संपत्तियों के संपत्ति कर का आकलन, भुगतान एवं डिजिटल रसीद से संबंधित सुविधा।",
       icon: <CreditCard className="h-6 w-6" />,
       themeColor: "from-blue-500 via-indigo-500 to-violet-600",
       iconBg: "from-blue-500 to-indigo-600",
       badge: "लोकप्रिय सेवा",
       badgeStyle: "border-blue-200 bg-blue-50 text-blue-700",
       glowColor: "bg-blue-400/20",
-      pdfName: "Mainpuri_Property_Tax_Assessment_Form.pdf",
+      pdfName: "Goverdhan_Property_Tax_Assessment_Form.pdf",
     },
     {
       id: "water-tax",
       name: "Water Supply & Tax",
       nameHi: "जल कर एवं जल कनेक्शन",
-      desc: "घरेलू एवं व्यावसायिक जल कनेक्शन, जल बिल की जानकारी, बकाया भुगतान तथा जल संबंधी सेवाओं के लिए डिजिटल सुविधा।",
+      desc: "गोवर्धन क्षेत्र के घरेलू एवं व्यावसायिक जल कनेक्शन, जल बिल, बकाया भुगतान तथा जल आपूर्ति से संबंधित नागरिक सेवाओं की डिजिटल सुविधा।",
       icon: <Droplet className="h-6 w-6" />,
       themeColor: "from-cyan-400 via-sky-500 to-blue-600",
       iconBg: "from-cyan-400 to-blue-600",
       badge: "त्वरित सेवा",
       badgeStyle: "border-cyan-200 bg-cyan-50 text-cyan-700",
       glowColor: "bg-cyan-400/20",
-      pdfName: "Mainpuri_Water_Connection_Tax_Form.pdf",
+      pdfName: "Goverdhan_Water_Connection_Tax_Form.pdf",
     },
     {
       id: "birth-cert",
       name: "Birth Registration",
       nameHi: "जन्म पंजीकरण एवं प्रमाण पत्र",
-      desc: "मैनपुरी नगर क्षेत्र में जन्म पंजीकरण हेतु आवेदन, अभिलेख सत्यापन तथा आधिकारिक जन्म प्रमाण पत्र से संबंधित सुविधा।",
+      desc: "नगर पंचायत गोवर्धन क्षेत्र में जन्म पंजीकरण, अभिलेख सत्यापन तथा आधिकारिक जन्म प्रमाण पत्र से संबंधित नागरिक सेवा।",
       icon: <Award className="h-6 w-6" />,
       themeColor: "from-emerald-400 via-green-500 to-teal-600",
       iconBg: "from-emerald-400 to-teal-600",
       badge: "नागरिक सेवा",
       badgeStyle: "border-emerald-200 bg-emerald-50 text-emerald-700",
       glowColor: "bg-emerald-400/20",
-      pdfName: "Mainpuri_Birth_Registration_Form.pdf",
+      pdfName: "Goverdhan_Birth_Registration_Form.pdf",
     },
     {
       id: "death-cert",
@@ -91,20 +90,20 @@ export default function Services() {
       badge: "आधिकारिक अभिलेख",
       badgeStyle: "border-rose-200 bg-rose-50 text-rose-700",
       glowColor: "bg-rose-400/20",
-      pdfName: "Mainpuri_Death_Registration_Form.pdf",
+      pdfName: "Goverdhan_Death_Registration_Form.pdf",
     },
     {
       id: "trade-license",
       name: "Trade License",
       nameHi: "व्यापार लाइसेंस",
-      desc: "नगर क्षेत्र में संचालित दुकानों एवं व्यवसायों के लिए नए व्यापार लाइसेंस, पंजीकरण एवं नवीनीकरण से संबंधित सुविधा।",
+      desc: "गोवर्धन नगर क्षेत्र में संचालित दुकानों एवं व्यवसायों के लिए नए व्यापार लाइसेंस, पंजीकरण एवं नवीनीकरण से संबंधित सुविधा।",
       icon: <Store className="h-6 w-6" />,
       themeColor: "from-amber-400 via-orange-500 to-red-500",
       iconBg: "from-amber-400 to-orange-600",
       badge: "व्यवसाय सेवा",
       badgeStyle: "border-orange-200 bg-orange-50 text-orange-700",
       glowColor: "bg-orange-400/20",
-      pdfName: "Mainpuri_Trade_License_Application.pdf",
+      pdfName: "Goverdhan_Trade_License_Application.pdf",
     },
     {
       id: "building-permission",
@@ -117,20 +116,20 @@ export default function Services() {
       badge: "नगर नियोजन",
       badgeStyle: "border-violet-200 bg-violet-50 text-violet-700",
       glowColor: "bg-violet-400/20",
-      pdfName: "Mainpuri_Building_Permission_Form.pdf",
+      pdfName: "Goverdhan_Building_Permission_Form.pdf",
     },
     {
       id: "rti",
       name: "RTI Application",
       nameHi: "सूचना का अधिकार (RTI)",
-      desc: "सूचना का अधिकार अधिनियम के अंतर्गत नगर पालिका परिषद, मैनपुरी से संबंधित सार्वजनिक सूचनाओं के लिए आवेदन सुविधा।",
+      desc: "सूचना का अधिकार अधिनियम के अंतर्गत नगर पंचायत गोवर्धन से संबंधित सार्वजनिक सूचनाओं के लिए आवेदन सुविधा।",
       icon: <HelpCircle className="h-6 w-6" />,
       themeColor: "from-sky-400 via-cyan-500 to-blue-700",
       iconBg: "from-sky-400 to-blue-600",
       badge: "पारदर्शिता",
       badgeStyle: "border-sky-200 bg-sky-50 text-sky-700",
       glowColor: "bg-sky-400/20",
-      pdfName: "Mainpuri_RTI_Application_Form.pdf",
+      pdfName: "Goverdhan_RTI_Application_Form.pdf",
     },
     {
       id: "grievance",
@@ -143,7 +142,7 @@ export default function Services() {
       badge: "त्वरित समाधान",
       badgeStyle: "border-red-200 bg-red-50 text-red-700",
       glowColor: "bg-red-400/20",
-      pdfName: "Mainpuri_Civic_Grievance_Form.pdf",
+      pdfName: "Goverdhan_Civic_Grievance_Form.pdf",
     },
   ]
 
@@ -179,29 +178,36 @@ export default function Services() {
   return (
     <section
       id="citizen-services"
-      className="relative overflow-hidden bg-linear-to-br from-[#fffdf8] via-[#f7fbff] to-[#fbf7ff] px-4 py-20 font-sans text-slate-900 md:px-8 md:py-24"
+      className="relative overflow-hidden bg-linear-to-br from-[#f2fff7] via-white to-[#f7fff9] px-4 py-20 font-sans text-slate-900 md:px-8 md:py-24"
     >
       {/* =====================================================
-          PREMIUM BACKGROUND
+          PREMIUM BACKGROUND GRID
       ====================================================== */}
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage:
-            "linear-gradient(#17384b 1px, transparent 1px), linear-gradient(90deg, #17384b 1px, transparent 1px)",
+            "linear-gradient(#087f5b 1px, transparent 1px), linear-gradient(90deg, #087f5b 1px, transparent 1px)",
           backgroundSize: "42px 42px",
         }}
       />
 
-      <div className="pointer-events-none absolute -left-40 top-20 h-105 w-105 rounded-full bg-orange-300/20 blur-[130px]" />
+      {/* =====================================================
+          COLORFUL AMBIENT LIGHT
+      ====================================================== */}
 
-      <div className="pointer-events-none absolute -right-40 top-1/3 h-115 w-115 rounded-full bg-blue-300/20 blur-[140px]" />
+      <div className="pointer-events-none absolute -left-40 top-10 h-107.5 w-107.5 rounded-full bg-emerald-300/20 blur-[130px]" />
+
+      <div className="pointer-events-none absolute -right-40 top-1/4 h-115 w- 115 rounded-full bg-cyan-300/20 blur-[140px]" />
 
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-100 w-100 rounded-full bg-violet-300/15 blur-[140px]" />
 
+      <div className="pointer-events-none absolute right-1/3 bottom-20 h-75 w-75 rounded-full bg-amber-300/15 blur-[120px]" />
+
       <div className="relative z-10 mx-auto max-w-7xl">
+
         {/* =====================================================
             HEADER
         ====================================================== */}
@@ -215,19 +221,19 @@ export default function Services() {
         >
           {/* Badge */}
 
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-[10px] font-black tracking-[0.15em] text-orange-700 uppercase shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-orange-400 to-rose-500 text-white shadow-sm">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/85 px-4 py-2 text-[10px] font-black tracking-[0.15em] text-emerald-700 uppercase shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-lg hover:shadow-emerald-100">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-emerald-400 to-teal-500 text-white shadow-sm">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
 
-            नगर पालिका परिषद, मैनपुरी
+            नगर पंचायत गोवर्धन, मथुरा
           </div>
 
           {/* Heading */}
 
           <h2 className="font-serif text-3xl font-black tracking-tight text-[#123247] md:text-5xl">
             Unified Citizen{" "}
-            <span className="bg-linear-to-r from-orange-500 via-pink-500 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-emerald-500 via-teal-500 to-lime-500 bg-clip-text text-transparent">
               Services
             </span>
           </h2>
@@ -235,18 +241,18 @@ export default function Services() {
           {/* Description */}
 
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 font-medium text-slate-600 md:text-base">
-            नगर पालिका परिषद, मैनपुरी के नागरिकों के लिए
-            आवश्यक ऑनलाइन सेवाएं, आवेदन एवं शिकायत निवारण
-            सुविधाएं एक ही डिजिटल प्लेटफॉर्म पर।
+            नगर पंचायत गोवर्धन, मथुरा के नागरिकों के लिए आवश्यक
+            ऑनलाइन सेवाएं, आवेदन एवं शिकायत निवारण सुविधाएं
+            एक ही डिजिटल प्लेटफॉर्म पर।
           </p>
 
-          {/* Decorative line */}
+          {/* Decorative Line */}
 
           <div className="mx-auto mt-7 flex items-center justify-center gap-2">
-            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-orange-400 to-pink-500" />
+            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-emerald-400 to-teal-500" />
 
-            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-violet-200 bg-violet-50">
-              <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-amber-200 bg-amber-50">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
             </span>
 
             <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-sky-500 to-violet-600" />
@@ -270,7 +276,7 @@ export default function Services() {
                 duration: 0.5,
               }}
               onClick={() => handleCardClick(service)}
-              className="group relative flex min-h-82.5 cursor-pointer flex-col justify-between overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/90 p-6 text-left shadow-[0_12px_35px_rgba(18,50,71,0.06)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-slate-300 hover:shadow-[0_25px_60px_rgba(18,50,71,0.13)] focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-4"
+              className="group relative flex min-h-82.5 cursor-pointer flex-col justify-between overflow-hidden rounded-[26px] border border-slate-200/80 bg-white/90 p-6 text-left shadow-[0_12px_35px_rgba(18,50,71,0.06)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-emerald-300 hover:shadow-[0_25px_60px_rgba(18,50,71,0.13)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-4"
             >
               {/* Top Gradient */}
 
@@ -284,13 +290,14 @@ export default function Services() {
                 className={`pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full ${service.glowColor} opacity-60 blur-3xl transition-all duration-500 group-hover:scale-150 group-hover:opacity-100`}
               />
 
-              {/* Decorative ring */}
+              {/* Decorative Ring */}
 
               <div
                 className={`pointer-events-none absolute -right-12 top-8 h-28 w-28 rounded-full border-18 border-transparent bg-linear-to-br ${service.themeColor} opacity-[0.04] transition-all duration-500 group-hover:scale-125`}
               />
 
               <div className="relative z-10">
+
                 {/* Icon + Badge */}
 
                 <div className="mb-6 flex items-center justify-between">
@@ -309,13 +316,13 @@ export default function Services() {
 
                 {/* Hindi */}
 
-                <span className="block text-[9px] font-black tracking-[0.14em] text-orange-600 uppercase">
+                <span className="block text-[9px] font-black tracking-[0.14em] text-emerald-600 uppercase transition-colors group-hover:text-orange-600">
                   {service.nameHi}
                 </span>
 
                 {/* English */}
 
-                <h3 className="mt-1.5 font-serif text-lg font-black leading-snug tracking-tight text-[#123247] transition-colors duration-300 group-hover:text-orange-600">
+                <h3 className="mt-1.5 font-serif text-lg font-black leading-snug tracking-tight text-[#123247] transition-colors duration-300 group-hover:text-emerald-600">
                   {service.name}
                 </h3>
 
@@ -342,7 +349,7 @@ export default function Services() {
                 </span>
               </div>
 
-              {/* Bottom hover line */}
+              {/* Bottom Hover Line */}
 
               <div
                 className={`absolute bottom-0 left-1/2 h-1 w-0 -translate-x-1/2 rounded-full bg-linear-to-r ${service.themeColor} opacity-0 blur-sm transition-all duration-500 group-hover:w-3/4 group-hover:opacity-100`}
@@ -360,23 +367,23 @@ export default function Services() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="group relative mt-12 overflow-hidden rounded-[24px] border border-slate-200 bg-white/85 p-5 shadow-[0_12px_35px_rgba(18,50,71,0.06)] backdrop-blur-xl transition-all duration-300 hover:border-orange-200 hover:shadow-xl md:p-6"
+          className="group relative mt-12 overflow-hidden rounded-[24px] border border-emerald-200 bg-white/85 p-5 shadow-[0_12px_35px_rgba(18,50,71,0.06)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-xl md:p-6"
         >
-          <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-orange-300/15 blur-3xl transition-all duration-500 group-hover:bg-orange-300/25" />
+          <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-emerald-300/15 blur-3xl transition-all duration-500 group-hover:bg-emerald-300/25" />
 
           <div className="relative z-10 flex flex-col items-center justify-center gap-4 text-center sm:flex-row">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-400 to-rose-500 text-white shadow-md">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
               <MapPin className="h-5 w-5" />
             </div>
 
             <div>
-              <p className="text-[10px] font-black tracking-[0.12em] text-orange-600 uppercase">
+              <p className="text-[10px] font-black tracking-[0.12em] text-emerald-600 uppercase">
                 Office Assistance
               </p>
 
               <p className="mt-1 text-xs font-medium leading-6 text-slate-600 md:text-sm">
                 किसी भी ऑनलाइन सेवा, आवेदन या नागरिक सहायता के लिए
-                नगर पालिका परिषद, मैनपुरी कार्यालय से संपर्क करें।
+                नगर पंचायत गोवर्धन, मथुरा कार्यालय से संपर्क करें।
               </p>
             </div>
           </div>
@@ -397,7 +404,7 @@ export default function Services() {
             {
               icon: <Landmark className="h-4 w-4" />,
               title: "आधिकारिक पोर्टल",
-              text: "Nagar Palika Parishad, Mainpuri",
+              text: "Nagar Panchayat Goverdhan, Mathura",
               color: "from-blue-500 to-indigo-600",
             },
             {
@@ -409,10 +416,10 @@ export default function Services() {
           ].map((item) => (
             <div
               key={item.title}
-              className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+              className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-lg"
             >
               <div
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br ${item.color} text-white shadow-sm transition-transform duration-300 group-hover:scale-110`}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br ${item.color} text-white shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
               >
                 {item.icon}
               </div>
@@ -441,7 +448,7 @@ export default function Services() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-100 flex items-center justify-center bg-[#102a3a]/60 p-4 backdrop-blur-md"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-[#0b3025]/60 p-4 backdrop-blur-md"
             onClick={closeModal}
           >
             <m.div
@@ -483,8 +490,8 @@ export default function Services() {
                   </div>
 
                   <div>
-                    <p className="text-[9px] font-black tracking-[0.12em] text-orange-600 uppercase">
-                      Nagar Palika Parishad
+                    <p className="text-[9px] font-black tracking-[0.12em] text-emerald-600 uppercase">
+                      Nagar Panchayat Goverdhan
                     </p>
 
                     <h3 className="mt-0.5 text-sm font-black text-[#123247]">
@@ -549,8 +556,8 @@ export default function Services() {
                       </h4>
 
                       <p className="mt-2 max-w-sm text-xs leading-6 font-medium text-slate-600">
-                        {activeService.name} के लिए नगर पालिका परिषद,
-                        मैनपुरी का आवेदन दस्तावेज डाउनलोड करें।
+                        {activeService.name} के लिए नगर पंचायत गोवर्धन,
+                        मथुरा का आवेदन दस्तावेज डाउनलोड करें।
                       </p>
 
                       <div className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left">
@@ -603,7 +610,7 @@ export default function Services() {
 
               <div className="border-t border-slate-100 bg-slate-50/80 px-6 py-3 text-center">
                 <p className="text-[9px] font-semibold text-slate-400">
-                  नगर पालिका परिषद, मैनपुरी • Digital Citizen Services
+                  नगर पंचायत गोवर्धन, मथुरा • Digital Citizen Services
                 </p>
               </div>
             </m.div>

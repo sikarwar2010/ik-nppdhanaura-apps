@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Gallery",
   description:
-    "Explore the photo and video gallery of Nagar Palika Parishad , Mainpuri, Uttar Pradesh, India. View images and videos showcasing our community events, initiatives, and the vibrant life of our town.",
+    "Explore the photo and video gallery of Nagar Panchayat,Goverdhan , Mathura, Uttar Pradesh, India. View images and videos showcasing our community events, initiatives, and the vibrant life of our town.",
 }
 
 export default function () {

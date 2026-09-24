@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Property Tax",
   description:
-    "Calculate and pay property tax for your building or plot in Nagar Palika Parishad,Mainpuri, Uttar Pradesh, India. Access information about tax rates, due dates, and payment methods.",
+    "Calculate and pay property tax for your building or plot in Nagar Panchayat,Goverdhan , Mathura, Uttar Pradesh, India. Access information about tax rates, due dates, and payment methods.",
 }
 
 export default function PropertyTaxPage() {

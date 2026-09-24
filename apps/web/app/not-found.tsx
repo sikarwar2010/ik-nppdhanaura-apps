@@ -12,7 +12,7 @@ export default function NotFound() {
           Page not found
         </h1>
         <p className="mt-2 text-sm text-slate-500">
-          That Nagar Palika Parishad , Mainpuri , Uttar Pradesh, India page is not available.
+          That Nagar Panchayat, Goverdhan , Mathura, Uttar Pradesh, India page is not available.
         </p>
         <Button className="mt-5">
           <Link href="/">Back to Home</Link>

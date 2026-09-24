@@ -34,9 +34,9 @@ export default function DignitariesSection() {
   ]
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-b from-slate-50 via-white to-slate-50 px-4 py-16 font-sans md:px-8">
+    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-slate-50 px-4 py-16 font-sans md:px-8">
       {/* Background Ambient Glow */}
-      <div className="pointer-events-none absolute top-1/2 left-1/2 h-87.5 w-225 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[140px]" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 h-[350px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-500/5 blur-[140px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
         {/* Section Mini Heading */}
@@ -53,7 +53,7 @@ export default function DignitariesSection() {
             </h2>
           </div>
           <span className="hidden text-xs font-medium text-slate-400 sm:inline-block">
-            Nagar Palika Parishad Mainpuri • Official Desk
+            Nagar Panchayat Goverdhan • Official Desk
           </span>
         </div>
 
@@ -66,7 +66,7 @@ export default function DignitariesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08, duration: 0.4 }}
-              className={`group relative flex flex-col items-center p-6 text-center transition-all duration-300 hover:bg-linear-to-b hover:from-orange-50/40 hover:to-transparent sm:flex-row sm:text-left ${
+              className={`group relative flex flex-col items-center p-6 text-center transition-all duration-300 hover:bg-gradient-to-b hover:from-orange-50/40 hover:to-transparent sm:flex-row sm:text-left ${
                 index !== dignitariesList.length - 1
                   ? "border-b border-slate-100 lg:border-r lg:border-b-0"
                   : ""
@@ -79,7 +79,7 @@ export default function DignitariesSection() {
                   alt={item.name}
                   className="h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-linear-to-t from-slate-950/25 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/25 via-transparent to-transparent" />
                 
                 {/* Official Icon Badge */}
                 <div className="absolute right-1.5 bottom-1.5 rounded-full bg-orange-600 p-1 text-white shadow-md">

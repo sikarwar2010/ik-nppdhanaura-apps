@@ -1,23 +1,40 @@
 export type CookiePair = { name: string; value: string }
 
-/** Local dev default and production cookie name. */
+/** Current project default when SESSION_COOKIE_NAME is unset. */
+export const DEFAULT_SESSION_COOKIE_NAME = "goverdhan_session"
+
+/**
+ * Prior project cookie names kept so mid-migration browsers still authenticate
+ * until cookies expire or logout clears them.
+ */
+export const LEGACY_SESSION_COOKIE_NAMES = [
+  "chhata_session",
+  "mainpuri_session",
+] as const
+
+/** @deprecated use DEFAULT_SESSION_COOKIE_NAME or LEGACY_SESSION_COOKIE_NAMES */
 export const LEGACY_SESSION_COOKIE_NAME = "chhata_session"
 
 /** @deprecated use resolveSessionCookieName() */
-export const SESSION_COOKIE_NAME = LEGACY_SESSION_COOKIE_NAME
+export const SESSION_COOKIE_NAME = DEFAULT_SESSION_COOKIE_NAME
 
 export function resolveSessionCookieName(
   configuredName?: string | null
 ): string {
   const configured = configuredName?.trim()
-  return configured || LEGACY_SESSION_COOKIE_NAME
+  return configured || DEFAULT_SESSION_COOKIE_NAME
 }
 
 export function knownSessionCookieNames(
   configuredName?: string | null
 ): string[] {
   const primary = resolveSessionCookieName(configuredName)
-  const names = new Set([primary, LEGACY_SESSION_COOKIE_NAME, "__Host-session"])
+  const names = new Set<string>([
+    primary,
+    DEFAULT_SESSION_COOKIE_NAME,
+    ...LEGACY_SESSION_COOKIE_NAMES,
+    "__Host-session",
+  ])
   return [...names]
 }
 

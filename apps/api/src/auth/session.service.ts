@@ -3,6 +3,7 @@ import {
   Injectable,
   ServiceUnavailableException,
 } from "@nestjs/common"
+import { knownSessionCookieNames } from "@workspace/types"
 import type { Request, Response } from "express"
 import { randomBytes } from "node:crypto"
 
@@ -342,7 +343,9 @@ export class SessionService {
   readSessionToken(req: Request): string | undefined {
     const cookieHeader = req.headers.cookie
     if (!cookieHeader) return undefined
-    const names = new Set([sessionCookieName(), "chhata_session"])
+    const names = new Set(
+      knownSessionCookieNames(process.env.SESSION_COOKIE_NAME)
+    )
     for (const part of cookieHeader.split(";")) {
       const trimmed = part.trim()
       for (const name of names) {
@@ -371,7 +374,9 @@ export class SessionService {
   }
 
   clearSessionCookie(res: Response): void {
-    const names = new Set([sessionCookieName(), "chhata_session", "__Host-session"])
+    const names = new Set(
+      knownSessionCookieNames(process.env.SESSION_COOKIE_NAME)
+    )
     const secure = this.shouldUseSecureCookie(res)
     for (const name of names) {
       const parts = [

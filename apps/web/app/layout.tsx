@@ -7,11 +7,11 @@ import QueryProvider from "@/components/providers/query-providers"
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 export const metadata: Metadata = {
-  title: "Nagar Palika Parishad , Mainpuri",
+  title: "Nagar Panchayat , Goverdhan, Mathura",
   description:
-    "Official portal of Nagar Palika Parishad Mainpuri, Uttar Pradesh. Settle property tax, pay water tax, apply for birth/death certificates, browse active tenders, and submit grievances online.",
+    "Official portal of Nagar Panchayat,Goverdhan,Mathura, Uttar Pradesh. Settle property tax, pay water tax, apply for birth/death certificates, browse active tenders, and submit grievances online.",
   keywords:
-    "Nagar Palika Parishad , Mainpuri , Uttar Pradesh , Property Tax, Water Tax , Birth Certificate , Death Certificate , Tenders , Grievances",
+    "Nagar Panchayat , Goverdhan , Mathura , Uttar Pradesh , Property Tax, Water Tax , Birth Certificate , Death Certificate , Tenders , Grievances",
 }
 
 export default function RootLayout({

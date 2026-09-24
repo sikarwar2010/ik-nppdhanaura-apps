@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "PublicGrievance",
   description:
-    "PublicGrievance page for Nagar Palika Parishad,Mainpuri, Uttar Pradesh, India. Submit your grievances and feedback to help us improve our services and community initiatives.",
+    "PublicGrievance page for Nagar Panchayat,Goverdhan , Mathura, Uttar Pradesh, India. Submit your grievances and feedback to help us improve our services and community initiatives.",
 }
 
 export default function () {

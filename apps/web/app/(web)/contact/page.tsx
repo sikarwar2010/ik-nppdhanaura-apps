@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Contact Us",
   description:
-    "Contact Nagar Palika Parishad, Mainpuri, Uttar Pradesh, India. Get in touch with us for inquiries, feedback, or assistance regarding our services and community initiatives.",
+    "Contact Nagar Panchayat,Goverdhan , Mathura, Uttar Pradesh, India. Get in touch with us for inquiries, feedback, or assistance regarding our services and community initiatives.",
 }
 export default function Contact() {
   return (

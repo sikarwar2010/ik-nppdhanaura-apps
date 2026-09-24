@@ -4,7 +4,7 @@ export function resolveSessionCookieName(): string {
   return resolveSessionCookieNameFromConfig(process.env.SESSION_COOKIE_NAME)
 }
 
-/** Resolved at runtime from SESSION_COOKIE_NAME env (default chhata_session). */
+/** Resolved at runtime from SESSION_COOKIE_NAME env (default goverdhan_session). */
 export function sessionCookieName(): string {
   return resolveSessionCookieName()
 }

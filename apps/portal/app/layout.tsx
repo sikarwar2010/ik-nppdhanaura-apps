@@ -16,7 +16,7 @@ const notoDevanagari = Noto_Sans_Devanagari({
 })
 
 export const metadata = {
-  title: "Nagar Panchayat Mainpuri",
+  title: "Nagar Panchayat Goverdhan",
   description: "Survey and property data platform",
 }
 

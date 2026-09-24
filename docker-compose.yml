@@ -2,31 +2,31 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: mainpuri-postgres
+    container_name: goverdhan-postgres
     restart: unless-stopped
     ports:
       # Host 5432 is often taken by other local stacks (e.g. api-survey-local).
       - "5433:5432"
     environment:
-      POSTGRES_USER: mainpuri
-      POSTGRES_PASSWORD: mainpuri
-      POSTGRES_DB: mainpuri
+      POSTGRES_USER: goverdhan
+      POSTGRES_PASSWORD: goverdhan
+      POSTGRES_DB: goverdhan
     volumes:
-      - mainpuri_pg_data:/var/lib/postgresql/data
+      - goverdhan_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U mainpuri -d mainpuri" ]
+      test: [ "CMD-SHELL", "pg_isready -U goverdhan -d goverdhan" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: mainpuri-redis
+    container_name: goverdhan-redis
     restart: unless-stopped
     ports:
       - "6380:6379"
     volumes:
-      - mainpuri_redis_data:/data
+      - goverdhan_redis_data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -35,7 +35,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: mainpuri-mailpit
+    container_name: goverdhan-mailpit
     restart: unless-stopped
     ports:
       - "8025:8025"
@@ -57,13 +57,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: "4000"
-      DATABASE_URL: postgresql://mainpuri:mainpuri@postgres:5432/mainpuri?schema=public
+      DATABASE_URL: postgresql://goverdhan:goverdhan@postgres:5432/goverdhan?schema=public
       REDIS_URL: redis://redis:6379
       STORAGE_DIR: /app/uploads
       CORS_ORIGIN: http://localhost:3000,http://localhost:3001
       PUBLIC_APP_URL: http://localhost:3000
       SESSION_SECRET: ${SESSION_SECRET:-change-me-to-a-long-random-secret-at-least-32-chars}
-      SESSION_COOKIE_NAME: mainpuri_session
+      SESSION_COOKIE_NAME: goverdhan_session
       API_BUILD_ID: local
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-sikarwar2010@gmail.com}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-tarun@0446}
@@ -84,7 +84,7 @@ services:
     networks:
       default:
         aliases:
-          - mainpuri-api
+          - goverdhan-api
 
   portal:
     profiles: [ "app" ]
@@ -92,7 +92,7 @@ services:
       context: .
       dockerfile: docker/portal.Dockerfile
       args:
-        API_INTERNAL_URL: http://mainpuri-api:4000
+        API_INTERNAL_URL: http://goverdhan-api:4000
         NEXT_PUBLIC_APP_URL: http://localhost:3000
         NEXT_PUBLIC_CITIZEN_WEB_URL: http://localhost:3001
     restart: unless-stopped
@@ -102,13 +102,13 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
-      API_INTERNAL_URL: http://mainpuri-api:4000
+      API_INTERNAL_URL: http://goverdhan-api:4000
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      SESSION_COOKIE_NAME: mainpuri_session
+      SESSION_COOKIE_NAME: goverdhan_session
     depends_on:
       api:
         condition: service_healthy
 
 volumes:
-  mainpuri_pg_data:
-  mainpuri_redis_data:
+  goverdhan_pg_data:
+  goverdhan_redis_data:

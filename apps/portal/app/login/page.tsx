@@ -185,7 +185,7 @@ export default function LoginPage() {
 
             <div className="mt-12 max-w-lg">
               <p className="font-[family-name:var(--font-deva)] text-sm font-medium tracking-wide text-sky-200/90">
-                नगर पालिका परिषद, मैनपुरी
+                नगर पंचायत, गोवर्धन
               </p>
               <h1
                 id="login-hero-title"
@@ -228,7 +228,7 @@ export default function LoginPage() {
           </ul>
 
           <p className="relative z-10 mt-10 text-xs leading-relaxed text-slate-400">
-            Official municipal operations portal for Nagar Palika Parishad Mainpuri
+            Official municipal operations portal for Nagar Panchyat Goverdhan
             Unauthorized access is prohibited and monitored.
           </p>
         </section>
@@ -255,7 +255,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.15em] text-sky-900 uppercase">
-                  Nagar Palika Parishad Mainpuri
+                  Nagar Panchyat Goverdhan
                 </p>
                 <p className="font-[family-name:var(--font-deva)] text-sm text-slate-600">
                   स्टाफ पोर्टल

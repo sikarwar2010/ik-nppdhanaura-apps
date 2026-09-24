@@ -1,9 +1,19 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Award, ExternalLink, X } from "lucide-react"
+import React, { useEffect, useState } from "react"
+import { m } from "framer-motion"
+import {
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Landmark,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from "lucide-react"
 
-interface Certification {
+interface Achievement {
   id: number
   title: string
   category: string
@@ -11,252 +21,1080 @@ interface Certification {
   description: string
 }
 
-const certificationsData: Certification[] = [
+const achievementsData: Achievement[] = [
   {
     id: 1,
-    title: "MSME Certified",
-    category: "Government Registration",
+    title: "Swachh Bharat Initiative",
+    category: "Clean & Green Goverdhan",
     image:
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&q=85&w=1000",
     description:
-      "Certified under Ministry of Micro, Small and Medium Enterprises.",
+      "नगर पंचायत गोवर्धन द्वारा स्वच्छता, कचरा प्रबंधन एवं स्वच्छ नगर अभियान को निरंतर बढ़ावा दिया जा रहा है।",
   },
   {
     id: 2,
-    title: "Enterprise Partner",
-    category: "ISO/IEC 27001:2022",
+    title: "Digital Citizen Services",
+    category: "Digital Governance",
     image:
-      "https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?auto=format&fit=crop&q=80&w=800",
-    description: "Information Security Management System compliance certified.",
+      "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=85&w=1000",
+    description:
+      "नागरिकों को तेज, पारदर्शी और सुविधाजनक डिजिटल सेवाएं उपलब्ध कराने की दिशा में निरंतर प्रयास।",
   },
   {
     id: 3,
-    title: "Technology Leader",
-    category: "ISO 9001:2015",
+    title: "Urban Development",
+    category: "Infrastructure Development",
     image:
-      "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800",
-    description: "Quality Management System for standard service delivery.",
+      "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&q=85&w=1000",
+    description:
+      "सड़क, नाली, सार्वजनिक सुविधाओं और अन्य नागरिक बुनियादी ढांचे के विकास एवं रखरखाव पर विशेष ध्यान।",
   },
   {
     id: 4,
-    title: "Swachh Bharat Award",
-    category: "Municipal Excellence",
+    title: "Green Goverdhan Initiative",
+    category: "Environment & Sustainability",
     image:
-      "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&q=85&w=1000",
     description:
-      "Recognition for outstanding cleanliness and sanitation initiatives.",
+      "हरित क्षेत्र बढ़ाने, वृक्षारोपण और पर्यावरण संरक्षण के माध्यम से स्वच्छ एवं सुंदर गोवर्धन की दिशा में पहल।",
   },
   {
     id: 5,
-    title: "Digital Governance",
-    category: "State Innovation",
+    title: "Citizen Service Excellence",
+    category: "Public Service",
     image:
-      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800",
-    description: "Awarded for transparent and fast digital citizen services.",
+      "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=85&w=1000",
+    description:
+      "नागरिक शिकायतों, सेवाओं और स्थानीय प्रशासन से जुड़ी आवश्यकताओं के त्वरित समाधान के लिए बेहतर व्यवस्था।",
   },
   {
     id: 6,
-    title: "Green Energy Pioneer",
-    category: "Sustainability",
+    title: "Water Supply Development",
+    category: "Water & Civic Utilities",
     image:
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&q=85&w=1000",
     description:
-      "Appreciation for adopting eco-friendly municipal infrastructure.",
+      "नागरिकों तक बेहतर पेयजल सुविधा पहुंचाने और जल आपूर्ति व्यवस्था को मजबूत करने के लिए निरंतर कार्य।",
   },
   {
     id: 7,
-    title: "Financial Transparency",
-    category: "Auditing Excellence",
+    title: "Smart Civic Infrastructure",
+    category: "Modern Governance",
     image:
-      "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=800",
+      "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&q=85&w=1000",
     description:
-      "Certified for 100% transparent budget allocation and utilization.",
+      "आधुनिक तकनीक और बेहतर शहरी प्रबंधन के माध्यम से गोवर्धन के नागरिक बुनियादी ढांचे को सुदृढ़ करना।",
   },
 ]
 
 export default function CertificationsSlider() {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [selectedImage, setSelectedImage] = useState<Certification | null>(null)
+  const [selectedImage, setSelectedImage] =
+    useState<Achievement | null>(null)
   const [isPaused, setIsPaused] = useState(false)
 
   const itemsPerPage = 3
-  const maxIndex = Math.max(0, certificationsData.length - itemsPerPage)
+
+  const maxIndex = Math.max(
+    0,
+    achievementsData.length - itemsPerPage
+  )
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev === 0 ? maxIndex : prev - 1))
+    setCurrentIndex((prev) =>
+      prev === 0 ? maxIndex : prev - 1
+    )
   }
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1))
+    setCurrentIndex((prev) =>
+      prev >= maxIndex ? 0 : prev + 1
+    )
   }
 
-  // ऑटो-स्लाइड लॉजिक (हर 4 सेकंड में)
   useEffect(() => {
-    if (isPaused || selectedImage) return // अगर माउस ऊपर है या पॉपअप खुला है तो स्लाइड न हो
+    if (isPaused || selectedImage) return
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1))
-    }, 2000)
+      setCurrentIndex((prev) =>
+        prev >= maxIndex ? 0 : prev + 1
+      )
+    }, 4000)
 
     return () => clearInterval(interval)
   }, [maxIndex, isPaused, selectedImage])
 
   return (
-    <section className="relative overflow-hidden bg-linear-to-b from-slate-50 to-slate-100/50 px-4 py-16 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        {/* Section Header */}
-        <div className="mx-auto mb-12 max-w-2xl text-center">
-          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold tracking-wider text-blue-700 uppercase">
-            <Award className="h-3.5 w-3.5" />
-            <span>Gallery</span>
+    <section
+      id="achievements"
+      className="
+        relative
+        overflow-hidden
+        bg-gradient-to-br
+        from-[#EFFAF2]
+        via-[#FFFFFF]
+        to-[#EAF7EE]
+        px-4
+        py-20
+        font-sans
+        sm:py-24
+        md:px-8
+      "
+    >
+      {/* =====================================================
+          AMBIENT BACKGROUND
+      ====================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -left-32
+          top-10
+          h-[400px]
+          w-[400px]
+          rounded-full
+          bg-emerald-300/15
+          blur-[120px]
+        "
+      />
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -right-32
+          bottom-0
+          h-[450px]
+          w-[450px]
+          rounded-full
+          bg-lime-300/15
+          blur-[130px]
+        "
+      />
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-1/2
+          h-[300px]
+          w-[650px]
+          -translate-x-1/2
+          -translate-y-1/2
+          rounded-full
+          bg-teal-200/10
+          blur-[120px]
+        "
+      />
+
+      {/* =====================================================
+          PREMIUM GRID
+      ====================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          opacity-70
+        "
+        style={{
+          backgroundImage: `
+            linear-gradient(
+              rgba(16,100,67,0.055) 1px,
+              transparent 1px
+            ),
+            linear-gradient(
+              90deg,
+              rgba(16,100,67,0.055) 1px,
+              transparent 1px
+            )
+          `,
+          backgroundSize: "46px 46px",
+          maskImage:
+            "radial-gradient(ellipse 75% 70% at 50% 50%, black 40%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 75% 70% at 50% 50%, black 40%, transparent 100%)",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl">
+
+        {/* =====================================================
+            SECTION HEADER
+        ====================================================== */}
+
+        <div className="mx-auto mb-14 max-w-3xl text-center">
+
+          <m.div
+            initial={{ opacity: 0, y: -10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-emerald-200
+              bg-white/80
+              px-4
+              py-2
+              shadow-[0_8px_30px_rgba(15,81,50,0.08)]
+              backdrop-blur-xl
+            "
+          >
+            <span
+              className="
+                flex
+                h-6
+                w-6
+                items-center
+                justify-center
+                rounded-full
+                bg-linear-to-br
+                from-emerald-500
+                to-green-600
+                text-white
+                shadow-md
+              "
+            >
+              <Award className="h-3.5 w-3.5" />
+            </span>
+
+            <span
+              className="
+                text-[9px]
+                font-black
+                uppercase
+                tracking-[0.16em]
+                text-emerald-800
+                sm:text-[10px]
+              "
+            >
+              Nagar Panchayat Goverdhan
+            </span>
+          </m.div>
+
+          <m.h2
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, delay: 0.08 }}
+            className="
+              mt-5
+              font-serif
+              text-3xl
+              font-black
+              leading-tight
+              tracking-tight
+              text-[#143D2C]
+              sm:text-4xl
+              md:text-5xl
+            "
+          >
+            उपलब्धियां एवं
+
+            <span
+              className="
+                ml-2
+                bg-gradient-to-r
+                from-emerald-700
+                via-green-600
+                to-[#B58A3B]
+                bg-clip-text
+                text-transparent
+              "
+            >
+              सम्मान
+            </span>
+
+            <span
+              className="
+                mt-1
+                block
+                text-xl
+                font-bold
+                text-[#52675B]
+                sm:text-2xl
+              "
+            >
+              Achievements & Recognitions
+            </span>
+          </m.h2>
+
+          <m.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55, delay: 0.14 }}
+            className="
+              mx-auto
+              mt-4
+              max-w-2xl
+              text-sm
+              font-medium
+              leading-7
+              text-[#5A6D63]
+              md:text-base
+            "
+          >
+            नगर पंचायत गोवर्धन, मथुरा द्वारा नागरिक सुविधाओं,
+            स्वच्छता, पर्यावरण, डिजिटल शासन एवं शहरी विकास के
+            क्षेत्र में किए जा रहे महत्वपूर्ण प्रयास।
+          </m.p>
+
+          {/* Divider */}
+
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <span
+              className="
+                h-[3px]
+                w-14
+                rounded-full
+                bg-gradient-to-r
+                from-transparent
+                to-emerald-500
+              "
+            />
+
+            <Sparkles
+              className="
+                h-4
+                w-4
+                text-[#C69A45]
+              "
+            />
+
+            <span
+              className="
+                h-[3px]
+                w-14
+                rounded-full
+                bg-gradient-to-l
+                from-transparent
+                to-emerald-500
+              "
+            />
           </div>
-          <h2 className="font-serif text-3xl font-extrabold tracking-tight text-emerald-500 md:text-4xl">
-            Our Nagar Palika Achievements & Recognitions
-          </h2>
-          <p className="text-black-600 mt-2 text-sm font-medium md:text-base">
-            Achievements and recognitions for excellence, compliance, and
-            quality service delivery.
-          </p>
         </div>
 
-        {/* Slider Container (Mouse enter/leave पर ऑटो-स्लाइड रुकने और चलने के लिए) */}
+        {/* =====================================================
+            SLIDER
+        ====================================================== */}
+
         <div
-          className="relative px-2 md:px-10"
+          className="relative px-1 sm:px-4 md:px-10"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          {/* Left Arrow Button */}
+
+          {/* LEFT ARROW */}
+
           <button
             onClick={prevSlide}
-            className="absolute top-1/2 left-0 z-10 flex h-11 w-11 -translate-x-2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-300 hover:bg-blue-600 hover:text-white focus:outline-none md:-translate-x-5"
-            aria-label="Previous Slide"
+            aria-label="Previous achievement"
+            className="
+              group
+              absolute
+              left-0
+              top-1/2
+              z-20
+              flex
+              h-11
+              w-11
+              -translate-x-1
+              -translate-y-1/2
+              cursor-pointer
+              items-center
+              justify-center
+              rounded-full
+              border
+              border-emerald-100
+              bg-white/95
+              text-emerald-700
+              shadow-[0_10px_30px_rgba(15,81,50,0.12)]
+              backdrop-blur-xl
+              transition-all
+              duration-300
+              hover:scale-110
+              hover:border-emerald-500
+              hover:bg-emerald-600
+              hover:text-white
+              hover:shadow-[0_15px_35px_rgba(16,185,129,0.25)]
+              md:-translate-x-5
+            "
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft
+              className="
+                h-5
+                w-5
+                transition-transform
+                group-hover:-translate-x-0.5
+              "
+            />
           </button>
 
-          {/* Cards Viewport */}
-          <div className="overflow-hidden">
+          {/* =================================================
+              CARDS VIEWPORT
+          ================================================== */}
+
+          <div className="overflow-hidden rounded-3xl">
             <div
-              className="flex gap-6 transition-transform duration-700 ease-out"
+              className="
+                flex
+                gap-5
+                transition-transform
+                duration-700
+                ease-out
+              "
               style={{
-                transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)`,
+                transform: `translateX(-${
+                  currentIndex * (100 / itemsPerPage)
+                }%)`,
               }}
             >
-              {certificationsData.map((cert) => (
+
+              {achievementsData.map((achievement, index) => (
+
                 <div
-                  key={cert.id}
-                  className="min-w-full shrink-0 md:min-w-[calc(33.333%-16px)]"
+                  key={achievement.id}
+                  className="
+                    min-w-full
+                    flex-shrink-0
+                    md:min-w-[calc(33.333%-13.333px)]
+                  "
                 >
-                  <div
-                    onClick={() => setSelectedImage(cert)}
-                    className="group flex h-full cursor-pointer flex-col rounded-2xl border border-slate-200/80 bg-white p-5 shadow-md transition-all duration-300 hover:shadow-xl"
+
+                  <m.div
+                    initial={{
+                      opacity: 0,
+                      y: 20,
+                    }}
+                    whileInView={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    viewport={{
+                      once: true,
+                    }}
+                    transition={{
+                      duration: 0.45,
+                      delay: index * 0.05,
+                    }}
+                    onClick={() =>
+                      setSelectedImage(achievement)
+                    }
+                    className="
+                      group
+                      flex
+                      h-full
+                      cursor-pointer
+                      flex-col
+                      overflow-hidden
+                      rounded-[26px]
+                      border
+                      border-emerald-100
+                      bg-white/90
+                      p-4
+                      shadow-[0_12px_35px_rgba(15,81,50,0.07)]
+                      backdrop-blur-xl
+                      transition-all
+                      duration-500
+                      hover:-translate-y-2
+                      hover:border-emerald-300
+                      hover:shadow-[0_25px_55px_rgba(15,81,50,0.16)]
+                    "
                   >
-                    {/* Image Preview Box */}
-                    <div className="relative mb-4 h-64 overflow-hidden rounded-xl border border-slate-100 bg-slate-100">
+
+                    {/* TOP ACCENT */}
+
+                    <div
+                      className="
+                        absolute
+                        left-0
+                        right-0
+                        top-0
+                        h-1
+                        rounded-t-[26px]
+                        bg-linear-to-r
+                        from-emerald-500
+                        via-[#C69A45]
+                        to-lime-500
+                        opacity-80
+                        transition-all
+                        duration-300
+                        group-hover:h-1.5
+                        group-hover:opacity-100
+                      "
+                    />
+
+                    {/* IMAGE */}
+
+                    <div
+                      className="
+                        relative
+                        mb-5
+                        h-56
+                        overflow-hidden
+                        rounded-2xl
+                        border
+                        border-emerald-50
+                        bg-emerald-50
+                        sm:h-60
+                      "
+                    >
+
                       <img
-                        src={cert.image}
-                        alt={cert.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        src={achievement.image}
+                        alt={achievement.title}
+                        className="
+                          h-full
+                          w-full
+                          object-cover
+                          transition-transform
+                          duration-700
+                          group-hover:scale-110
+                        "
                       />
-                      <div className="absolute inset-0 flex items-end bg-linear-to-t from-slate-900/40 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                        <span className="flex items-center gap-1 rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-xs">
-                          Click to View <ExternalLink className="h-3 w-3" />
-                        </span>
+
+                      {/* Image Gradient */}
+
+                      <div
+                        className="
+                          absolute
+                          inset-0
+                          bg-linear-to-t
+                          from-[#063D29]/70
+                          via-transparent
+                          to-transparent
+                          opacity-60
+                        "
+                      />
+
+                      {/* View Badge */}
+
+                      <div
+                        className="
+                          absolute
+                          bottom-3
+                          left-3
+                          flex
+                          translate-y-2
+                          items-center
+                          gap-1.5
+                          rounded-full
+                          border
+                          border-white/20
+                          bg-black/40
+                          px-3
+                          py-1.5
+                          text-[9px]
+                          font-bold
+                          text-white
+                          opacity-0
+                          backdrop-blur-md
+                          transition-all
+                          duration-300
+                          group-hover:translate-y-0
+                          group-hover:opacity-100
+                        "
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        View Details
+                      </div>
+
+                      {/* Award Icon */}
+
+                      <div
+                        className="
+                          absolute
+                          right-3
+                          top-3
+                          flex
+                          h-9
+                          w-9
+                          items-center
+                          justify-center
+                          rounded-xl
+                          border
+                          border-white/20
+                          bg-white/90
+                          text-[#B58A3B]
+                          shadow-lg
+                          backdrop-blur-md
+                          transition-transform
+                          duration-300
+                          group-hover:rotate-6
+                          group-hover:scale-110
+                        "
+                      >
+                        <Award className="h-4 w-4" />
                       </div>
                     </div>
 
-                    {/* Content info */}
-                    <div>
-                      <span className="text-xs font-bold tracking-wider text-blue-600 uppercase">
-                        {cert.category}
-                      </span>
-                      <h3 className="mt-1 font-serif text-lg font-bold text-slate-900">
-                        {cert.title}
+                    {/* CONTENT */}
+
+                    <div className="flex flex-1 flex-col">
+
+                      <div
+                        className="
+                          mb-2
+                          inline-flex
+                          w-fit
+                          items-center
+                          gap-1.5
+                          rounded-full
+                          border
+                          border-emerald-100
+                          bg-emerald-50
+                          px-2.5
+                          py-1
+                          text-[8px]
+                          font-black
+                          uppercase
+                          tracking-[0.1em]
+                          text-emerald-700
+                        "
+                      >
+                        <ShieldCheck className="h-3 w-3" />
+                        {achievement.category}
+                      </div>
+
+                      <h3
+                        className="
+                          font-serif
+                          text-lg
+                          font-black
+                          leading-tight
+                          text-[#153D2C]
+                          transition-colors
+                          duration-300
+                          group-hover:text-emerald-700
+                        "
+                      >
+                        {achievement.title}
                       </h3>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                        {cert.description}
+
+                      <p
+                        className="
+                          mt-2
+                          text-xs
+                          font-medium
+                          leading-6
+                          text-slate-500
+                        "
+                      >
+                        {achievement.description}
                       </p>
+
                     </div>
-                  </div>
+
+                    {/* FOOTER */}
+
+                    <div
+                      className="
+                        mt-5
+                        flex
+                        items-center
+                        justify-between
+                        border-t
+                        border-emerald-50
+                        pt-3
+                      "
+                    >
+
+                      <span
+                        className="
+                          text-[9px]
+                          font-black
+                          uppercase
+                          tracking-[0.1em]
+                          text-slate-400
+                          transition-colors
+                          group-hover:text-emerald-600
+                        "
+                      >
+                        Nagar Panchayat Goverdhan
+                      </span>
+
+                      <span
+                        className="
+                          flex
+                          h-7
+                          w-7
+                          items-center
+                          justify-center
+                          rounded-full
+                          bg-emerald-50
+                          text-emerald-600
+                          transition-all
+                          duration-300
+                          group-hover:bg-emerald-600
+                          group-hover:text-white
+                          group-hover:translate-x-1
+                        "
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+
+                    </div>
+
+                  </m.div>
+
                 </div>
+
               ))}
+
             </div>
           </div>
 
-          {/* Right Arrow Button */}
+          {/* RIGHT ARROW */}
+
           <button
             onClick={nextSlide}
-            className="absolute top-1/2 right-0 z-10 flex h-11 w-11 translate-x-2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-lg transition-all duration-300 hover:bg-blue-600 hover:text-white focus:outline-none md:translate-x-5"
-            aria-label="Next Slide"
+            aria-label="Next achievement"
+            className="
+              group
+              absolute
+              right-0
+              top-1/2
+              z-20
+              flex
+              h-11
+              w-11
+              translate-x-1
+              -translate-y-1/2
+              cursor-pointer
+              items-center
+              justify-center
+              rounded-full
+              border
+              border-emerald-100
+              bg-white/95
+              text-emerald-700
+              shadow-[0_10px_30px_rgba(15,81,50,0.12)]
+              backdrop-blur-xl
+              transition-all
+              duration-300
+              hover:scale-110
+              hover:border-emerald-500
+              hover:bg-emerald-600
+              hover:text-white
+              hover:shadow-[0_15px_35px_rgba(16,185,129,0.25)]
+              md:translate-x-5
+            "
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight
+              className="
+                h-5
+                w-5
+                transition-transform
+                group-hover:translate-x-0.5
+              "
+            />
           </button>
+
         </div>
 
-        {/* Pagination Dots */}
+        {/* =====================================================
+            PAGINATION
+        ====================================================== */}
+
         <div className="mt-8 flex items-center justify-center gap-2">
-          {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+
+          {Array.from({
+            length: maxIndex + 1,
+          }).map((_, index) => (
+
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`h-2 cursor-pointer rounded-full transition-all duration-300 ${
-                currentIndex === index ? "w-8 bg-blue-600" : "w-2 bg-slate-300"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
+              aria-label={`Go to achievement slide ${index + 1}`}
+              className={`
+                h-2
+                cursor-pointer
+                rounded-full
+                transition-all
+                duration-500
+                ${
+                  currentIndex === index
+                    ? "w-9 bg-gradient-to-r from-emerald-500 to-green-600 shadow-md"
+                    : "w-2 bg-emerald-200 hover:w-4 hover:bg-emerald-400"
+                }
+              `}
             />
+
           ))}
+
         </div>
+
+        {/* =====================================================
+            BOTTOM LOCATION STRIP
+        ====================================================== */}
+
+        <div
+          className="
+            mx-auto
+            mt-8
+            flex
+            max-w-2xl
+            items-center
+            justify-center
+            gap-2
+            rounded-full
+            border
+            border-emerald-100
+            bg-white/70
+            px-4
+            py-2.5
+            shadow-sm
+            backdrop-blur-xl
+          "
+        >
+          <Landmark
+            className="
+              h-3.5
+              w-3.5
+              text-[#B58A3B]
+            "
+          />
+
+          <span
+            className="
+              text-[9px]
+              font-bold
+              uppercase
+              tracking-[0.1em]
+              text-[#50655A]
+            "
+          >
+            Nagar Panchayat Goverdhan • Mathura • Uttar Pradesh
+          </span>
+        </div>
+
       </div>
 
-      {/* ================================================= */}
-      {/* IMAGE POPUP / LIGHTBOX MODAL                      */}
-      {/* ================================================= */}
+      {/* =====================================================
+          LIGHTBOX MODAL
+      ====================================================== */}
+
       {selectedImage && (
-        <div
-          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm"
+        <m.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="
+            fixed
+            inset-0
+            z-[100]
+            flex
+            items-center
+            justify-center
+            bg-[#05261B]/85
+            p-4
+            backdrop-blur-md
+          "
           onClick={() => setSelectedImage(null)}
         >
-          <div
-            className="animate-scale-up relative w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+
+          <m.div
+            initial={{
+              opacity: 0,
+              scale: 0.94,
+              y: 15,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.3,
+            }}
+            className="
+              relative
+              w-full
+              max-w-4xl
+              overflow-hidden
+              rounded-[28px]
+              border
+              border-emerald-100
+              bg-white
+              shadow-[0_35px_100px_rgba(0,0,0,0.35)]
+            "
+            onClick={(event) => event.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 p-4">
+
+            {/* MODAL HEADER */}
+
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+                border-b
+                border-emerald-100
+                bg-gradient-to-r
+                from-[#F0FAF3]
+                to-white
+                p-4
+                sm:p-5
+              "
+            >
+
               <div>
-                <span className="text-xs font-bold tracking-wider text-blue-600 uppercase">
+
+                <div
+                  className="
+                    mb-1
+                    flex
+                    items-center
+                    gap-1.5
+                    text-[9px]
+                    font-black
+                    uppercase
+                    tracking-[0.12em]
+                    text-emerald-700
+                  "
+                >
+                  <Award className="h-3 w-3" />
                   {selectedImage.category}
-                </span>
-                <h3 className="font-serif text-lg font-bold text-slate-900">
+                </div>
+
+                <h3
+                  className="
+                    font-serif
+                    text-lg
+                    font-black
+                    text-[#153D2C]
+                    sm:text-xl
+                  "
+                >
                   {selectedImage.title}
                 </h3>
+
               </div>
+
               <button
                 onClick={() => setSelectedImage(null)}
-                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-200/60 text-slate-700 transition-colors hover:bg-slate-200"
-                aria-label="Close modal"
+                aria-label="Close achievement"
+                className="
+                  flex
+                  h-9
+                  w-9
+                  cursor-pointer
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-white
+                  text-slate-500
+                  shadow-sm
+                  transition-all
+                  duration-300
+                  hover:rotate-90
+                  hover:border-red-200
+                  hover:bg-red-50
+                  hover:text-red-500
+                "
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
+
             </div>
 
-            {/* Modal Image View */}
-            <div className="flex max-h-[70vh] items-center justify-center bg-slate-900 p-4">
+            {/* MODAL IMAGE */}
+
+            <div
+              className="
+                flex
+                max-h-[68vh]
+                items-center
+                justify-center
+                bg-[#08291E]
+                p-4
+                sm:p-6
+              "
+            >
               <img
                 src={selectedImage.image}
                 alt={selectedImage.title}
-                className="max-h-[65vh] w-auto rounded-lg object-contain shadow-md"
+                className="
+                  max-h-[62vh]
+                  w-auto
+                  max-w-full
+                  rounded-xl
+                  object-contain
+                  shadow-2xl
+                "
               />
             </div>
 
-            {/* Modal Footer Description */}
-            <div className="border-t border-slate-100 bg-white p-4">
-              <p className="text-center text-sm font-medium text-slate-600">
-                {selectedImage.description}
-              </p>
+            {/* MODAL FOOTER */}
+
+            <div
+              className="
+                border-t
+                border-emerald-100
+                bg-white
+                p-5
+              "
+            >
+              <div
+                className="
+                  mx-auto
+                  flex
+                  max-w-2xl
+                  items-start
+                  gap-3
+                "
+              >
+
+                <div
+                  className="
+                    mt-0.5
+                    flex
+                    h-8
+                    w-8
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-lg
+                    bg-emerald-50
+                    text-emerald-600
+                  "
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                </div>
+
+                <p
+                  className="
+                    text-sm
+                    font-medium
+                    leading-6
+                    text-slate-600
+                  "
+                >
+                  {selectedImage.description}
+                </p>
+
+              </div>
             </div>
-          </div>
-        </div>
+
+          </m.div>
+
+        </m.div>
       )}
+
     </section>
   )
 }

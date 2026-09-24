@@ -47,32 +47,35 @@ export default function ContactUs() {
     }, 900)
   }
 
+  const mapUrl =
+    "https://www.google.com/maps/search/?api=1&query=Nagar+Panchayat+Karyalaya+Govardhan+Mathura+Uttar+Pradesh+281502"
+
   return (
     <main
       id="contact-us"
-      className="relative min-h-screen overflow-hidden bg-linear-to-br from-[#fffdf8] via-[#f7fbff] to-[#fbf7ff] px-4 py-16 font-sans md:px-8 md:py-24"
+      className="relative min-h-screen overflow-hidden bg-linear-to-br from-[#f7fff9] via-white to-[#fff9ef] px-4 py-16 font-sans md:px-8 md:py-24"
     >
       {/* =====================================================
-          BACKGROUND GRID
+          PREMIUM BACKGROUND GRID
       ====================================================== */}
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
+        className="pointer-events-none absolute inset-0 opacity-[0.045]"
         style={{
           backgroundImage:
-            "linear-gradient(#123247 1px, transparent 1px), linear-gradient(90deg, #123247 1px, transparent 1px)",
+            "linear-gradient(#176b45 1px, transparent 1px), linear-gradient(90deg, #176b45 1px, transparent 1px)",
           backgroundSize: "42px 42px",
         }}
       />
 
-      {/* Background Glows */}
+      {/* Soft colourful ambient lights */}
 
-      <div className="pointer-events-none absolute -left-40 top-20 h-105 w-105 rounded-full bg-orange-300/20 blur-[140px]" />
+      <div className="pointer-events-none absolute -left-40 top-10 h-107.5 w-107.5 rounded-full bg-emerald-300/20 blur-[140px]" />
 
-      <div className="pointer-events-none absolute -right-40 top-1/3 h-112.5 w-112.5 rounded-full bg-blue-300/20 blur-[140px]" />
+      <div className="pointer-events-none absolute -right-40 top-1/4 h-112.5 w-112.5 rounded-full bg-orange-300/20 blur-[140px]" />
 
-      <div className="pointer-events-none absolute bottom-0 left-1/3 h-100 w-100 rounded-full bg-violet-300/15 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-105 w-105 rounded-full bg-lime-300/15 blur-[140px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
         {/* =====================================================
@@ -86,39 +89,46 @@ export default function ContactUs() {
           transition={{ duration: 0.6 }}
           className="mx-auto mb-14 max-w-3xl text-center"
         >
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-[10px] font-black tracking-[0.15em] text-orange-700 uppercase shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-100">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-orange-400 to-pink-500 text-white shadow-sm">
+          {/* Badge */}
+
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/85 px-4 py-2 text-[10px] font-black tracking-[0.15em] text-emerald-700 uppercase shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100"
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-sm">
               <Sparkles className="h-3.5 w-3.5" />
             </span>
 
             नागरिक संपर्क केंद्र
           </div>
 
-          <h1 className="font-serif text-4xl font-black tracking-tight text-[#123247] md:text-6xl">
+          {/* Heading */}
+
+          <h1 className="font-serif text-4xl font-black tracking-tight text-[#123f2b] md:text-6xl">
             Get in{" "}
-            <span className="bg-linear-to-r from-orange-500 via-pink-500 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-emerald-500 via-green-500 to-orange-500 bg-clip-text text-transparent">
               Touch
             </span>
           </h1>
 
           <p className="mt-3 text-sm font-bold text-slate-500 md:text-base">
-            संपर्क कार्यालय • Contact Nagar Palika Parishad, Mainpuri
+            संपर्क कार्यालय • Contact Nagar Panchayat Govardhan, Mathura
           </p>
 
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 font-medium text-slate-600 md:text-base">
             आपके सुझाव, शिकायतें और प्रश्न हमारे लिए महत्वपूर्ण हैं।
-            नगर पालिका परिषद, मैनपुरी से संबंधित किसी भी जानकारी या
-            सहायता के लिए हमसे संपर्क करें।
+            नगर पंचायत गोवर्धन, मथुरा से संबंधित किसी भी जानकारी,
+            नागरिक सेवा या सहायता के लिए हमसे संपर्क करें।
           </p>
 
-          <div className="mx-auto mt-7 flex items-center justify-center gap-2">
-            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-orange-400 to-pink-500" />
+          {/* Decorative divider */}
 
-            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-violet-200 bg-violet-50">
-              <Sparkles className="h-3.5 w-3.5 text-violet-500" />
+          <div className="mx-auto mt-7 flex items-center justify-center gap-2">
+            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-emerald-400 to-green-500" />
+
+            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-orange-200 bg-orange-50">
+              <Sparkles className="h-3.5 w-3.5 text-orange-500" />
             </span>
 
-            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-sky-500 to-violet-600" />
+            <span className="h-1.5 w-14 rounded-full bg-linear-to-r from-orange-400 to-amber-500" />
           </div>
         </motion.div>
 
@@ -138,99 +148,112 @@ export default function ContactUs() {
             transition={{ duration: 0.6 }}
             className="lg:col-span-5"
           >
-            <div className="group relative h-full overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_15px_45px_rgba(15,45,65,0.07)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_25px_65px_rgba(15,45,65,0.12)] md:p-7">
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-orange-400 via-pink-500 to-violet-600" />
+            <div className="group relative h-full overflow-hidden rounded-[30px] border border-emerald-100/80 bg-white/90 p-6 shadow-[0_15px_45px_rgba(15,80,50,0.08)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_25px_65px_rgba(15,80,50,0.14)] md:p-7">
+              {/* Top gradient */}
 
-              <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-orange-300/15 blur-3xl" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-emerald-400 via-green-500 to-orange-400" />
+
+              {/* Ambient glow */}
+
+              <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-300/15 blur-3xl" />
 
               <div className="relative z-10">
+                {/* Header */}
+
                 <div className="mb-7 flex items-start justify-between gap-4">
                   <div>
-                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1.5 text-[9px] font-black tracking-wider text-blue-700 uppercase">
+                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase">
                       <ShieldCheck className="h-3.5 w-3.5" />
                       Official Contact
                     </div>
 
-                    <h2 className="font-serif text-2xl font-black tracking-tight text-[#123247]">
+                    <h2 className="font-serif text-2xl font-black tracking-tight text-[#123f2b]">
                       Contact Information
                     </h2>
 
                     <p className="mt-1.5 text-xs leading-5 font-medium text-slate-500">
-                      किसी भी सहायता, जानकारी या नगरपालिका सेवा से संबंधित
-                      प्रश्न के लिए हमसे संपर्क करें।
+                      किसी भी नागरिक सेवा, जानकारी या नगर पंचायत संबंधी
+                      सहायता के लिए हमसे संपर्क करें।
                     </p>
                   </div>
 
-                  <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-orange-400 to-pink-500 text-white shadow-lg sm:flex">
+                  <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg sm:flex">
                     <Phone className="h-5 w-5" />
                   </div>
                 </div>
 
-                {/* Address */}
+                {/* =================================================
+                    ADDRESS
+                ================================================== */}
 
                 <div className="space-y-3.5">
-                  <div className="group/item flex items-start gap-4 rounded-2xl border border-blue-100 bg-linear-to-r from-blue-50/80 to-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-md transition-transform duration-300 group-hover/item:scale-110 group-hover/item:rotate-2">
+                  <div className="group/item flex items-start gap-4 rounded-2xl border border-emerald-100 bg-linear-to-r from-emerald-50/80 to-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/60">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-green-600 text-white shadow-md transition-transform duration-300 group-hover/item:scale-110 group-hover/item:rotate-2">
                       <MapPin className="h-5 w-5" />
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black tracking-[0.12em] text-blue-600 uppercase">
+                      <p className="text-[9px] font-black tracking-[0.12em] text-emerald-600 uppercase">
                         Office Address
                       </p>
 
                       <p className="mt-1 text-xs leading-5 font-bold text-slate-700">
-                        Agrawal Mohalla,
+                        Nagar Panchayat Karyalaya,
                         <br />
-                        Mainpuri, Uttar Pradesh - 205001
+                        Govardhan, Mathura,
+                        <br />
+                        Uttar Pradesh - 281502
                       </p>
                     </div>
                   </div>
 
-                  {/* Phone */}
+                  {/* =================================================
+                      PHONE
+                  ================================================== */}
 
-                  <div className="group/item flex items-start gap-4 rounded-2xl border border-emerald-100 bg-linear-to-r from-emerald-50/80 to-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-100/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-md transition-transform duration-300 group-hover/item:scale-110 group-hover/item:rotate-2">
+                  <div className="group/item flex items-start gap-4 rounded-2xl border border-blue-100 bg-linear-to-r from-blue-50/80 to-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-100/60">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-md transition-transform duration-300 group-hover/item:scale-110 group-hover/item:rotate-2">
                       <Phone className="h-5 w-5" />
                     </div>
 
                     <div>
-                      <p className="text-[9px] font-black tracking-[0.12em] text-emerald-600 uppercase">
-                        Phone Number
+                      <p className="text-[9px] font-black tracking-[0.12em] text-blue-600 uppercase">
+                        Nagar Panchayat Contact
                       </p>
 
                       <Link
-                        href="tel:+919454083549"
-                        className="mt-1 block text-xs font-black text-slate-700 transition-colors hover:text-emerald-600 hover:underline"
+                        href="tel:8189077944"
+                        className="mt-1 block text-xs font-black text-slate-700 transition-colors hover:text-blue-600 hover:underline"
                       >
-                        +91 94540 83549
+                        +91 81890 77944
                       </Link>
                     </div>
                   </div>
 
-                  {/* Email */}
+                  {/* =================================================
+                      EMAIL
+                  ================================================== */}
 
-                  <div className="group/item flex items-start gap-4 rounded-2xl border border-amber-100 bg-linear-to-r from-amber-50/80 to-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-100/60">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-md transition-transform duration-300 group-hover/item:scale-110 group-hover/item:rotate-2">
+                  <div className="group/item flex items-start gap-4 rounded-2xl border border-orange-100 bg-linear-to-r from-orange-50/80 to-white p-4 transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-100/60">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-400 to-amber-500 text-white shadow-md transition-transform duration-300 group-hover/item:scale-110 group-hover/item:rotate-2">
                       <Mail className="h-5 w-5" />
                     </div>
 
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black tracking-[0.12em] text-amber-600 uppercase">
-                        Email Address
+                      <p className="text-[9px] font-black tracking-[0.12em] text-orange-600 uppercase">
+                        Email
                       </p>
 
-                      <Link
-                        href="mailto:nppmainpuri@gmail.com"
-                        className="mt-1 block truncate text-xs font-black text-slate-700 transition-colors hover:text-amber-600 hover:underline"
-                      >
-                        nppmainpuri@gmail.com
-                      </Link>
+                      <p className="mt-1 text-xs font-bold text-slate-500">
+                        Official email not publicly listed
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Office Details */}
+                {/* =================================================
+                    OFFICE DETAILS
+                ================================================== */}
 
                 <div className="mt-7 space-y-3 border-t border-slate-100 pt-6">
                   <div className="flex items-center gap-3 rounded-xl border border-violet-100 bg-violet-50/50 p-3.5 transition-all hover:bg-violet-50">
@@ -239,12 +262,12 @@ export default function ContactUs() {
                     </div>
 
                     <div>
-                      <h4 className="text-[10px] font-black text-[#123247]">
-                        Office Hours
+                      <h4 className="text-[10px] font-black text-[#123f2b]">
+                        Office Information
                       </h4>
 
                       <p className="mt-0.5 text-[10px] font-medium text-slate-500">
-                        Monday – Saturday • 10:00 AM – 05:00 PM
+                        Nagar Panchayat Office • Govardhan
                       </p>
                     </div>
                   </div>
@@ -260,20 +283,27 @@ export default function ContactUs() {
                       </h4>
 
                       <p className="mt-0.5 text-[10px] font-medium text-slate-500">
-                        नगरपालिका सेवाओं एवं नागरिक सहायता के लिए संपर्क करें।
+                        नागरिक सेवाओं एवं शिकायत संबंधी सहायता के लिए
+                        संपर्क करें।
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                {/* Official portal */}
+
+                <div className="mt-6 flex items-center justify-between rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
                   <div>
-                    <p className="text-[9px] font-black tracking-wider text-slate-400 uppercase">
-                      Official Portal
+                    <p className="text-[9px] font-black tracking-wider text-emerald-600 uppercase">
+                      Local Urban Body
                     </p>
 
-                    <p className="mt-1 text-xs font-black text-[#123247]">
-                      Nagar Palika Parishad, Mainpuri
+                    <p className="mt-1 text-xs font-black text-[#123f2b]">
+                      Nagar Panchayat Govardhan
+                    </p>
+
+                    <p className="mt-0.5 text-[10px] font-medium text-slate-500">
+                      Mathura, Uttar Pradesh
                     </p>
                   </div>
 
@@ -296,38 +326,44 @@ export default function ContactUs() {
             transition={{ duration: 0.6 }}
             className="lg:col-span-7"
           >
-            <div className="relative h-full overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 shadow-[0_15px_45px_rgba(15,45,65,0.07)] backdrop-blur-xl">
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-blue-500 via-violet-500 to-pink-500" />
+            <div className="relative h-full overflow-hidden rounded-[30px] border border-emerald-100/80 bg-white/95 shadow-[0_15px_45px_rgba(15,80,50,0.08)] backdrop-blur-xl">
+                <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-emerald-500 via-green-500 to-orange-500" />
 
-              <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-blue-300/10 blur-3xl" />
+              <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-emerald-300/10 blur-3xl" />
 
-              <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-pink-300/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-orange-300/10 blur-3xl" />
 
               <div className="relative z-10 p-6 md:p-8">
+                {/* Form Header */}
+
                 <div className="mb-7 flex items-start justify-between gap-4">
                   <div>
-                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-violet-100 bg-violet-50 px-3 py-1.5 text-[9px] font-black tracking-wider text-violet-700 uppercase">
+                    <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase">
                       <Send className="h-3 w-3" />
                       Online Enquiry
                     </div>
 
-                    <h2 className="font-serif text-2xl font-black tracking-tight text-[#123247]">
+                    <h2 className="font-serif text-2xl font-black tracking-tight text-[#123f2b]">
                       Send Us a Message
                     </h2>
 
                     <p className="mt-1.5 text-xs font-medium text-slate-500">
-                      अपना संदेश दर्ज करें। हमारी टीम आवश्यकतानुसार आपसे संपर्क
-                      करेगी।
+                      अपना संदेश दर्ज करें। हमारी टीम आवश्यकतानुसार आपसे
+                      संपर्क करेगी।
                     </p>
                   </div>
 
-                  <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-pink-500 text-white shadow-lg sm:flex">
+                  <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-lg sm:flex">
                     <Send className="h-5 w-5" />
                   </div>
                 </div>
 
                 <AnimatePresence mode="wait">
                   {submitted ? (
+                    /* =================================================
+                       SUCCESS STATE
+                    ================================================== */
+
                     <motion.div
                       key="success"
                       initial={{ opacity: 0, scale: 0.92, y: 15 }}
@@ -343,13 +379,13 @@ export default function ContactUs() {
                         </div>
                       </div>
 
-                      <h3 className="mt-7 text-2xl font-black text-[#123247]">
+                      <h3 className="mt-7 text-2xl font-black text-[#123f2b]">
                         Message Sent Successfully!
                       </h3>
 
                       <p className="mt-3 max-w-md text-sm leading-6 font-medium text-slate-500">
-                        धन्यवाद! आपका संदेश नगर पालिका परिषद, मैनपुरी को
-                        सफलतापूर्वक प्राप्त हो गया है।
+                        धन्यवाद! आपका संदेश नगर पंचायत गोवर्धन, मथुरा के
+                        लिए सफलतापूर्वक प्राप्त हो गया है।
                       </p>
 
                       <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-[10px] font-bold text-emerald-700">
@@ -358,6 +394,10 @@ export default function ContactUs() {
                       </div>
                     </motion.div>
                   ) : (
+                    /* =================================================
+                       FORM
+                    ================================================== */
+
                     <motion.form
                       key="form"
                       initial={{ opacity: 0 }}
@@ -385,7 +425,7 @@ export default function ContactUs() {
                             autoComplete="name"
                             disabled={isPending}
                             placeholder="Enter your full name"
-                            className="h-11 rounded-xl border-slate-200 bg-slate-50/70 px-4 text-xs font-semibold transition-all placeholder:text-slate-400 hover:border-blue-200 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                            className="h-11 rounded-xl border-slate-200 bg-slate-50/70 px-4 text-xs font-semibold transition-all placeholder:text-slate-400 hover:border-emerald-200 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                           />
                         </div>
 
@@ -432,7 +472,7 @@ export default function ContactUs() {
                             pattern="[1-9][0-9]{9}"
                             disabled={isPending}
                             placeholder="10-digit mobile number"
-                            className="h-11 rounded-xl border-slate-200 bg-slate-50/70 px-4 text-xs font-semibold transition-all placeholder:text-slate-400 hover:border-emerald-200 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                            className="h-11 rounded-xl border-slate-200 bg-slate-50/70 px-4 text-xs font-semibold transition-all placeholder:text-slate-400 hover:border-blue-200 focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100"
                             onChange={(e) => {
                               e.target.value = e.target.value
                                 .replace(/\D/g, "")
@@ -478,18 +518,18 @@ export default function ContactUs() {
                           disabled={isPending}
                           rows={6}
                           placeholder="Write your message or enquiry..."
-                          className="resize-none rounded-xl border-slate-200 bg-slate-50/70 px-4 py-3 text-xs font-semibold transition-all placeholder:text-slate-400 hover:border-pink-200 focus:border-pink-400 focus:bg-white focus:ring-4 focus:ring-pink-100"
+                          className="resize-none rounded-xl border-slate-200 bg-slate-50/70 px-4 py-3 text-xs font-semibold transition-all placeholder:text-slate-400 hover:border-emerald-200 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-100"
                         />
                       </div>
 
                       {/* Privacy */}
 
-                      <div className="flex items-start gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                      <div className="flex items-start gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
                         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
 
                         <p className="text-[9px] leading-4 font-medium text-slate-500">
-                          आपकी जानकारी केवल आपकी enquiry को process करने और
-                          आवश्यक संपर्क के लिए उपयोग की जाएगी।
+                          आपकी जानकारी केवल आपकी enquiry को process करने
+                          और आवश्यक संपर्क के लिए उपयोग की जाएगी।
                         </p>
                       </div>
 
@@ -498,7 +538,7 @@ export default function ContactUs() {
                       <Button
                         type="submit"
                         disabled={isPending}
-                        className="group h-12 w-full cursor-pointer rounded-xl bg-linear-to-r from-blue-600 via-violet-600 to-pink-500 text-xs font-black text-white shadow-lg shadow-violet-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-300 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="group h-12 w-full cursor-pointer rounded-xl bg-linear-to-r from-emerald-600 via-green-600 to-teal-600 text-xs font-black text-white shadow-lg shadow-emerald-200 transition-all duration-300 hover:-translate-y-0.5 hover:from-emerald-500 hover:via-green-500 hover:to-teal-500 hover:shadow-xl hover:shadow-emerald-300 disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         <span>
                           {isPending ? "Sending Message..." : "Send Message"}
@@ -519,7 +559,7 @@ export default function ContactUs() {
         </div>
 
         {/* =====================================================
-            GOOGLE MAPS
+            GOOGLE MAP
         ====================================================== */}
 
         <motion.section
@@ -527,33 +567,33 @@ export default function ContactUs() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-7 overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/90 p-5 shadow-[0_15px_45px_rgba(15,45,65,0.07)] backdrop-blur-xl md:p-7"
+          className="mt-7 overflow-hidden rounded-[30px] border border-emerald-100/80 bg-white/90 p-5 shadow-[0_15px_45px_rgba(15,80,50,0.08)] backdrop-blur-xl md:p-7"
         >
           {/* Map Header */}
 
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase">
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-[9px] font-black tracking-wider text-orange-700 uppercase">
                 <MapPin className="h-3 w-3" />
                 Find Our Office
               </div>
 
-              <h2 className="font-serif text-2xl font-black tracking-tight text-[#123247]">
-                Nagar Palika Parishad, Mainpuri
+              <h2 className="font-serif text-2xl font-black tracking-tight text-[#123f2b]">
+                Nagar Panchayat Govardhan
               </h2>
 
               <p className="mt-1 text-xs font-medium text-slate-500">
-                Agrawal Mohalla, Mainpuri, Uttar Pradesh - 205001
+                Govardhan, Mathura, Uttar Pradesh - 281502
               </p>
             </div>
 
             {/* Open Google Maps */}
 
             <Link
-              href="https://www.google.com/maps/search/?api=1&query=Nagar+Palika+Parishad+Mainpuri+Agrawal+Mohalla+Uttar+Pradesh+205001"
+              href={mapUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 px-4 py-3 text-[10px] font-black text-white shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-300"
+              className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-linear-to-r from-emerald-600 to-teal-600 px-4 py-3 text-[10px] font-black text-white shadow-lg shadow-emerald-200 transition-all duration-300 hover:-translate-y-0.5 hover:from-emerald-500 hover:to-teal-500 hover:shadow-xl hover:shadow-emerald-300"
             >
               <Navigation className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
 
@@ -564,30 +604,31 @@ export default function ContactUs() {
           </div>
 
           {/* =================================================
-              MAINPURI GOOGLE MAP IFRAME
+              GOVARDHAN MAP IFRAME
           ================================================== */}
 
-          <div className="group relative mt-6 h-95 w-full overflow-hidden rounded-[24px] border border-slate-200 bg-slate-100">
-            <div className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-[#123247]/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <div className="group relative mt-6 h-95 w-full overflow-hidden rounded-[24px] border border-emerald-100 bg-emerald-50">
+            <div className="pointer-events-none absolute inset-0 z-10 bg-linear-to-t from-[#176b45]/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
             <iframe
-              src="https://www.google.com/maps?q=Nagar+Palika+Parishad+Mainpuri+Agrawal+Mohalla+Uttar+Pradesh+205001&output=embed"
-              className="h-full w-full border-0 grayscale-15 transition-all duration-700 group-hover:grayscale-0"
+              src="https://www.google.com/maps?q=Nagar+Panchayat+Karyalaya+Govardhan+Mathura+Uttar+Pradesh+281502&output=embed"
+              className="h-full w-full border-0 grayscale-10 transition-all duration-700 group-hover:grayscale-0"
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Nagar Palika Parishad Mainpuri Location Map"
+              title="Nagar Panchayat Govardhan Mathura Location Map"
             />
           </div>
 
           {/* Map Footer */}
 
-          <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-orange-500" />
+              <MapPin className="h-4 w-4 text-emerald-600" />
 
               <span className="text-[10px] font-bold text-slate-600">
-                Agrawal Mohalla, Mainpuri, Uttar Pradesh - 205001
+                Nagar Panchayat Karyalaya, Govardhan, Mathura, Uttar Pradesh
+                - 281502
               </span>
             </div>
 
