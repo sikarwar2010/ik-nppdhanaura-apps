@@ -7,10 +7,10 @@ export function getCitizenWebUrl(): string {
 
 /**
  * Hostname shown on official demand notices / payment instructions.
- * Falls back to www.npchhata.com when unset or localhost.
+ * Falls back to www.npgovardhan.org when unset or localhost.
  */
 export function getCitizenWebDisplayHost(baseUrl?: string): string {
-  const fallback = "www.npchhata.com"
+  const fallback = "www.npgovardhan.org"
   const raw = (baseUrl ?? getCitizenWebUrl()).trim()
   if (!raw) return fallback
   try {

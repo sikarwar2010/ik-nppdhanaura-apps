@@ -128,7 +128,7 @@ export function generateDemandNoticeHtml(
     assessmentYear?: string
     /** Absolute URL or data URI — required for print popup (about:blank). */
     logoUrl?: string
-    /** Public website hostname for payment instructions (e.g. www.npchhata.com). */
+    /** Public website hostname for payment instructions (e.g. www.npgovardhan.org). */
     websiteDisplayHost?: string
   }
 ): string {

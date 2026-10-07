@@ -182,7 +182,7 @@ describe("duesPayloadToNoticeViewModel + HTML", () => {
       colony: null,
       city: "Chhata",
       pincode: null,
-      propertyUse: "Residential",
+      propertyUse: "Residential Rented",
       taxRateZone: "BELOW_9M",
       roadType: null,
       assessmentYear: { id: "y1", code: "2025-26", name: "2025-2026" },
@@ -216,11 +216,14 @@ describe("duesPayloadToNoticeViewModel + HTML", () => {
       },
     }
 
-    const vm = duesPayloadToNoticeViewModel(dues)
+    const vm = duesPayloadToNoticeViewModel(dues, {
+      propertyType: "Residential",
+    })
     expect(vm.surveyId).toBe(dues.surveyId)
     expect(vm.totalDemand).toBe(69.12)
     expect(vm.assessmentYear).toBe("2025-2026")
     expect(vm.ownerName).toBe("Ram")
+    expect(vm.propertyType).toBe("Residential")
 
     const blankOwnerVm = duesPayloadToNoticeViewModel({
       ...dues,
@@ -237,6 +240,9 @@ describe("duesPayloadToNoticeViewModel + HTML", () => {
     expect(html).toContain("page-break-after: always")
     expect(html).toContain("संपत्ति कर मांग सूचना पत्र")
     expect(html).toContain("chh-001-000001-001-R")
+    expect(html).toContain("www.npgovardhan.org")
+    expect(html).toContain(">Residential</div>")
+    expect(html).not.toContain(">Residential Rented</div>")
     expect(html).toContain("second")
     expect(html.match(/class="page"/g)?.length).toBe(2)
     expect(html).not.toContain("Print A4 Notice")

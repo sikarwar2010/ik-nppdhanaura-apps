@@ -56,6 +56,7 @@ const SURVEY_DUES_SELECT = {
   colony: true,
   city: true,
   pincode: true,
+  propertyType: true,
   propertyUse: true,
   taxRateZone: true,
   roadType: true,
@@ -292,7 +293,9 @@ export class DemandNoticeService implements OnModuleDestroy {
       })
     }
 
-    const vm = duesPayloadToNoticeViewModel(dues)
+    const vm = duesPayloadToNoticeViewModel(dues, {
+      propertyType: survey.propertyType,
+    })
     const logoUrl =
       input.logoUrl?.trim() || (await this.resolveLogoDataUri()) || undefined
     return generateDemandNoticeDocumentHtml([vm], {
@@ -643,6 +646,7 @@ export class DemandNoticeService implements OnModuleDestroy {
         )
         return {
           survey: this.toSurveyForDues(survey),
+          propertyType: survey.propertyType,
           tax: dues.tax,
           hasPublishedTaxConfig: true,
           dues,
@@ -677,7 +681,11 @@ export class DemandNoticeService implements OnModuleDestroy {
         })
         if (cancelled?.status === ExportJobStatus.CANCELLED) return
 
-        viewModels.push(duesPayloadToNoticeViewModel(item.dues))
+        viewModels.push(
+          duesPayloadToNoticeViewModel(item.dues, {
+            propertyType: item.propertyType,
+          })
+        )
         processed += 1
         if (processed % 25 === 0 || processed === validationItems.length) {
           await this.prisma.exportJob.update({

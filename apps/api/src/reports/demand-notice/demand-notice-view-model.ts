@@ -23,7 +23,7 @@ export type PropertyTaxDemandNoticeViewModel = {
   houseNo: string | null
   propertyNo: string | null
   parcelNo: string | null
-  propertyUse: string | null
+  propertyType: string | null
   /** Display name; blank owner becomes "N/A". */
   ownerName: string
   ownerFatherName: string | null
@@ -74,7 +74,11 @@ function money(n: number): string {
 
 export function duesPayloadToNoticeViewModel(
   dues: DuesPayload,
-  options?: { noticeDate?: Date; mobileDisplay?: string }
+  options?: {
+    noticeDate?: Date
+    mobileDisplay?: string
+    propertyType?: string | null
+  }
 ): PropertyTaxDemandNoticeViewModel {
   const floors = dues.floors.map((f) => ({
     floorLabel: f.floorLabel,
@@ -109,7 +113,7 @@ export function duesPayloadToNoticeViewModel(
     houseNo: dues.houseNo,
     propertyNo: dues.propertyNo,
     parcelNo: dues.parcelNo,
-    propertyUse: dues.propertyUse,
+    propertyType: options?.propertyType ?? null,
     ownerName,
     ownerFatherName: dues.ownerFatherName,
     mobileDisplay: options?.mobileDisplay ?? dues.mobileMasked ?? "—",
