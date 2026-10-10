@@ -462,6 +462,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                       type="submit"
                       disabled={
                         payment.isPending ||
+                        process.env.NODE_ENV === "production" ||
                         !dues.data.onlinePaymentEnabled ||
                         dues.data.tax.totalDemand <= 0
                       }
