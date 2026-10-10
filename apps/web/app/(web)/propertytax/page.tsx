@@ -1,10 +1,11 @@
 import PropertyTax from '@/components/propertytax/page';
 import type { Metadata } from "next"
+import { propertyTaxMunicipality } from "@/components/propertytax/municipality-config"
 
 export const metadata: Metadata = {
-  title: "Property Tax",
+  title: `House Tax | ${propertyTaxMunicipality.name}`,
   description:
-    "Calculate and pay property tax for your building or plot in Nagar Panchayat,Goverdhan , Mathura, Uttar Pradesh, India. Access information about tax rates, due dates, and payment methods.",
+    `Search and pay municipal house and property tax for ${propertyTaxMunicipality.name}, ${propertyTaxMunicipality.city}, ${propertyTaxMunicipality.state}.`,
 }
 
 export default function PropertyTaxPage() {

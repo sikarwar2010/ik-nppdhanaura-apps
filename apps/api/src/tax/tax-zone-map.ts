@@ -110,6 +110,7 @@ export function mapTaxRateZoneCode(raw?: string | null): string | null {
 export function mapConstructionCode(raw?: string | null): string {
   if (!raw?.trim()) return "PAKKA_BUILDING_WITH_RCC_ROOF"
   const n = norm(raw)
+  if (n.includes("other_pakka_building")) return "TIN_SHED"
   for (const [key, code] of Object.entries(CONSTRUCTION)) {
     if (n.includes(key)) return code
   }

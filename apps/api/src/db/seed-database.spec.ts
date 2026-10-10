@@ -117,6 +117,46 @@ describe("isGrantedToDepartmentAdmin", () => {
 })
 
 describe("seedDatabase", () => {
+  it("seeds configured municipality ward data", async () => {
+    const { prisma } = createPrismaMock()
+    const wards = [
+      { number: 1, code: "W01", name: "Ward 01 - Sample Locality" },
+      { number: 2, code: "W02", name: "Ward 02 - Market Area" },
+    ]
+
+    await seedDatabase(prisma, {
+      env: {
+        ...seedEnv,
+        MUNICIPALITY_WARDS_JSON: JSON.stringify(wards),
+      },
+      hashPassword: async () => "hashed",
+      logger: { info: () => undefined },
+    })
+
+    expect(prisma.ward.upsert).toHaveBeenCalledTimes(2)
+    expect(prisma.ward.upsert).toHaveBeenCalledWith({
+      where: { number: 1 },
+      update: { code: "W01", name: "Ward 01 - Sample Locality", isActive: true },
+      create: { ...wards[0], isActive: true },
+    })
+  })
+
+  it("rejects invalid configured ward data", async () => {
+    const { prisma } = createPrismaMock()
+
+    await expect(
+      seedDatabase(prisma, {
+        env: {
+          ...seedEnv,
+          MUNICIPALITY_WARDS_JSON: '[{"number":0,"code":"W01","name":"Ward 1"}]',
+        },
+        hashPassword: async () => "hashed",
+        logger: { info: () => undefined },
+      })
+    ).rejects.toThrow("MUNICIPALITY_WARDS_JSON entry 1")
+    expect(prisma.ward.upsert).not.toHaveBeenCalled()
+  })
+
   it("creates a Super Admin with passwordHash on user", async () => {
     const { prisma, users, userRoles } = createPrismaMock()
     const logs: string[] = []

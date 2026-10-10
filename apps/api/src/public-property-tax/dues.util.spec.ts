@@ -150,6 +150,64 @@ describe("buildNoticeFloorLines", () => {
     expect(lines[0]?.tax).toBe(483.84)
   })
 
+  it.each([
+    { usageType: "Residential", expectedRate: 0.6 },
+    { usageType: "Commercial", expectedRate: 1.2 },
+  ])(
+    "uses the zone's Tin Shed rate for Other Pakka Building ($usageType)",
+    ({ usageType, expectedRate }) => {
+      const survey: SurveyForDues = {
+        id: "other-pakka",
+        surveyId: "SUR-OTHER-PAKKA",
+        ownerName: "Ram",
+        ownerFatherName: "Shyam",
+        mobile: null,
+        propertyNo: "1",
+        parcelNo: "2",
+        houseNo: "3",
+        streetName: null,
+        locality: "Test",
+        colony: null,
+        city: "Chhata",
+        pincode: null,
+        propertyUse: usageType,
+        taxRateZone: "BELOW_9M",
+        roadType: null,
+        hasMunicipalWaterSupply: true,
+        plotAreaSqFt: null,
+        plinthAreaSqFt: null,
+        totalBuiltUpAreaSqFt: null,
+        ward: { number: 1, name: "Ward 1" },
+        floors: [
+          {
+            floorLabel: "Ground Floor",
+            usageType,
+            usageFactor: "Self Occupied",
+            buildingType: "Other Pakka Building",
+            areaSqFt: 100,
+          },
+        ],
+      }
+      const rates = {
+        assessablePct: 80,
+        commercialAssessablePct: 80,
+        propertyTaxPct: 10,
+        waterTaxPct: 7.5,
+        drainageTaxPct: 2.5,
+        penaltyPct: 0,
+        rateByZoneAndConstruction: new Map([
+          [taxRateKey("BELOW_9M", "PAKKA_BUILDING_WITH_RCC_ROOF"), 0.8],
+          [taxRateKey("BELOW_9M", "TIN_SHED"), 0.6],
+        ]),
+        anyRateByZone: new Map([["BELOW_9M", 0.8]]),
+      }
+
+      const lines = buildNoticeFloorLines(survey, rates)
+      expect(lines).toHaveLength(1)
+      expect(lines[0]?.rate).toBe(expectedRate)
+    }
+  )
+
   it("GIS Use Code C doubles notice rate even when propertyUse is Residential", () => {
     const survey: SurveyForDues = {
       id: "s3",
@@ -252,7 +310,7 @@ describe("buildNoticeFloorLines", () => {
 })
 
 describe("computePublicDuesPayload", () => {
-  it("includes ownerName and ownerFatherName from the survey", () => {
+  it("includes owner names and property type from the survey", () => {
     const survey: SurveyForDues = {
       id: "s1",
       surveyId: "SUR-1",
@@ -267,6 +325,7 @@ describe("computePublicDuesPayload", () => {
       colony: null,
       city: "Chhata",
       pincode: null,
+      propertyType: "Residential",
       propertyUse: "Residential",
       taxRateZone: "BELOW_9M",
       roadType: null,
@@ -288,5 +347,6 @@ describe("computePublicDuesPayload", () => {
     const payload = computePublicDuesPayload(survey, sampleRatesConfig())
     expect(payload.ownerName).toBe("Ram")
     expect(payload.ownerFatherName).toBe("Shyam")
+    expect(payload.propertyType).toBe("Residential")
   })
 })

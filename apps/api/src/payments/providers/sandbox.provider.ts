@@ -27,20 +27,26 @@ export class SandboxPaymentProvider implements PaymentGatewayProvider {
 
   async requery(input: RequeryInput): Promise<RequeryResult> {
     return {
-      statusCode: "OTS0000",
-      success: true,
-      atomTxnId: `SANDBOX-${input.merchTxnId}`,
+      statusCode: "SANDBOX_NOT_CONFIGURED",
+      success: false,
       amount: undefined,
-      raw: { provider: "sandbox", merchTxnId: input.merchTxnId },
+      raw: {
+        provider: "sandbox",
+        merchTxnId: input.merchTxnId,
+        message: "No live payment gateway is configured.",
+      },
     }
   }
 
   async refund(input: RefundInput): Promise<RefundResult> {
     return {
-      statusCode: "OTS0000",
-      success: true,
-      gatewayRefundId: `RFD-${input.merchTxnId}`,
-      raw: { provider: "sandbox", input },
+      statusCode: "SANDBOX_NOT_CONFIGURED",
+      success: false,
+      raw: {
+        provider: "sandbox",
+        input,
+        message: "No live payment gateway is configured.",
+      },
     }
   }
 }

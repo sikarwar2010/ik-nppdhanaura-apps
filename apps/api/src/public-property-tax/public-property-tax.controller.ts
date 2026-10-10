@@ -46,9 +46,4 @@ export class PublicPropertyTaxController {
     return { success: true, data }
   }
 
-  @Get("receipts/:merchTxnId")
-  async getReceipt(@Param("merchTxnId") merchTxnId: string) {
-    const data = await this.service.getReceipt(merchTxnId)
-    return { success: true, data }
-  }
 }

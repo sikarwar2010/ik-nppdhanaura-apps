@@ -43,6 +43,7 @@ export type SurveyForDues = {
   city: string | null
   pincode: string | null
   propertyUse: string | null
+  propertyType?: string | null
   taxRateZone: string | null
   roadType: string | null
   hasMunicipalWaterSupply: boolean | null
@@ -264,6 +265,7 @@ export function computePublicDuesPayload(
     colony: survey.colony,
     city: survey.city,
     pincode: survey.pincode,
+    propertyType: survey.propertyType ?? null,
     propertyUse: survey.propertyUse,
     taxRateZone: survey.taxRateZone,
     roadType: survey.roadType,

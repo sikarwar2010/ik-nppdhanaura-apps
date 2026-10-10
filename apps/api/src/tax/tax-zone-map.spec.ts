@@ -1,5 +1,6 @@
 import {
   classifyGisUseCode,
+  mapConstructionCode,
   isResidentialUsage,
   mapTaxRateZoneCode,
 } from "./tax-zone-map"
@@ -74,6 +75,15 @@ describe("classifyGisUseCode", () => {
   it("treats unknown letters as residential", () => {
     expect(classifyGisUseCode("I")).toBe("residential")
     expect(classifyGisUseCode("249044-001-000131-001-X")).toBe("residential")
+  })
+})
+
+describe("mapConstructionCode", () => {
+  it("maps Other Pakka Building to the Tin Shed rate category", () => {
+    expect(mapConstructionCode("Other Pakka Building")).toBe("TIN_SHED")
+    expect(mapConstructionCode("Other Pakka Building with RCC Roof")).toBe(
+      "TIN_SHED"
+    )
   })
 })
 

@@ -40,6 +40,52 @@ const WARDS = [
   { number: 18, code: "W18", name: "वार्ड नंबर 18 - आन्यौर" },
 ] as const
 
+function resolveWardSeed(env: NodeJS.ProcessEnv) {
+  const configured = env.MUNICIPALITY_WARDS_JSON?.trim()
+  if (!configured) return WARDS
+
+  const parsed: unknown = JSON.parse(configured)
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("MUNICIPALITY_WARDS_JSON must be a non-empty JSON array.")
+  }
+
+  const codes = new Set<string>()
+  const numbers = new Set<number>()
+  return parsed.map((item, index) => {
+    if (typeof item !== "object" || item === null || Array.isArray(item)) {
+      throw new Error(
+        `MUNICIPALITY_WARDS_JSON entry ${index + 1} must be an object.`
+      )
+    }
+
+    const ward = item as Record<string, unknown>
+    const code = typeof ward.code === "string" ? ward.code.trim() : ""
+    const name = typeof ward.name === "string" ? ward.name.trim() : ""
+    const number = ward.number
+    if (
+      typeof number !== "number" ||
+      !Number.isSafeInteger(number) ||
+      number < 1 ||
+      code.length === 0 ||
+      code.length > 40 ||
+      name.length === 0 ||
+      name.length > 120
+    ) {
+      throw new Error(
+        `MUNICIPALITY_WARDS_JSON entry ${index + 1} must include a positive ward number, code (1-40 characters), and name (1-120 characters).`
+      )
+    }
+    if (codes.has(code) || numbers.has(number)) {
+      throw new Error(
+        `MUNICIPALITY_WARDS_JSON contains a duplicate ward number or code at entry ${index + 1}.`
+      )
+    }
+    codes.add(code)
+    numbers.add(number)
+    return { number, code, name }
+  })
+}
+
 /** Human-readable labels for catalog permission codes (@workspace/types). */
 const PERMISSION_DESCRIPTIONS: Record<string, string> = {
   "dashboard:read": "View dashboard",
@@ -169,7 +215,7 @@ export async function seedDatabase(
 
   logger.info("Seeding reference data...")
 
-  for (const ward of WARDS) {
+  for (const ward of resolveWardSeed(env)) {
     await prisma.ward.upsert({
       where: { number: ward.number },
       update: { code: ward.code, name: ward.name, isActive: true },

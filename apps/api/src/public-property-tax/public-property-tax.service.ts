@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
 } from "@nestjs/common"
 import { PaymentStatus, Prisma } from "@prisma/client"
 
@@ -93,6 +94,7 @@ export class PublicPropertyTaxService {
         city: true,
         pincode: true,
         propertyUse: true,
+        propertyType: true,
         taxRateZone: true,
         roadType: true,
         hasMunicipalWaterSupply: true,
@@ -151,14 +153,25 @@ export class PublicPropertyTaxService {
       survey.id,
       config.assessmentYear.id
     )
+    const onlinePaymentEnabled =
+      process.env.PAYMENT_PROVIDER?.trim().toLowerCase() === "atom"
 
     return {
       ...computePublicDuesPayload(survey, config),
       paidForAssessmentYear,
+      onlinePaymentEnabled,
     }
   }
 
   async createPayment(dto: CreatePublicPropertyTaxPaymentDto) {
+    if (process.env.PAYMENT_PROVIDER?.trim().toLowerCase() !== "atom") {
+      throw new ServiceUnavailableException({
+        code: "PAYMENT_GATEWAY_NOT_CONFIGURED",
+        message:
+          "Online payment is not available yet because this municipality has not configured a live payment gateway.",
+      })
+    }
+
     const dues = await this.getDues(dto.surveyId)
     const amount = Number(dues.tax.totalDemand)
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -229,8 +242,11 @@ export class PublicPropertyTaxService {
           : "http://localhost:4000/api/v1/payments/gateway/return"
       })()
 
+    const citizenEmailDomain =
+      process.env.PUBLIC_CITIZEN_EMAIL_DOMAIN?.trim().replace(/^@/, "") ||
+      "citizen.local"
     const custEmail =
-      dto.payerEmail?.trim() || `${dto.payerMobile}@citizen.chhata.in`
+      dto.payerEmail?.trim() || `${dto.payerMobile}@${citizenEmailDomain}`
     const checkoutEnv = (
       process.env.ATOM_CHECKOUT_ENV?.trim().toLowerCase() === "prod"
         ? "prod"
@@ -317,8 +333,8 @@ export class PublicPropertyTaxService {
     return {
       paymentId: payment.id,
       merchTxnId: payment.merchTxnId,
-      receiptNumber: payment.receiptNumber,
       status: payment.status,
+      sandbox: payment.gateway === "sandbox",
       amount: Number(payment.amount),
       currency: payment.currency,
       payerMobileMasked: maskMobile(payment.payerMobile),
@@ -330,71 +346,6 @@ export class PublicPropertyTaxService {
       parcelNo: survey?.parcelNo ?? null,
       createdAt: payment.createdAt.toISOString(),
       updatedAt: payment.updatedAt.toISOString(),
-    }
-  }
-
-  async getReceipt(merchTxnId: string) {
-    const status = await this.getPaymentByMerchTxnId(merchTxnId, true)
-    if (status.status !== PaymentStatus.SUCCESS) {
-      throw new NotFoundException({
-        code: "RECEIPT_NOT_AVAILABLE",
-        message: "Receipt is available only after a successful payment",
-      })
-    }
-
-    const payment = await this.prisma.payment.findFirst({
-      where: { merchTxnId: merchTxnId.trim() },
-      include: {
-        survey: {
-          select: {
-            ownerName: true,
-            ownerFatherName: true,
-          },
-        },
-      },
-    })
-    if (!payment?.surveyId) {
-      throw new NotFoundException({
-        code: "RECEIPT_NOT_AVAILABLE",
-        message: "Receipt is available only after a successful payment",
-      })
-    }
-
-    let assessmentYear: string | null = null
-    let taxBreakdown: {
-      propertyTax: number
-      waterTax: number
-      drainageTax: number
-      penalty: number
-      totalDemand: number
-    } | null = null
-    try {
-      const dues = await this.getDues(payment.surveyId)
-      assessmentYear = dues.assessmentYear.name
-      taxBreakdown = {
-        propertyTax: dues.tax.propertyTax,
-        waterTax: dues.tax.waterTax,
-        drainageTax: dues.tax.drainageTax,
-        penalty: dues.tax.penalty,
-        totalDemand: dues.tax.totalDemand,
-      }
-    } catch {
-      // Receipt still valid without live dues recomputation
-    }
-
-    return {
-      ...status,
-      receiptNumber:
-        status.receiptNumber ?? `RCP-${status.merchTxnId ?? merchTxnId}`,
-      paidAt:
-        payment.collectionDate?.toISOString() ??
-        payment.updatedAt.toISOString(),
-      assessmentYear,
-      ownerName: payment.survey?.ownerName ?? payment.payerName ?? null,
-      ownerFatherName: payment.survey?.ownerFatherName ?? null,
-      taxBreakdown,
-      gateway: payment.gateway,
-      atomTxnId: payment.atomTxnId,
     }
   }
 
@@ -457,6 +408,7 @@ export class PublicPropertyTaxService {
         surveyId,
         assessmentYearId,
         status: PaymentStatus.SUCCESS,
+        OR: [{ gateway: null }, { gateway: { not: "sandbox" } }],
       },
     })
     return count > 0
@@ -504,6 +456,7 @@ export class PublicPropertyTaxService {
               surveyId: { in: surveyIds },
               status: PaymentStatus.SUCCESS,
               assessmentYearId: { in: yearIds },
+              OR: [{ gateway: null }, { gateway: { not: "sandbox" } }],
             },
             select: {
               surveyId: true,

@@ -6,10 +6,11 @@ import {
   CITIZEN_PAYMENT_IN_PROGRESS_WINDOW_MS,
   hasRecentOpenCitizenPayment,
 } from "./payment-in-progress.util"
+import { SandboxPaymentProvider } from "../payments/providers/sandbox.provider"
 
 /**
  * Lightweight payment-path guards (mirrors service rules without DB).
- * Full create/receipt flows are covered by integration/manual UAT.
+ * Full create flow is covered by integration/manual UAT.
  */
 describe("public property tax payment rules", () => {
   it("rejects zero or negative demand before gateway create", () => {
@@ -62,6 +63,17 @@ describe("hasRecentOpenCitizenPayment", () => {
         now
       )
     ).toBe(true)
+  })
+
+  describe("sandbox payment provider", () => {
+    it("never reports sandbox requery as a successful collection", async () => {
+      const result = await new SandboxPaymentProvider().requery({
+        merchTxnId: "TEST-TXN",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.statusCode).toBe("SANDBOX_NOT_CONFIGURED")
+    })
   })
 
   it("blocks when INITIATED payment was created within the window", () => {
