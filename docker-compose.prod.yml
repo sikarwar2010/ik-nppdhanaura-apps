@@ -19,7 +19,7 @@
 # Do not publish Postgres or Redis. Do not add container_name
 # (Isolated Deployments suffixes resources).
 #
-# Internal API DNS: portal/web MUST use http://goverdhan-api:4000, not
+# Internal API DNS: portal/web MUST use http://nppdhanaura-api:4000, not
 # http://api:4000. Dokploy Traefik attaches a shared network to portal/web;
 # Docker then merges A records for the short name `api` across every network
 # the container is on. Another Compose stack named `api` on that shared
@@ -35,7 +35,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - goverdhan_pg_data:/var/lib/postgresql/data
+      - nppdhanaura_pg_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\"" ]
       interval: 5s
@@ -52,7 +52,7 @@ services:
       REDISCLI_AUTH: ${REDIS_PASSWORD}
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
-      - goverdhan_redis_data:/data
+      - nppdhanaura_redis_data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -83,7 +83,7 @@ services:
       CORS_ORIGIN: ${PUBLIC_PORTAL_URL},${PUBLIC_WEB_URL}
       PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
       SESSION_SECRET: ${SESSION_SECRET}
-      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-goverdhan_session}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-nppdhanaura_session}
       # Override env_file so a pasted PAYMENT_PROVIDER=sandbox from apps/api/.env.example
       # cannot fail production startup validation (compose environment wins over env_file).
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-atom}
@@ -94,7 +94,7 @@ services:
       # POST /api/v1/payments/gateway/callback on the API container.
       ATOM_CALLBACK_URL: ${PUBLIC_WEB_URL}/api/v1/payments/gateway/callback
     volumes:
-      - goverdhan_uploads:/app/uploads
+      - nppdhanaura_uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -112,14 +112,14 @@ services:
     networks:
       default:
         aliases:
-          - goverdhan-api
+          - nppdhanaura-api
 
   portal:
     build:
       context: .
       dockerfile: docker/portal.Dockerfile
       args:
-        API_INTERNAL_URL: http://goverdhan-api:4000
+        API_INTERNAL_URL: http://nppdhanaura-api:4000
         NEXT_PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
         NEXT_PUBLIC_CITIZEN_WEB_URL: ${PUBLIC_WEB_URL}
     restart: unless-stopped
@@ -128,10 +128,10 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
-      API_INTERNAL_URL: http://goverdhan-api:4000
+      API_INTERNAL_URL: http://nppdhanaura-api:4000
       NEXT_PUBLIC_APP_URL: ${PUBLIC_PORTAL_URL}
       NEXT_PUBLIC_CITIZEN_WEB_URL: ${PUBLIC_WEB_URL}
-      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-goverdhan_session}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-nppdhanaura_session}
     depends_on:
       api:
         condition: service_healthy
@@ -149,14 +149,14 @@ services:
       context: .
       dockerfile: docker/web.Dockerfile
       args:
-        API_INTERNAL_URL: http://goverdhan-api:4000
+        API_INTERNAL_URL: http://nppdhanaura-api:4000
     restart: unless-stopped
     env_file: .env
     environment:
       NODE_ENV: production
       PORT: "3001"
       HOSTNAME: 0.0.0.0
-      API_INTERNAL_URL: http://goverdhan-api:4000
+      API_INTERNAL_URL: http://nppdhanaura-api:4000
     depends_on:
       api:
         condition: service_healthy
@@ -170,6 +170,6 @@ services:
       - "3001"
 
 volumes:
-  goverdhan_pg_data:
-  goverdhan_redis_data:
-  goverdhan_uploads:
+  nppdhanaura_pg_data:
+  nppdhanaura_redis_data:
+  nppdhanaura_uploads:

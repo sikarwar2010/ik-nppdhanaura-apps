@@ -2,31 +2,31 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: goverdhan-postgres
+    container_name: nppdhanaura-postgres
     restart: unless-stopped
     ports:
       # Host 5432 is often taken by other local stacks (e.g. api-survey-local).
       - "5433:5432"
     environment:
-      POSTGRES_USER: goverdhan
-      POSTGRES_PASSWORD: goverdhan
-      POSTGRES_DB: goverdhan
+      POSTGRES_USER: nppdhanaura
+      POSTGRES_PASSWORD: nppdhanaura
+      POSTGRES_DB: nppdhanaura
     volumes:
-      - goverdhan_pg_data:/var/lib/postgresql/data
+      - nppdhanaura_pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U goverdhan -d goverdhan" ]
+      test: [ "CMD-SHELL", "pg_isready -U nppdhanaura -d nppdhanaura" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: goverdhan-redis
+    container_name: nppdhanaura-redis
     restart: unless-stopped
     ports:
       - "6380:6379"
     volumes:
-      - goverdhan_redis_data:/data
+      - nppdhanaura_redis_data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -35,7 +35,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: goverdhan-mailpit
+    container_name: nppdhanaura-mailpit
     restart: unless-stopped
     ports:
       - "8025:8025"
@@ -57,13 +57,13 @@ services:
     environment:
       NODE_ENV: production
       PORT: "4000"
-      DATABASE_URL: postgresql://goverdhan:goverdhan@postgres:5432/goverdhan?schema=public
+      DATABASE_URL: postgresql://nppdhanaura:nppdhanaura@postgres:5432/nppdhanaura?schema=public
       REDIS_URL: redis://redis:6379
       STORAGE_DIR: /app/uploads
       CORS_ORIGIN: http://localhost:3000,http://localhost:3001
       PUBLIC_APP_URL: http://localhost:3000
       SESSION_SECRET: ${SESSION_SECRET:-change-me-to-a-long-random-secret-at-least-32-chars}
-      SESSION_COOKIE_NAME: goverdhan_session
+      SESSION_COOKIE_NAME: nppdhanaura_session
       API_BUILD_ID: local
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-sikarwar2010@gmail.com}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-tarun@0446}
@@ -84,7 +84,7 @@ services:
     networks:
       default:
         aliases:
-          - goverdhan-api
+          - nppdhanaura-api
 
   portal:
     profiles: [ "app" ]
@@ -92,7 +92,7 @@ services:
       context: .
       dockerfile: docker/portal.Dockerfile
       args:
-        API_INTERNAL_URL: http://goverdhan-api:4000
+        API_INTERNAL_URL: http://nppdhanaura-api:4000
         NEXT_PUBLIC_APP_URL: http://localhost:3000
         NEXT_PUBLIC_CITIZEN_WEB_URL: http://localhost:3001
     restart: unless-stopped
@@ -102,13 +102,13 @@ services:
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: 0.0.0.0
-      API_INTERNAL_URL: http://goverdhan-api:4000
+      API_INTERNAL_URL: http://nppdhanaura-api:4000
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      SESSION_COOKIE_NAME: goverdhan_session
+      SESSION_COOKIE_NAME: nppdhanaura_session
     depends_on:
       api:
         condition: service_healthy
 
 volumes:
-  goverdhan_pg_data:
-  goverdhan_redis_data:
+  nppdhanaura_pg_data:
+  nppdhanaura_redis_data:
