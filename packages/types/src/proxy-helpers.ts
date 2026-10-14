@@ -1,19 +1,19 @@
 export type CookiePair = { name: string; value: string }
 
 /** Current project default when SESSION_COOKIE_NAME is unset. */
-export const DEFAULT_SESSION_COOKIE_NAME = "goverdhan_session"
+export const DEFAULT_SESSION_COOKIE_NAME = "dhanaura_session"
 
 /**
  * Prior project cookie names kept so mid-migration browsers still authenticate
  * until cookies expire or logout clears them.
  */
 export const LEGACY_SESSION_COOKIE_NAMES = [
-  "chhata_session",
-  "mainpuri_session",
+  "dhanaura_session",
+  "amroha_session",
 ] as const
 
 /** @deprecated use DEFAULT_SESSION_COOKIE_NAME or LEGACY_SESSION_COOKIE_NAMES */
-export const LEGACY_SESSION_COOKIE_NAME = "chhata_session"
+export const LEGACY_SESSION_COOKIE_NAME = "dhanaura_session"
 
 /** @deprecated use resolveSessionCookieName() */
 export const SESSION_COOKIE_NAME = DEFAULT_SESSION_COOKIE_NAME
@@ -161,7 +161,7 @@ export function collectAuthCookieNames(
   return [...names]
 }
 
-/** Legacy Better Auth names only — does not expire chhata_session. */
+/** Legacy Better Auth names only — does not expire dhanaura_session. */
 export function collectLegacyAuthCookieNames(
   existingNames: string[]
 ): string[] {
@@ -219,7 +219,7 @@ export function expiredAuthCookieHeaders(
   )
 }
 
-/** Expire leftover Better Auth cookies without clearing chhata_session. */
+/** Expire leftover Better Auth cookies without clearing dhanaura_session. */
 export function expiredLegacyAuthCookieHeaders(
   existingNames: string[]
 ): string[] {

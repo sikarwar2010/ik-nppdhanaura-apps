@@ -123,7 +123,7 @@ export function FilterControlPanel({
       <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">ULB</Label>
-          <Input value="Nagar Panchayat Chhata" readOnly className="bg-muted" />
+          <Input value="Nagar Palika Parishad Dhanaura" readOnly className="bg-muted" />
         </div>
 
         <div className="space-y-1.5">

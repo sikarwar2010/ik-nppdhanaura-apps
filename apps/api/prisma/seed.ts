@@ -1,4 +1,4 @@
-import "dotenv/config"
+import "./load-env"
 
 import { seedDatabase } from "../src/db/seed-database"
 import { createPrismaClient } from "../src/prisma/prisma.client"

@@ -13,7 +13,7 @@ export const RESPONDENT_RELATIONSHIPS = [
   "Other",
 ] as const
 
-export const CITIES = ["Goverdhan"] as const
+export const CITIES = ["Dhanaura"] as const
 
 export const TAX_RATE_ZONES = [
   "RATE ZONE 1 (Upto 9 Meters)",

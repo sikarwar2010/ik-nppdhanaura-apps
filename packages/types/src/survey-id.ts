@@ -1,6 +1,6 @@
 /** GIS Survey Id format: `{ulbCode}-{ward3}-{parcel6}-{property3}-{gisUseCode}` e.g. 249044-001-000131-001-R */
 
-export const CHHATA_ULB_CODE = "249044"
+export const DHA_ULB_CODE = "249044"
 
 export type GisSurveyParts = {
   ulbCode: string
@@ -98,7 +98,7 @@ export function buildSurveyIdFromRecord(
   input: BuildSurveyIdFromRecordInput
 ): string {
   const parsed = input.surveyId ? parseGisSurveyId(input.surveyId) : null
-  const ulbCode = input.ulbCode ?? parsed?.ulbCode ?? CHHATA_ULB_CODE
+  const ulbCode = input.ulbCode ?? parsed?.ulbCode ?? DHA_ULB_CODE
   const parcelNo = normalizeParcelNo(
     input.parcelNo ?? parsed?.parcelNo ?? ""
   )
@@ -142,7 +142,7 @@ export function resolveImportSurveyId(
   wardNumber: number,
   parcelNo: string,
   propertyNo: string,
-  ulbCode: string = CHHATA_ULB_CODE
+  ulbCode: string = DHA_ULB_CODE
 ): string {
   const parsed = parseGisSurveyId(rawSurveyId)
   return buildSurveyIdFromRecord({

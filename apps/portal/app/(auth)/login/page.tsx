@@ -116,7 +116,7 @@ export default function LoginPage() {
     }
   }, [])
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setFormError(null)
     setLoading(true)
@@ -185,7 +185,7 @@ export default function LoginPage() {
 
             <div className="mt-12 max-w-lg">
               <p className="font-[family-name:var(--font-deva)] text-sm font-medium tracking-wide text-sky-200/90">
-                नगर पंचायत, गोवर्धन
+                Nagar Palika Parishad Dhanaura,Amroha
               </p>
               <h1
                 id="login-hero-title"
@@ -228,7 +228,7 @@ export default function LoginPage() {
           </ul>
 
           <p className="relative z-10 mt-10 text-xs leading-relaxed text-slate-400">
-            Official municipal operations portal for Nagar Panchyat Goverdhan
+            Official municipal operations portal for Nagar Palika Parishad Dhanaura,Amroha
             Unauthorized access is prohibited and monitored.
           </p>
         </section>
@@ -255,7 +255,7 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.15em] text-sky-900 uppercase">
-                  Nagar Panchyat Goverdhan
+                  Nagar Palika Parishad Dhanaura,Amroha
                 </p>
                 <p className="font-[family-name:var(--font-deva)] text-sm text-slate-600">
                   स्टाफ पोर्टल
