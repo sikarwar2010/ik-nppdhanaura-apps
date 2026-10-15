@@ -1,0 +1,218 @@
+import type { Locale } from "./locale"
+
+type OptionCopy = { en: string; hi: string }
+
+/**
+ * Stable stored values → display labels.
+ * The key is what the database and selects keep. Language only changes the label.
+ */
+const OPTIONS: Record<string, OptionCopy> = {
+  Yes: { en: "Yes", hi: "हाँ" },
+  No: { en: "No", hi: "नहीं" },
+  ALL: { en: "All", hi: "सभी" },
+  DRAFT: { en: "Draft", hi: "प्रारूप" },
+  ACTIVE: { en: "Active", hi: "सक्रिय" },
+  ARCHIVED: { en: "Archived", hi: "संग्रहित" },
+  DELETED: { en: "Deleted", hi: "हटाया गया" },
+  COMPLETE: { en: "Complete", hi: "पूर्ण" },
+  NEEDS_REVIEW: { en: "Needs review", hi: "समीक्षा आवश्यक" },
+  INVALID: { en: "Invalid", hi: "अमान्य" },
+  DUPLICATE: { en: "Duplicate", hi: "डुप्लिकेट" },
+  MISSING_CONTACT: { en: "Missing contact", hi: "संपर्क नहीं है" },
+  MISSING_PROPERTY_NUMBER: {
+    en: "Missing property number",
+    hi: "संपत्ति संख्या नहीं है",
+  },
+  MISSING_MEASUREMENT: { en: "Missing measurement", hi: "माप नहीं है" },
+  R: { en: "R - Residential", hi: "R - आवासीय" },
+  C: { en: "C - Commercial", hi: "C - व्यावसायिक" },
+  M: { en: "M - Mix Property", hi: "M - मिश्रित संपत्ति" },
+  P: { en: "P - Open plot", hi: "P - खुला प्लाट" },
+  Residential: { en: "Residential", hi: "आवासीय" },
+  Commercial: { en: "Commercial", hi: "व्यावसायिक" },
+  Mix: { en: "Mix", hi: "मिश्रित" },
+  Mixed: { en: "Mixed", hi: "मिश्रित" },
+  "Open Land": { en: "Open Land", hi: "खुली भूमि" },
+  "Residential Self": { en: "Residential Self", hi: "आवासीय स्वयं" },
+  "Residential Rented": { en: "Residential Rented", hi: "आवासीय किराए पर" },
+  Religious: { en: "Religious", hi: "धार्मिक" },
+  "Individual (Single/Joint)": {
+    en: "Individual (Single/Joint)",
+    hi: "व्यक्तिगत (एकल/संयुक्त)",
+  },
+  "HFA (Awasiy Makan)": { en: "HFA (Awasiy Makan)", hi: "एचएफए (आवासीय मकान)" },
+  "Shops/Office Bank": {
+    en: "Shops / Office / Bank",
+    hi: "दुकान / कार्यालय / बैंक",
+  },
+  "Restuurents/lodging house": {
+    en: "Restaurants / Lodging House",
+    hi: "रेस्तरां / लॉजिंग हाउस",
+  },
+  "Prior to 1900": { en: "Prior to 1900", hi: "1900 से पहले" },
+  "Between 1900 & 1997": { en: "Between 1900 & 1997", hi: "1900 और 1997 के बीच" },
+  "After 1997": { en: "After 1997", hi: "1997 के बाद" },
+  Interior: { en: "Interior", hi: "आंतरिक" },
+  Dhanaura: { en: "Dhanaura", hi: "धनौरा" },
+  "RATE ZONE 1 (Upto 9 Meters)": {
+    en: "RATE ZONE 1 (Upto 9 Meters)",
+    hi: "दर क्षेत्र 1 (9 मीटर तक)",
+  },
+  "RATE ZONE 2 (9 meters and upto 12 meters)": {
+    en: "RATE ZONE 2 (9 meters and upto 12 meters)",
+    hi: "दर क्षेत्र 2 (9 मीटर से 12 मीटर तक)",
+  },
+  "RATE ZONE 3 (12 Meters And Upto 24 Meters)": {
+    en: "RATE ZONE 3 (12 Meters And Upto 24 Meters)",
+    hi: "दर क्षेत्र 3 (12 मीटर से 24 मीटर तक)",
+  },
+  "RATE ZONE 4 (Above 24 Meters)": {
+    en: "RATE ZONE 4 (Above 24 Meters)",
+    hi: "दर क्षेत्र 4 (24 मीटर से अधिक)",
+  },
+  "rcc road": { en: "RCC Road", hi: "आर.सी.सी. सड़क" },
+  "Other(null)": { en: "Other", hi: "अन्य" },
+  Self: { en: "Self", hi: "स्वयं" },
+  Son: { en: "Son", hi: "पुत्र" },
+  Wife: { en: "Wife", hi: "पत्नी" },
+  Daughter: { en: "Daughter", hi: "पुत्री" },
+  Father: { en: "Father", hi: "पिता" },
+  Mother: { en: "Mother", hi: "माता" },
+  Brother: { en: "Brother", hi: "भाई" },
+  Other: { en: "Other", hi: "अन्य" },
+  "Government Tap": { en: "Government Tap", hi: "सरकारी नल" },
+  "Dug well": { en: "Dug well", hi: "खुदा कुआँ" },
+  Borewell: { en: "Borewell", hi: "बोरवेल" },
+  "Other(Naa)": { en: "Other (N/A)", hi: "अन्य (लागू नहीं)" },
+  "Other(Na)": { en: "Other (N/A)", hi: "अन्य (लागू नहीं)" },
+  "Other(No)": { en: "Other (No)", hi: "अन्य (नहीं)" },
+  "Other(Hedpamp)": { en: "Other (Handpump)", hi: "अन्य (हैंडपंप)" },
+  "Connected to specific tank": {
+    en: "Connected to specific tank",
+    hi: "विशिष्ट टैंक से जुड़ा",
+  },
+  "Connected to municipal sewage system": {
+    en: "Connected to municipal sewage system",
+    hi: "नगर सीवेज प्रणाली से जुड़ा",
+  },
+  "No toilet": { en: "No toilet", hi: "शौचालय नहीं" },
+  Basement: { en: "Basement", hi: "तहखाना" },
+  "Ground Floor": { en: "Ground Floor", hi: "भूतल" },
+  "First Floor": { en: "First Floor", hi: "प्रथम मंजिल" },
+  "Second Floor": { en: "Second Floor", hi: "द्वितीय मंजिल" },
+  "Third Floor": { en: "Third Floor", hi: "तृतीय मंजिल" },
+  "Fourth Floor": { en: "Fourth Floor", hi: "चतुर्थ मंजिल" },
+  Terrace: { en: "Terrace", hi: "छत" },
+  Open: { en: "Open Land", hi: "खुली भूमि" },
+  "Under Construction": { en: "Under Construction", hi: "निर्माणाधीन" },
+  "Self Occupied": { en: "Self Occupied", hi: "स्वयं उपयोग" },
+  Rented: { en: "Rented", hi: "किराए पर" },
+  Vacant: { en: "Vacant", hi: "खाली" },
+  "Pakka Building with R.C.C Roof or R.B. Roof": {
+    en: "Pakka Building with R.C.C Roof or R.B. Roof",
+    hi: "पक्का भवन, आर.सी.सी. या आर.बी. छत",
+  },
+  "Tin Shed": { en: "Tin Shed", hi: "टिन शेड" },
+  "Kaccha Building": { en: "Kaccha Building", hi: "कच्चा भवन" },
+  RCC: { en: "RCC / Pakka", hi: "आर.सी.सी. / पक्का" },
+  TIN: { en: "Tin Shed", hi: "टिन शेड" },
+  KACHCHA: { en: "Kachcha", hi: "कच्चा" },
+  UC: { en: "Under Construction", hi: "निर्माणाधीन" },
+  "RCC / Pakka": { en: "RCC / Pakka", hi: "आर.सी.सी. / पक्का" },
+  Kachcha: { en: "Kachcha", hi: "कच्चा" },
+  "Below 9m": { en: "Below 9m", hi: "9 मीटर से कम" },
+  "9m to 12m": { en: "9m to 12m", hi: "9 मीटर से 12 मीटर" },
+  "12m to 24m": { en: "12m to 24m", hi: "12 मीटर से 24 मीटर" },
+  "Above 24m": { en: "Above 24m", hi: "24 मीटर से अधिक" },
+  BELOW_9M: { en: "Below 9m", hi: "9 मीटर से कम" },
+  METER_9_TO_12: { en: "9m to 12m", hi: "9 मीटर से 12 मीटर" },
+  METER_12_TO_24: { en: "12m to 24m", hi: "12 मीटर से 24 मीटर" },
+  ABOVE_24M: { en: "Above 24m", hi: "24 मीटर से अधिक" },
+  "<9m": { en: "Below 9m", hi: "9 मीटर से कम" },
+  "9-12m": { en: "9m to 12m", hi: "9 मीटर से 12 मीटर" },
+  "12-24m": { en: "12m to 24m", hi: "12 मीटर से 24 मीटर" },
+  ">24m": { en: "Above 24m", hi: "24 मीटर से अधिक" },
+  UPLOADED: { en: "Uploaded", hi: "अपलोड हुआ" },
+  VALIDATING: { en: "Validating", hi: "जाँच हो रही है" },
+  READY: { en: "Ready", hi: "तैयार" },
+  PROCESSING: { en: "Processing", hi: "प्रक्रिया जारी" },
+  COMPLETED: { en: "Completed", hi: "पूर्ण" },
+  PARTIAL: { en: "Partial", hi: "आंशिक" },
+  FAILED: { en: "Failed", hi: "असफल" },
+  CANCELLED: { en: "Cancelled", hi: "रद्द" },
+  INDIVIDUAL: { en: "Individual", hi: "व्यक्तिगत" },
+  JOINT: { en: "Joint", hi: "संयुक्त" },
+  LIMITED_COMPANY_FIRM: {
+    en: "Limited Company / Firm",
+    hi: "लिमिटेड कंपनी / फर्म",
+  },
+  TRUST_SOCIETY: { en: "Trust / Society", hi: "ट्रस्ट / सोसाइटी" },
+  RELIGIOUS_BODY: { en: "Religious Body", hi: "धार्मिक संस्था" },
+  STATE_GOVERNMENT_BODY: {
+    en: "State Government Body",
+    hi: "राज्य सरकारी निकाय",
+  },
+  CENTRAL_GOVERNMENT_BODY: {
+    en: "Central Government Body",
+    hi: "केंद्र सरकारी निकाय",
+  },
+  MUNICIPAL_COUNCIL_TOWN_PANCHAYAT: {
+    en: "Municipal Council / Town Panchayat",
+    hi: "नगर परिषद / नगर पंचायत",
+  },
+  LEASE_PROPERTY: { en: "Lease Property", hi: "पट्टे की संपत्ति" },
+  RESIDENTIAL_SELF: { en: "Residential Self", hi: "आवासीय स्वयं" },
+  RESIDENTIAL_RENTED: { en: "Residential Rented", hi: "आवासीय किराए पर" },
+  OPEN_LAND: { en: "Open Land", hi: "खुली भूमि" },
+  RESIDENTIAL_AND_COMMERCIAL: {
+    en: "Residential and Commercial",
+    hi: "आवासीय और व्यावसायिक",
+  },
+  SHOP_BAKERY: { en: "Shop / Bakery", hi: "दुकान / बेकरी" },
+  BANK_OFFICE: { en: "Bank / Office", hi: "बैंक / कार्यालय" },
+  SCHOOL_COLLEGE: { en: "School / College", hi: "विद्यालय / महाविद्यालय" },
+  MALL_SHOWROOM: { en: "Mall / Showroom", hi: "मॉल / शोरूम" },
+  PETROL_PUMP: { en: "Petrol Pump", hi: "पेट्रोल पंप" },
+  HOTEL_MARRIAGE_RESTAURANT: {
+    en: "Hotel / Marriage Hall / Restaurant",
+    hi: "होटल / मैरिज हॉल / रेस्तरां",
+  },
+  HOSPITAL_NURSING_PATHOLOGY: {
+    en: "Hospital / Nursing Home / Pathology",
+    hi: "अस्पताल / नर्सिंग होम / पैथोलॉजी",
+  },
+  GODOWN: { en: "Godown", hi: "गोदाम" },
+  CENTRAL_GOVERNMENT: { en: "Central Government", hi: "केंद्र सरकार" },
+  STATE_GOVERNMENT: { en: "State Government", hi: "राज्य सरकार" },
+  INDUSTRY: { en: "Industry", hi: "उद्योग" },
+  COLD_STORE: { en: "Cold Store", hi: "कोल्ड स्टोर" },
+  AGRICULTURE: { en: "Agriculture", hi: "कृषि" },
+  OPEN_LAND_GODOWN: { en: "Open Land / Godown", hi: "खुली भूमि / गोदाम" },
+  MANDIR: { en: "Mandir", hi: "मंदिर" },
+  MASJID: { en: "Masjid", hi: "मस्जिद" },
+  TRUST_DHARAMSHALA: { en: "Trust / Dharamshala", hi: "ट्रस्ट / धर्मशाला" },
+  SHAMSHAN_KABRISTAN: { en: "Shamshan / Kabristan", hi: "श्मशान / कब्रिस्तान" },
+  GURUDWARA_CHURCH: { en: "Gurudwara / Church", hi: "गुरुद्वारा / चर्च" },
+  BASEMENT: { en: "Basement", hi: "तहखाना" },
+  GROUND_FLOOR: { en: "Ground Floor", hi: "भूतल" },
+  FIRST_FLOOR: { en: "First Floor", hi: "प्रथम मंजिल" },
+  SECOND_FLOOR: { en: "Second Floor", hi: "द्वितीय मंजिल" },
+  THIRD_FLOOR: { en: "Third Floor", hi: "तृतीय मंजिल" },
+  FOURTH_FLOOR: { en: "Fourth Floor", hi: "चतुर्थ मंजिल" },
+  FIFTH_FLOOR: { en: "Fifth Floor", hi: "पंचम मंजिल" },
+  SIXTH_FLOOR: { en: "Sixth Floor", hi: "षष्ठ मंजिल" },
+}
+
+const BY_LOWER = new Map<string, OptionCopy>()
+for (const [key, copy] of Object.entries(OPTIONS)) {
+  BY_LOWER.set(key.toLowerCase(), copy)
+}
+
+/** Display label for a stable option value. Unknown text is returned unchanged. */
+export function optionLabel(locale: Locale, value?: string | null): string {
+  const raw = value?.trim() ?? ""
+  if (!raw) return ""
+  const copy = OPTIONS[raw] ?? BY_LOWER.get(raw.toLowerCase())
+  if (!copy) return raw
+  return locale === "hi" ? copy.hi : copy.en
+}

@@ -16,6 +16,22 @@ import {
 } from "./survey-id.util"
 
 describe("survey-id", () => {
+  it("pads ward, house, and unit for the Dhanaura example", () => {
+    expect(
+      generateSurveyId({
+        ulbCode: "249044",
+        wardNo: 1,
+        parcelNo: "1",
+        propertyNo: "1",
+        gisUseCode: "R",
+      })
+    ).toBe("249044-001-000001-001-R")
+    expect(() => normalizeWardCode("")).toThrow(/Ward number is required/)
+    expect(() => normalizeParcelNo("")).toThrow(/Parcel number is required/)
+    expect(() => normalizePropertyNo("")).toThrow(/Property number is required/)
+    expect(() => normalizeGisUseCode("")).toThrow(/GIS use code is required/)
+  })
+
   it("formats GIS survey id with zero-padding (Test 6)", () => {
     expect(
       generateSurveyId({

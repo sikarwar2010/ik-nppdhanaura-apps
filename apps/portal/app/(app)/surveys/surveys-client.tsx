@@ -42,6 +42,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { usePermission } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 import { formatParcelNo, formatSurveyId } from "@/lib/survey-format"
+import { optionLabel, useLocale } from "@workspace/i18n"
 
 import { ClearWardButton } from "./_components/clear-ward-dialog"
 
@@ -87,11 +88,11 @@ const STATUS_FILTERS: Array<{
   value: SurveyStatusFilter | "ALL"
   label: string
 }> = [
-  { value: "ALL", label: "All" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "ARCHIVED", label: "Archived" },
-]
+    { value: "ALL", label: "All" },
+    { value: "DRAFT", label: "Draft" },
+    { value: "ACTIVE", label: "Active" },
+    { value: "ARCHIVED", label: "Archived" },
+  ]
 
 function parsePage(value: string | null): number {
   const n = Number(value ?? "1")
@@ -143,6 +144,7 @@ function statusBadgeClass(status: string): string {
 }
 
 export default function SurveysClientPage() {
+  const { locale, t } = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
   const { can } = usePermission()
@@ -274,13 +276,13 @@ export default function SurveysClientPage() {
             const value = getValue()
             return (
               <Badge variant="secondary" className={statusBadgeClass(value)}>
-                {value}
+                {optionLabel(locale, value)}
               </Badge>
             )
           },
         }),
         columnHelper.accessor("surveyId", {
-          header: "Survey ID",
+          header: t("survey.surveyId"),
           cell: ({ row, getValue }) => (
             <span className="font-medium tabular-nums">
               {formatSurveyId({
@@ -294,7 +296,7 @@ export default function SurveysClientPage() {
         }),
         columnHelper.accessor((row) => row.ward.number, {
           id: "wardNumber",
-          header: "Ward Number",
+          header: t("survey.ward"),
           cell: ({ getValue }) => (
             <span className="tabular-nums">
               {String(getValue()).padStart(2, "0")}
@@ -302,7 +304,7 @@ export default function SurveysClientPage() {
           ),
         }),
         columnHelper.accessor("parcelNo", {
-          header: "Parcel Number",
+          header: t("survey.colParcel"),
           cell: ({ row, getValue }) => (
             <span className="tabular-nums">
               {formatParcelNo(getValue(), row.original.surveyId)}
@@ -310,7 +312,7 @@ export default function SurveysClientPage() {
           ),
         }),
         columnHelper.accessor("ownerName", {
-          header: "Owner Name",
+          header: t("survey.colOwner"),
           cell: ({ getValue }) => (
             <span className="font-(family-name:--font-deva)">
               {getValue()?.trim() || "—"}
@@ -318,7 +320,7 @@ export default function SurveysClientPage() {
           ),
         }),
         columnHelper.accessor("ownerFatherName", {
-          header: "Owner Father Name",
+          header: t("survey.ownerFather"),
           cell: ({ getValue }) => (
             <span className="font-(family-name:--font-deva)">
               {getValue()?.trim() || "—"}
@@ -326,7 +328,7 @@ export default function SurveysClientPage() {
           ),
         }),
         columnHelper.accessor("mobile", {
-          header: "Owner Mobile Number",
+          header: t("survey.mobile"),
           cell: ({ getValue }) => {
             const value = getValue()?.trim()
             if (!value || value === "0") return "—"
@@ -334,7 +336,7 @@ export default function SurveysClientPage() {
           },
         }),
       ]),
-    [page, pageSize]
+    [page, pageSize, t, locale]
   )
 
   const onPaginationChange = React.useCallback(
@@ -376,11 +378,10 @@ export default function SurveysClientPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Survey Registry
+            {t("survey.registry")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Select a ward to fetch records, then search and page through the
-            registry.
+            {t("survey.registryHint")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -394,7 +395,7 @@ export default function SurveysClientPage() {
               render={<Link href="/reports" />}
             >
               <FileDown className="size-4" />
-              Export Excel
+              {t("reports.export")}
             </Button>
           ) : null}
           {canImport ? (
@@ -404,7 +405,7 @@ export default function SurveysClientPage() {
               render={<Link href="/surveys/import" />}
             >
               <FileUp className="size-4" />
-              Import Excel
+              {t("reports.import")}
             </Button>
           ) : null}
           {canCreate ? (
@@ -562,7 +563,7 @@ export default function SurveysClientPage() {
                   })
                 }
               >
-                {item.label}
+                {optionLabel(locale, item.value)}
               </Button>
             )
           })}

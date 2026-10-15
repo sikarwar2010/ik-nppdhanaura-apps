@@ -1,3 +1,4 @@
+import type { MessageKey } from "@workspace/i18n"
 import {
   BarChart3,
   ClipboardList,
@@ -122,6 +123,27 @@ export const NAV_ITEMS: NavItem[] = [
     ],
   },
 ]
+
+const NAV_TITLE_KEYS: Record<string, MessageKey> = {
+  Dashboard: "nav.dashboard",
+  Survey: "nav.survey",
+  Reports: "nav.reports",
+  "Report Builder": "nav.reportBuilder",
+  "Tax Rates": "nav.taxRates",
+  "Demand Notice": "nav.demandNotice",
+  Settings: "nav.settings",
+  Users: "nav.users",
+  Roles: "nav.roles",
+  Permissions: "nav.permissions",
+  "Audit Logs": "nav.auditLogs",
+  "System Settings": "nav.systemSettings",
+  Import: "nav.import",
+  History: "nav.history",
+}
+
+export function navTitleKey(title: string): MessageKey | null {
+  return NAV_TITLE_KEYS[title] ?? null
+}
 
 /** True when Survey list/detail is active, but not import/export routes. */
 export function isSurveyNavActive(pathname: string): boolean {

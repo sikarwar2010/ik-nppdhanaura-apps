@@ -1,3 +1,5 @@
+import { optionLabel, type Locale } from "@workspace/i18n"
+
 /**
  * Display-only labels for Chhata survey catalog / legacy values.
  * Never change stored option values — only what the UI shows.
@@ -113,8 +115,24 @@ export function formatCatalogLabel(value?: string | null): string {
   return raw
 }
 
+/** Locale-aware catalog label. Unknown text, including names and addresses, stays as stored. */
+export function displayCatalogLabel(
+  value: string | null | undefined,
+  locale: Locale
+): string {
+  const raw = value?.trim() ?? ""
+  if (!raw) return ""
+  const translated = optionLabel(locale, raw)
+  if (translated !== raw) return translated
+  if (locale === "en") return formatCatalogLabel(raw)
+  return raw
+}
+
 /** Display helper for optional fields (empty → em dash). */
-export function formatCatalogDisplay(value?: string | null): string {
-  const label = formatCatalogLabel(value)
+export function formatCatalogDisplay(
+  value?: string | null,
+  locale: Locale = "en"
+): string {
+  const label = displayCatalogLabel(value, locale)
   return label || "—"
 }

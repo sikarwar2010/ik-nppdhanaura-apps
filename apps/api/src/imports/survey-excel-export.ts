@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client"
 import ExcelJS from "exceljs"
 
 import { type ColumnMap, type MappingPreset, getMapping } from "./column-maps"
+import { DHANAURA_FLOOR_LABELS, DHANAURA_HEADERS } from "./dhanaura-gis-map"
 
 export const SURVEY_EXPORT_SHEET_NAME = "Survey Data"
 
@@ -225,6 +226,14 @@ export type SurveyExportRecord = {
   toiletType: string | null
   hasMunicipalWasteService: boolean | null
   ward: { name: string; number: number }
+  sourceExtras?: Prisma.JsonValue | null
+  floors?: Array<{
+    floorLabel: string
+    areaSqFt: Prisma.Decimal | number | null
+    buildingType?: string | null
+    usageType?: string | null
+    usageFactor?: string | null
+  }>
 }
 
 /**
@@ -236,6 +245,7 @@ export function detectExportPreset(_wardNumber?: number): MappingPreset {
 }
 
 export function getExportHeaders(preset: MappingPreset): readonly string[] {
+  if (preset === "dhanaura-gis") return DHANAURA_HEADERS
   if (preset === "mainpuri-v1-41") return MAINPURI_V1_HEADERS
   if (preset === "chhata-v1-38" || preset === "chhata-v1-39") {
     return CHHATA_V1_HEADERS
@@ -418,11 +428,83 @@ function applyMappedFields(
   }
 }
 
+function readSourceExtras(
+  value: Prisma.JsonValue | null | undefined
+): Record<string, string> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {}
+  const record: Record<string, string> = {}
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string" && entry.trim()) record[key] = entry
+    else if (typeof entry === "number" && Number.isFinite(entry)) {
+      record[key] = String(entry)
+    }
+  }
+  return record
+}
+
+function floorArea(survey: SurveyExportRecord, label: string): string {
+  const floor = survey.floors?.find((item) => item.floorLabel === label)
+  if (!floor) return ""
+  return formatDecimalForExcel(
+    floor.areaSqFt instanceof Prisma.Decimal
+      ? floor.areaSqFt
+      : floor.areaSqFt == null
+        ? null
+        : new Prisma.Decimal(floor.areaSqFt)
+  )
+}
+
+function surveyToDhanauraRow(survey: SurveyExportRecord): string[] {
+  const extras = readSourceExtras(survey.sourceExtras)
+  const buildingType =
+    survey.floors?.find((floor) => floor.buildingType)?.buildingType ?? ""
+  const water =
+    survey.waterSourceType || formatBoolForExcel(survey.hasMunicipalWaterSupply)
+  return [
+    extras.serialNo ?? "",
+    survey.houseNo ?? "",
+    survey.presentHouseNo ?? extras.identityHouseKey ?? "",
+    extras.previousOwnerName ?? "",
+    extras.previousOwnerFatherName ?? "",
+    survey.ownerName ?? "",
+    survey.ownerFatherName ?? "",
+    survey.mobile ?? "",
+    extras.propertyTitle ?? "",
+    survey.propertyType ?? "",
+    buildingType,
+    formatDecimalForExcel(survey.plotAreaSqFt),
+    extras.vacantPlotArea ?? "",
+    extras.propertyWidth ?? "",
+    extras.propertyLength ?? "",
+    formatDecimalForExcel(survey.totalBuiltUpAreaSqFt),
+    survey.yearOfConstruction ?? "",
+    extras.roomCount ?? "",
+    extras.floorCount ?? "",
+    floorArea(survey, DHANAURA_FLOOR_LABELS.basement),
+    floorArea(survey, DHANAURA_FLOOR_LABELS.ground),
+    floorArea(survey, DHANAURA_FLOOR_LABELS.first),
+    floorArea(survey, DHANAURA_FLOOR_LABELS.second),
+    extras.shopAreaSqFt ?? "",
+    extras.shopNumber ?? "",
+    extras.shopName ?? "",
+    extras.tenantName ?? "",
+    water,
+    extras.roadWidthMeters ?? "",
+    survey.roadType ?? "",
+    extras.taxpayerInfo ?? "",
+    extras.familyMemberCount ?? "",
+    String(survey.ward.number),
+    survey.locality ?? "",
+  ]
+}
+
 export function surveyToExcelRow(
   survey: SurveyExportRecord,
   preset: MappingPreset,
   sn?: number
 ): unknown[] {
+  if (preset === "dhanaura-gis") return surveyToDhanauraRow(survey)
+
   const headers = getExportHeaders(preset)
   const row: unknown[] = new Array(headers.length).fill("")
   const map = getMapping(preset)
@@ -448,6 +530,13 @@ export function buildSurveyExportWorkbook(
     const sn = preset === "chhata-v2-55" ? index + 1 : undefined
     sheet.addRow(surveyToExcelRow(survey, preset, sn))
   })
+
+  if (preset === "dhanaura-gis") {
+    const textColumns = [1, 2, 3, 8]
+    for (const columnNumber of textColumns) {
+      sheet.getColumn(columnNumber).numFmt = "@"
+    }
+  }
 
   return workbook
 }

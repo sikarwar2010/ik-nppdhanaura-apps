@@ -15,6 +15,18 @@ test.describe("portal smoke", () => {
     ).toHaveCount(0)
   })
 
+  test("language toggle switches a label and survives reload", async ({
+    page,
+  }) => {
+    await page.goto("/login")
+    await page.getByRole("button", { name: "हिन्दी" }).click()
+    await expect(page.getByText("स्टाफ पोर्टल")).toBeVisible()
+    await expect(page.getByLabel("ईमेल")).toBeVisible()
+    await page.reload()
+    await expect(page.getByText("स्टाफ पोर्टल")).toBeVisible()
+    await expect(page.getByLabel("ईमेल")).toBeVisible()
+  })
+
   test("signup redirects to login", async ({ page }) => {
     await page.goto("/signup")
     await expect(page).toHaveURL(/\/login/)

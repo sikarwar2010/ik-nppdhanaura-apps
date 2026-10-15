@@ -1,10 +1,12 @@
-import { Geist, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google"
+import { LOCALE_COOKIE, LocaleProvider, parseLocale } from "@workspace/i18n"
 import { Toaster } from "@workspace/ui/components/sonner"
 import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import { Geist, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google"
+import { cookies } from "next/headers"
 
-import "@workspace/ui/globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { QueryProvider } from "@/components/query-provider"
+import { ThemeProvider } from "@/components/theme-provider"
+import "@workspace/ui/globals.css"
 import { cn } from "@workspace/ui/lib/utils"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
@@ -20,14 +22,16 @@ export const metadata = {
   description: "Survey and property data platform",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const locale = parseLocale(cookieStore.get(LOCALE_COOKIE)?.value)
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={cn(
         "antialiased",
@@ -38,14 +42,16 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>
-          <QueryProvider>
-            <TooltipProvider>
-              {children}
-              <Toaster richColors closeButton />
-            </TooltipProvider>
-          </QueryProvider>
-        </ThemeProvider>
+        <LocaleProvider initialLocale={locale}>
+          <ThemeProvider>
+            <QueryProvider>
+              <TooltipProvider>
+                {children}
+                <Toaster richColors closeButton />
+              </TooltipProvider>
+            </QueryProvider>
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   )

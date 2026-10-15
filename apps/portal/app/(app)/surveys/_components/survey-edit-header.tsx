@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 
+import { optionLabel, useLocale } from "@workspace/i18n"
+
 import { qualityLabel } from "@/lib/survey-format"
 
 type SurveyEditHeaderProps = {
@@ -26,6 +28,7 @@ export function SurveyEditHeader({
   detailHref,
   canAudit,
 }: SurveyEditHeaderProps) {
+  const { locale } = useLocale()
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-muted/20 px-4 py-3">
       <div className="space-y-1.5">
@@ -35,12 +38,12 @@ export function SurveyEditHeader({
           </p>
           {status ? (
             <Badge variant="outline" className="font-normal">
-              {status}
+              {optionLabel(locale, status)}
             </Badge>
           ) : null}
           {dataQualityStatus ? (
             <Badge variant="secondary" className="font-normal">
-              {qualityLabel(dataQualityStatus)}
+              {qualityLabel(dataQualityStatus, locale)}
             </Badge>
           ) : null}
         </div>

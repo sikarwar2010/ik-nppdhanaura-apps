@@ -55,6 +55,33 @@ const CONSTRUCTION: Record<string, string> = {
   open: "OPEN_LAND",
 }
 
+/** Survey-form labels. Same strings the Tax Road Zone dropdown stores. */
+export const TAX_RATE_ZONE_LABELS = {
+  BELOW_9M: "RATE ZONE 1 (Upto 9 Meters)",
+  METER_9_TO_12: "RATE ZONE 2 (9 meters and upto 12 meters)",
+  METER_12_TO_24: "RATE ZONE 3 (12 Meters And Upto 24 Meters)",
+  ABOVE_24M: "RATE ZONE 4 (Above 24 Meters)",
+} as const
+
+/**
+ * Road-width meters → survey Tax Road Zone label.
+ * Bands follow TAX_RATE_ZONE seed values: <9m, 9-12m, 12-24m, >24m.
+ * 9 and 12 stay in the 9–12m band. Blank, negative, or non-numeric → null.
+ */
+export function taxRateZoneLabelFromRoadWidth(
+  raw?: string | number | null
+): string | null {
+  if (raw == null) return null
+  const text = String(raw).trim().replace(/,/g, "")
+  if (!text) return null
+  const width = Number(text)
+  if (!Number.isFinite(width) || width < 0) return null
+  if (width < 9) return TAX_RATE_ZONE_LABELS.BELOW_9M
+  if (width <= 12) return TAX_RATE_ZONE_LABELS.METER_9_TO_12
+  if (width <= 24) return TAX_RATE_ZONE_LABELS.METER_12_TO_24
+  return TAX_RATE_ZONE_LABELS.ABOVE_24M
+}
+
 /**
  * Map survey Tax Rate Zone text → matrix row code.
  * Rate Zone 1 → BELOW_9M

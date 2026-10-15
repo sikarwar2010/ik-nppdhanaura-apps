@@ -1,3 +1,6 @@
+"use client"
+
+import { useLocale } from "@workspace/i18n"
 import {
   Table,
   TableBody,
@@ -10,13 +13,13 @@ import {
 import type { ImportErrorRow } from "./types"
 
 export function ImportErrorsTable({ errors }: { errors: ImportErrorRow[] }) {
+  const { t } = useLocale()
   if (errors.length === 0) return null
 
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-destructive" role="alert">
-        {errors.length.toLocaleString("en-IN")} row{" "}
-        {errors.length === 1 ? "error" : "errors"}
+        {errors.length.toLocaleString("en-IN")} {t("import.rowIssues")}
         {errors.length >= 100 ? " (showing first 100)" : null}
       </p>
       <div className="overflow-hidden rounded-xl border bg-card">

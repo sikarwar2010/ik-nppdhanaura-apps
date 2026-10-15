@@ -1,7 +1,7 @@
 import { ConflictException } from "@nestjs/common"
 import type { Prisma, Ward } from "@prisma/client"
 import {
-  CHHATA_ULB_CODE,
+  DHA_ULB_CODE,
   buildSurveyIdFromRecord,
   generateSurveyId,
   normalizeGisUseCode,
@@ -27,7 +27,7 @@ export type ResolvedSurveyIdentity = {
 }
 
 export function getUlbCode(): string {
-  return process.env.ULB_CODE?.trim() || CHHATA_ULB_CODE
+  return process.env.ULB_CODE?.trim() || DHA_ULB_CODE
 }
 
 export function resolveSurveyIdentity(
@@ -50,8 +50,7 @@ export function resolveSurveyIdentity(
     input.parcelNo ?? current?.parcelNo ?? parsed?.parcelNo ?? ""
   const propertyRaw =
     input.propertyNo ?? current?.propertyNo ?? parsed?.propertyNo ?? ""
-  const gisUseRaw =
-    input.gisUseCode ?? parsed?.gisUseCode ?? ""
+  const gisUseRaw = input.gisUseCode ?? parsed?.gisUseCode ?? ""
 
   const parcelNo = normalizeParcelNo(parcelRaw)
   const propertyNo = normalizePropertyNo(propertyRaw)

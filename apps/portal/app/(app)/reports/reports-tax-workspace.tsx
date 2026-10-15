@@ -12,6 +12,7 @@ import {
 import * as React from "react"
 import { toast } from "sonner"
 
+import { optionLabel, useLocale } from "@workspace/i18n"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -111,6 +112,8 @@ export function ReportsTaxWorkspace({
   const [previewRoadId, setPreviewRoadId] = React.useState("")
   const [previewConstructionId, setPreviewConstructionId] = React.useState("")
   const [previewGisUseCode, setPreviewGisUseCode] = React.useState("R")
+  const { locale } = useLocale()
+  const refLabel = (name: string) => optionLabel(locale, name)
 
   const wardsQuery = useQuery({
     queryKey: ["wards"],
@@ -193,9 +196,9 @@ export function ReportsTaxWorkspace({
       buildSelectItems(
         yearsQuery.data ?? [],
         (y) => y.id,
-        (y) => y.name
+        (y) => optionLabel(locale, y.name)
       ),
-    [yearsQuery.data]
+    [yearsQuery.data, locale]
   )
 
   const taxZoneItems = React.useMemo(
@@ -203,9 +206,9 @@ export function ReportsTaxWorkspace({
       buildSelectItems(
         roads,
         (r) => r.id,
-        (r) => r.name
+        (r) => optionLabel(locale, r.name)
       ),
-    [roads]
+    [roads, locale]
   )
 
   const constructionItems = React.useMemo(
@@ -213,9 +216,9 @@ export function ReportsTaxWorkspace({
       buildSelectItems(
         constructions,
         (c) => c.id,
-        (c) => c.name
+        (c) => optionLabel(locale, c.name)
       ),
-    [constructions]
+    [constructions, locale]
   )
 
   const gisUseItems = React.useMemo(
@@ -223,9 +226,9 @@ export function ReportsTaxWorkspace({
       buildSelectItems(
         GIS_USE_PREVIEW_OPTIONS,
         (g) => g.code,
-        (g) => g.name
+        (g) => optionLabel(locale, g.code)
       ),
-    []
+    [locale]
   )
 
   const configIdentity = config ? `${config.id}:${config.version}` : ""
@@ -438,9 +441,8 @@ export function ReportsTaxWorkspace({
             <button
               key={w.id}
               type="button"
-              className={`w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${
-                wardId === w.id ? "bg-primary/10 font-medium" : ""
-              }`}
+              className={`w-full cursor-pointer rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted ${wardId === w.id ? "bg-primary/10 font-medium" : ""
+                }`}
               onClick={() => onWardChange(w.id)}
             >
               {w.name}
@@ -469,10 +471,10 @@ export function ReportsTaxWorkspace({
                   <SelectItem
                     key={y.id}
                     value={y.id}
-                    label={y.name}
+                    label={refLabel(y.name)}
                     className="cursor-pointer"
                   >
-                    {y.name}
+                    {refLabel(y.name)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -530,7 +532,7 @@ export function ReportsTaxWorkspace({
                   <th className="border p-2 text-left">Road width</th>
                   {constructions.map((c) => (
                     <th key={c.id} className="border p-2 text-left">
-                      {c.name}
+                      {refLabel(c.name)}
                     </th>
                   ))}
                 </tr>
@@ -538,7 +540,7 @@ export function ReportsTaxWorkspace({
               <tbody>
                 {roads.map((road) => (
                   <tr key={road.id}>
-                    <td className="border p-2 font-medium">{road.name}</td>
+                    <td className="border p-2 font-medium">{refLabel(road.name)}</td>
                     {constructions.map((c) => {
                       const key = `${road.id}:${c.id}`
                       const value = cellMap.get(key) ?? 0
@@ -642,10 +644,10 @@ export function ReportsTaxWorkspace({
                         <SelectItem
                           key={r.id}
                           value={r.id}
-                          label={r.name}
+                          label={refLabel(r.name)}
                           className="cursor-pointer"
                         >
-                          {r.name}
+                          {refLabel(r.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -667,10 +669,10 @@ export function ReportsTaxWorkspace({
                       <SelectItem
                         key={g.code}
                         value={g.code}
-                        label={g.name}
+                        label={optionLabel(locale, g.code)}
                         className="cursor-pointer"
                       >
-                        {g.name}
+                        {optionLabel(locale, g.code)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -691,10 +693,10 @@ export function ReportsTaxWorkspace({
                       <SelectItem
                         key={c.id}
                         value={c.id}
-                        label={c.name}
+                        label={refLabel(c.name)}
                         className="cursor-pointer"
                       >
-                        {c.name}
+                        {refLabel(c.name)}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -1,9 +1,11 @@
 "use client"
 
-import React, { useState } from "react"
+import { LanguageToggle, useLocale } from "@workspace/i18n"
 import { Landmark, MapPin, Search, Sparkles, X } from "lucide-react"
+import { useState } from "react"
 
 export default function Header() {
+  const { t } = useLocale()
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
@@ -141,12 +143,12 @@ export default function Header() {
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#D39A48]/30 bg-[#FFF5E3] px-2.5 py-1 text-[9px] font-black tracking-[0.14em] text-[#916426] uppercase shadow-sm">
                   <Landmark className="h-3 w-3" />
-                  Uttar Pradesh Government
+                  {t("web.badge.government")}
                 </span>
 
                 <span className="hidden items-center gap-1.5 rounded-full border border-[#72956C]/25 bg-[#EDF5EA] px-2.5 py-1 text-[9px] font-bold tracking-wider text-[#557651] uppercase sm:inline-flex">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#6D9367]" />
-                  Official Portal
+                  {t("web.badge.official")}
                 </span>
               </div>
 
@@ -186,7 +188,8 @@ export default function Header() {
               SEARCH INPUT
           ====================================================== */}
 
-          <div className="relative z-10 flex w-full items-center lg:w-auto">
+          <div className="relative z-10 flex w-full items-center gap-3 lg:w-auto">
+            <LanguageToggle className="inline-flex shrink-0" />
             <div className="group relative flex h-12 w-full items-center overflow-hidden rounded-2xl border border-[#D5DED0] bg-white/95 px-3 text-[#344638] shadow-[0_8px_30px_rgba(73,96,66,0.07)] backdrop-blur-xl transition-all duration-300 hover:border-[#D49A46]/60 focus-within:border-[#D49A46] focus-within:ring-2 focus-within:ring-[#D49A46]/30 focus-within:shadow-[0_16px_40px_rgba(73,96,66,0.14)] sm:w-[320px]">
               {/* Search Hover Background */}
               <span className="pointer-events-none absolute inset-0 bg-linear-to-r from-[#FFF7E9] via-transparent to-[#F0F7ED] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -202,7 +205,7 @@ export default function Header() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search services & pages..."
+                  placeholder={t("web.search.placeholder")}
                   className="w-full bg-transparent text-xs font-bold text-[#344638] placeholder-[#7E8B80] outline-none"
                 />
 
@@ -211,7 +214,7 @@ export default function Header() {
                   <button
                     type="button"
                     onClick={() => setSearchQuery("")}
-                    aria-label="Clear search"
+                    aria-label={t("web.search.clear")}
                     className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-200 text-slate-600 transition-colors hover:bg-amber-100 hover:text-amber-900"
                   >
                     <X className="h-3 w-3" />

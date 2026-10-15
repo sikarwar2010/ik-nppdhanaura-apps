@@ -18,7 +18,9 @@ import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 import { cn } from "@workspace/ui/lib/utils"
 
-import { ApiError, api } from "@/lib/api"
+import { LanguageToggle, useLocale } from "@workspace/i18n"
+
+import { api, ApiError } from "@/lib/api"
 
 async function clearLegacyAuthCookies() {
   try {
@@ -59,7 +61,12 @@ function stripHttpMetadata(message: string): string {
     .trim()
 }
 
-function mapAuthErrorMessage(error: unknown): string {
+function mapAuthErrorMessage(
+  error: unknown,
+  fallback: string,
+  tooMany: string,
+  loginFailed: string
+): string {
   const raw =
     error instanceof ApiError || error instanceof Error
       ? error.message
@@ -77,15 +84,16 @@ function mapAuthErrorMessage(error: unknown): string {
     m.includes("user not found") ||
     m.includes("invalid email or password")
   ) {
-    return "Your account is not provisioned or the password is incorrect. Contact an administrator."
+    return fallback
   }
   if (m.includes("too many requests")) {
-    return "Too many login attempts. Please wait a moment and try again."
+    return tooMany
   }
-  return message || "Login failed"
+  return message || loginFailed
 }
 
 export default function LoginPage() {
+  const { t } = useLocale()
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [loading, setLoading] = React.useState(false)
@@ -95,7 +103,7 @@ export default function LoginPage() {
     void clearLegacyAuthCookies()
     const params = new URLSearchParams(window.location.search)
     if (params.get("signedOut") === "1") {
-      toast.success("Signed out")
+      toast.success(t("auth.signedOut"))
       const url = new URL(window.location.href)
       url.searchParams.delete("signedOut")
       window.history.replaceState({}, "", url.pathname + url.search)
@@ -105,7 +113,12 @@ export default function LoginPage() {
       params.get("error_description") ??
       params.get("message")
     if (error) {
-      const msg = mapAuthErrorMessage(decodeURIComponent(error))
+      const msg = mapAuthErrorMessage(
+        decodeURIComponent(error),
+        t("auth.invalidCredentials"),
+        t("auth.tooMany"),
+        t("auth.loginFailed")
+      )
       setFormError(msg)
       toast.error(msg)
       const url = new URL(window.location.href)
@@ -114,7 +127,7 @@ export default function LoginPage() {
       url.searchParams.delete("message")
       window.history.replaceState({}, "", url.pathname + url.search)
     }
-  }, [])
+  }, [t])
 
   async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -126,10 +139,15 @@ export default function LoginPage() {
         password,
       })
       await clearLegacyAuthCookies()
-      toast.success("Signed in")
+      toast.success(t("auth.signedIn"))
       window.location.assign("/dashboard")
     } catch (err) {
-      const msg = mapAuthErrorMessage(err)
+      const msg = mapAuthErrorMessage(
+        err,
+        t("auth.invalidCredentials"),
+        t("auth.tooMany"),
+        t("auth.loginFailed")
+      )
       setFormError(msg)
       toast.error(msg)
     } finally {
@@ -191,10 +209,10 @@ export default function LoginPage() {
                 id="login-hero-title"
                 className="mt-3 font-[family-name:var(--font-auth-display)] text-4xl leading-tight font-semibold tracking-tight text-balance xl:text-[2.75rem]"
               >
-                Staff portal
+                {t("auth.staffPortal")}
               </h1>
               <p className="mt-4 text-lg leading-relaxed text-slate-200/95">
-                Survey and property operations
+                {t("auth.operations")}
               </p>
               <p className="mt-2 font-[family-name:var(--font-deva)] text-base leading-relaxed text-slate-300/90">
                 स्टाफ पोर्टल — सर्वेक्षण एवं संपत्ति संचालन
@@ -270,8 +288,9 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <h2 className="font-[family-name:var(--font-auth-display)] text-2xl font-semibold tracking-tight text-[#0F172A]">
-                    Sign in
+                    {t("auth.signIn")}
                   </h2>
+                  <LanguageToggle className="mt-2 inline-flex" />
                   <p className="font-[family-name:var(--font-deva)] text-sm text-slate-600">
                     साइन इन · Staff access only
                   </p>
@@ -295,7 +314,7 @@ export default function LoginPage() {
               <form className="space-y-5" onSubmit={onSubmit} noValidate>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="font-medium text-[#0F172A]">
-                    Email / ईमेल
+                    {t("auth.email")}
                   </Label>
                   <Input
                     id="email"
@@ -315,14 +334,14 @@ export default function LoginPage() {
                       htmlFor="password"
                       className="font-medium text-[#0F172A]"
                     >
-                      Password / पासवर्ड
+                      {t("auth.password")}
                     </Label>
                     <Link
                       href="/forgot-password"
                       className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-[#0369A1] transition-colors duration-200 hover:text-sky-950 hover:underline"
                     >
                       <Lock className="size-3" aria-hidden />
-                      Forgot password?
+                      {t("auth.forgotPassword")}
                     </Link>
                   </div>
                   <Input
@@ -353,10 +372,10 @@ export default function LoginPage() {
                         className="mr-2 size-4 animate-spin"
                         aria-hidden
                       />
-                      Signing in…
+                      {t("auth.signingIn")}
                     </>
                   ) : (
-                    "Sign in / साइन इन करें"
+                    t("auth.signIn")
                   )}
                 </Button>
               </form>

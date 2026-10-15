@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { api } from "@/lib/api"
 import { downloadAuthenticatedExport } from "@/lib/download-blob"
+import { useLocale } from "@workspace/i18n"
 
 import {
   FilterControlPanel,
@@ -25,6 +26,7 @@ type TaxConfig = {
 type RefEntry = { id: string; code: string; name: string }
 
 export default function ReportBuilderPage() {
+  const { t } = useLocale()
   const [filters, setFilters] = React.useState<ReportFilters>({
     wardId: "",
     propertyUse: "",
@@ -99,11 +101,11 @@ export default function ReportBuilderPage() {
 
   const kpiData = dashboardQuery.data
     ? {
-        surveysInScope: surveysQuery.data?.total ?? dashboardQuery.data.totalProperties,
-        completeQuality: dashboardQuery.data.completeQuality,
-        needsReview: dashboardQuery.data.needsReviewQuality,
-        totalWards: dashboardQuery.data.totalWards,
-      }
+      surveysInScope: surveysQuery.data?.total ?? dashboardQuery.data.totalProperties,
+      completeQuality: dashboardQuery.data.completeQuality,
+      needsReview: dashboardQuery.data.needsReviewQuality,
+      totalWards: dashboardQuery.data.totalWards,
+    }
     : undefined
 
   const taxPublished = taxConfigQuery.data?.status === "PUBLISHED"
@@ -127,19 +129,34 @@ export default function ReportBuilderPage() {
         `/api/v1/reports/surveys/export?${params}`,
         `survey-report-${ward?.number ?? "all"}.xlsx`
       )
-      toast.success("Survey Excel downloaded")
+      toast.success(t("reports.downloaded"))
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Export failed")
+      toast.error(e instanceof Error ? e.message : t("reports.exportFailed"))
+    }
+  }
+
+  const handleExportGis = async () => {
+    const params = buildExportParams()
+    params.set("template", "dhanaura-gis")
+    const ward = wardsQuery.data?.find((w) => w.id === filters.wardId)
+    try {
+      await downloadAuthenticatedExport(
+        `/api/v1/reports/surveys/export?${params}`,
+        `survey-gis-${ward?.number ?? "all"}.xlsx`
+      )
+      toast.success(t("reports.gisDownloaded"))
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("reports.exportFailed"))
     }
   }
 
   const handleExportTax = async () => {
     if (!filters.wardId || !assessmentYearId) {
-      toast.error("Select ward and assessment year")
+      toast.error(t("reports.taxRequired"))
       return
     }
     if (!taxPublished) {
-      toast.error("Publish tax rates before exporting")
+      toast.error(t("reports.publishFirst"))
       return
     }
     const params = buildExportParams()
@@ -150,9 +167,9 @@ export default function ReportBuilderPage() {
         `/api/v1/reports/surveys/export?${params}`,
         `ward-tax-report-${ward?.number ?? "ward"}.xlsx`
       )
-      toast.success("Tax demand Excel downloaded")
+      toast.success(t("reports.taxDownloaded"))
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Export failed")
+      toast.error(e instanceof Error ? e.message : t("reports.exportFailed"))
     }
   }
 
@@ -171,6 +188,7 @@ export default function ReportBuilderPage() {
         taxPublished={taxPublished}
         onExportSurvey={handleExportSurvey}
         onExportTax={handleExportTax}
+        onExportGis={handleExportGis}
       />
     </div>
   )

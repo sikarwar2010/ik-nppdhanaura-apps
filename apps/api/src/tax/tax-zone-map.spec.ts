@@ -1,8 +1,9 @@
 import {
   classifyGisUseCode,
-  mapConstructionCode,
   isResidentialUsage,
+  mapConstructionCode,
   mapTaxRateZoneCode,
+  taxRateZoneLabelFromRoadWidth,
 } from "./tax-zone-map"
 
 describe("mapTaxRateZoneCode", () => {
@@ -49,6 +50,55 @@ describe("mapTaxRateZoneCode", () => {
   it("returns null for empty values", () => {
     expect(mapTaxRateZoneCode(null)).toBeNull()
     expect(mapTaxRateZoneCode("")).toBeNull()
+  })
+})
+
+describe("taxRateZoneLabelFromRoadWidth", () => {
+  it("uses the existing road-width bands", () => {
+    expect(taxRateZoneLabelFromRoadWidth("8")).toBe(
+      "RATE ZONE 1 (Upto 9 Meters)"
+    )
+    expect(taxRateZoneLabelFromRoadWidth(8.9)).toBe(
+      "RATE ZONE 1 (Upto 9 Meters)"
+    )
+    expect(taxRateZoneLabelFromRoadWidth("9")).toBe(
+      "RATE ZONE 2 (9 meters and upto 12 meters)"
+    )
+    expect(taxRateZoneLabelFromRoadWidth("12")).toBe(
+      "RATE ZONE 2 (9 meters and upto 12 meters)"
+    )
+    expect(taxRateZoneLabelFromRoadWidth("12.1")).toBe(
+      "RATE ZONE 3 (12 Meters And Upto 24 Meters)"
+    )
+    expect(taxRateZoneLabelFromRoadWidth(24)).toBe(
+      "RATE ZONE 3 (12 Meters And Upto 24 Meters)"
+    )
+    expect(taxRateZoneLabelFromRoadWidth("24.1")).toBe(
+      "RATE ZONE 4 (Above 24 Meters)"
+    )
+  })
+
+  it("leaves blank, negative, and non-numeric widths unresolved", () => {
+    expect(taxRateZoneLabelFromRoadWidth("")).toBeNull()
+    expect(taxRateZoneLabelFromRoadWidth("   ")).toBeNull()
+    expect(taxRateZoneLabelFromRoadWidth(null)).toBeNull()
+    expect(taxRateZoneLabelFromRoadWidth("abc")).toBeNull()
+    expect(taxRateZoneLabelFromRoadWidth("-1")).toBeNull()
+  })
+
+  it("maps each width label back through the existing tax-zone codes", () => {
+    expect(mapTaxRateZoneCode(taxRateZoneLabelFromRoadWidth("8"))).toBe(
+      "BELOW_9M"
+    )
+    expect(mapTaxRateZoneCode(taxRateZoneLabelFromRoadWidth("9"))).toBe(
+      "METER_9_TO_12"
+    )
+    expect(mapTaxRateZoneCode(taxRateZoneLabelFromRoadWidth("12.1"))).toBe(
+      "METER_12_TO_24"
+    )
+    expect(mapTaxRateZoneCode(taxRateZoneLabelFromRoadWidth("24.1"))).toBe(
+      "ABOVE_24M"
+    )
   })
 })
 

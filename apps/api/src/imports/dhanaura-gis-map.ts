@@ -1,0 +1,1060 @@
+import {
+  generateSurveyId,
+  normalizeParcelNo,
+  normalizePropertyNo,
+  parseGisSurveyId,
+} from "@workspace/types"
+import ExcelJS from "exceljs"
+
+import { taxRateZoneLabelFromRoadWidth } from "../tax/tax-zone-map"
+
+import {
+  countEnglishHeaderMatches,
+  excelValueToString,
+  extractWardNumber,
+  parseBool,
+  parseNumber,
+  resolveColumnMap,
+  type ColumnMap,
+  type MappingPreset,
+} from "./column-maps"
+
+export const DHANAURA_IMPORT_LAYOUT = "dhanaura-gis"
+export const HEADER_SCAN_LIMIT = 20
+export const MIN_HEADER_SCORE = 4
+
+export const DHANAURA_FLOOR_LABELS = {
+  basement: "Basement",
+  ground: "Ground Floor",
+  first: "First Floor",
+  second: "Second Floor",
+} as const
+
+const DEVANAGARI_DIGITS = "०१२३४५६७८९"
+
+export const DHANAURA_HEADERS = [
+  "क्रम सं०",
+  "पुराना म०न०",
+  "नया म०न०",
+  "पुराना मकान मालिक",
+  "पिता/पति का नाम",
+  "नया मकान मालिक",
+  "पिता/पति का नाम",
+  "मोबाईल न०",
+  "सम्पत्ति शीर्षक",
+  "सम्पत्ति का प्रकार",
+  "मकान की प्रकृति",
+  "सम्पत्ति का कुल क्षेत्रफल",
+  "खाली प्लाट का क्षेत्रफल",
+  "सम्पत्ति क्षेत्र चौड़ाई",
+  "सम्पत्ति क्षेत्र लम्बाई",
+  "मकान निर्माण क्षेत्रफल वर्गफुट",
+  "निर्माण वर्ष",
+  "कमरों की संख्या",
+  "मंजिलों की संख्या",
+  "भूमिगत क्षेत्रफल वर्गफुट",
+  "तल मंजिल",
+  "प्रथम मंजिल",
+  "दूसरी मंजिल",
+  "दुकान का क्षेत्रफल वर्गफुट",
+  "दुकान संख्या",
+  "दुकान का नाम",
+  "किरायदार का नाम",
+  "जल आपूर्ति",
+  "सड़क चौड़ाई मी०",
+  "सड़क का प्रकार",
+  "अन्य/करदाता",
+  "फैमिली मेम्बर",
+  "वार्ड न०",
+  "मौहल्ला",
+] as const
+
+export type DhanauraField = (typeof DHANAURA_FIELD_ORDER)[number]
+
+const DHANAURA_FIELD_ORDER = [
+  "serialNo",
+  "oldHouseNo",
+  "newHouseNo",
+  "previousOwnerName",
+  "previousOwnerFatherName",
+  "ownerName",
+  "ownerFatherName",
+  "mobile",
+  "propertyTitle",
+  "propertyType",
+  "buildingType",
+  "plotAreaSqFt",
+  "vacantPlotArea",
+  "propertyWidth",
+  "propertyLength",
+  "totalBuiltUpAreaSqFt",
+  "yearOfConstruction",
+  "roomCount",
+  "floorCount",
+  "basementArea",
+  "groundFloorArea",
+  "firstFloorArea",
+  "secondFloorArea",
+  "shopAreaSqFt",
+  "shopNumber",
+  "shopName",
+  "tenantName",
+  "waterSupply",
+  "roadWidthMeters",
+  "roadType",
+  "taxpayerInfo",
+  "familyMemberCount",
+  "wardNumber",
+  "locality",
+] as const
+
+export type DhanauraColumnMap = Record<DhanauraField, number>
+
+/** Fields kept on Survey.sourceExtras instead of first-class columns. */
+export const DHANAURA_EXTRA_FIELDS = [
+  "serialNo",
+  "previousOwnerName",
+  "previousOwnerFatherName",
+  "propertyTitle",
+  "vacantPlotArea",
+  "propertyWidth",
+  "propertyLength",
+  "roomCount",
+  "floorCount",
+  "shopAreaSqFt",
+  "shopNumber",
+  "shopName",
+  "tenantName",
+  "roadWidthMeters",
+  "taxpayerInfo",
+  "familyMemberCount",
+] as const
+
+export type DhanauraExtraField = (typeof DHANAURA_EXTRA_FIELDS)[number]
+
+type Alias = {
+  field: DhanauraField
+  exact: string[]
+  /** Hindi or GIS-only labels. Generic Chhata/Mainpuri tokens are not specific. */
+  specific: boolean
+}
+
+const ALIASES: Alias[] = [
+  {
+    field: "serialNo",
+    exact: ["क्रमसं0", "क्रमसं", "serialnumber", "serialno"],
+    specific: true,
+  },
+  {
+    field: "oldHouseNo",
+    exact: ["पुरानाम0न0", "पुरानामकाननंबर", "oldhousenumber", "oldhouseno"],
+    specific: true,
+  },
+  {
+    field: "newHouseNo",
+    exact: ["नयाम0न0", "नयामकाननंबर", "newhousenumber", "newhouseno"],
+    specific: true,
+  },
+  {
+    field: "previousOwnerName",
+    exact: ["पुरानामकानमालिक", "previouspropertyowner", "previousowner"],
+    specific: true,
+  },
+  {
+    field: "ownerName",
+    exact: ["नयामकानमालिक", "currentpropertyowner", "currentowner"],
+    specific: true,
+  },
+  {
+    field: "mobile",
+    exact: ["मोबाईलन0", "मोबाइलन0", "mobilenumber", "mobileno"],
+    specific: false,
+  },
+  {
+    field: "propertyTitle",
+    exact: ["सम्पत्तिशीर्षक", "संपत्तिशीर्षक", "propertytitle"],
+    specific: true,
+  },
+  {
+    field: "propertyType",
+    exact: ["सम्पत्तिकाप्रकार", "संपत्तिकाप्रकार", "propertytype"],
+    specific: false,
+  },
+  {
+    field: "buildingType",
+    exact: ["मकानकीप्रकृति", "buildingtype", "constructiontype"],
+    specific: true,
+  },
+  {
+    field: "plotAreaSqFt",
+    exact: [
+      "सम्पत्तिकाकुलक्षेत्रफल",
+      "संपत्तिकाकुलक्षेत्रफल",
+      "totalpropertyarea",
+    ],
+    specific: true,
+  },
+  {
+    field: "vacantPlotArea",
+    exact: ["खालीप्लाटकाक्षेत्रफल", "vacantplotarea"],
+    specific: true,
+  },
+  {
+    field: "propertyWidth",
+    exact: ["सम्पत्तिक्षेत्रचौड़ाई", "संपत्तिक्षेत्रचौड़ाई", "propertywidth"],
+    specific: true,
+  },
+  {
+    field: "propertyLength",
+    exact: ["सम्पत्तिक्षेत्रलम्बाई", "सम्पत्तिक्षेत्रलंबाई", "propertylength"],
+    specific: true,
+  },
+  {
+    field: "totalBuiltUpAreaSqFt",
+    exact: [
+      "मकाननिर्माणक्षेत्रफलवर्गफुट",
+      "buildingarea",
+      "constructionareasqft",
+    ],
+    specific: true,
+  },
+  {
+    field: "yearOfConstruction",
+    exact: ["निर्माणवर्ष", "constructionyear", "yearofconstruction"],
+    specific: false,
+  },
+  {
+    field: "roomCount",
+    exact: ["कमरोंकीसंख्या", "numberofrooms", "roomcount"],
+    specific: true,
+  },
+  {
+    field: "floorCount",
+    exact: ["मंजिलोंकीसंख्या", "numberoffloors", "floorcount"],
+    specific: true,
+  },
+  {
+    field: "basementArea",
+    exact: ["भूमिगतक्षेत्रफलवर्गफुट", "basementarea"],
+    specific: true,
+  },
+  {
+    field: "groundFloorArea",
+    exact: ["तलमंजिल", "groundfloorarea", "groundfloor"],
+    specific: true,
+  },
+  {
+    field: "firstFloorArea",
+    exact: ["प्रथममंजिल", "firstfloorarea", "firstfloor"],
+    specific: true,
+  },
+  {
+    field: "secondFloorArea",
+    exact: ["दूसरीमंजिल", "secondfloorarea", "secondfloor"],
+    specific: true,
+  },
+  {
+    field: "shopAreaSqFt",
+    exact: ["दुकानकाक्षेत्रफलवर्गफुट", "shoparea"],
+    specific: true,
+  },
+  { field: "shopNumber", exact: ["दुकानसंख्या", "shopnumber"], specific: true },
+  { field: "shopName", exact: ["दुकानकानाम", "shopname"], specific: true },
+  {
+    field: "tenantName",
+    exact: ["किरायदारकानाम", "tenantname"],
+    specific: true,
+  },
+  { field: "waterSupply", exact: ["जलआपूर्ति", "watersupply"], specific: true },
+  {
+    field: "roadWidthMeters",
+    exact: ["सड़कचौड़ाईमी0", "सड़कचौड़ाईमी", "roadwidth"],
+    specific: true,
+  },
+  { field: "roadType", exact: ["सड़ककाप्रकार", "roadtype"], specific: false },
+  {
+    field: "taxpayerInfo",
+    exact: ["अन्यकरदाता", "taxpayer", "othertaxpayer"],
+    specific: true,
+  },
+  {
+    field: "familyMemberCount",
+    exact: ["फैमिलीमेम्बर", "फैमिलीमेंबर", "familymember", "familymembercount"],
+    specific: true,
+  },
+  {
+    field: "wardNumber",
+    exact: ["वार्डन0", "वार्डनंबर", "wardnumber", "wardno"],
+    specific: true,
+  },
+  {
+    field: "locality",
+    exact: ["मौहल्ला", "मोहल्ला", "mohalla", "locality"],
+    specific: false,
+  },
+]
+
+const FATHER_EXACT = new Set([
+  "पितापतिकानाम",
+  "fatherhusbandname",
+  "fathersname",
+  "husbandname",
+])
+
+const ALIAS_BY_EXACT = new Map<string, Alias>()
+for (const alias of ALIASES) {
+  for (const exact of alias.exact) {
+    if (!ALIAS_BY_EXACT.has(exact)) ALIAS_BY_EXACT.set(exact, alias)
+  }
+}
+
+const HINDI_EXACT = new Set(
+  ALIASES.flatMap((alias) =>
+    alias.exact.filter((token) => /[\u0900-\u097F]/.test(token))
+  ).concat(["पितापतिकानाम"])
+)
+
+const SPECIFIC_EXACT = new Set(
+  ALIASES.filter((alias) => alias.specific).flatMap((alias) => alias.exact)
+)
+for (const token of ["पितापतिकानाम"]) SPECIFIC_EXACT.add(token)
+
+export function normLoose(value: string): string {
+  return value
+    .normalize("NFC")
+    .replace(/[०-९]/g, (ch) => {
+      const index = DEVANAGARI_DIGITS.indexOf(ch)
+      return index >= 0 ? String(index) : ch
+    })
+    .toLowerCase()
+    .replace(/[\s.।/_\\\-:：,，()]+/g, "")
+}
+
+export function normalizeHouseKey(value: string): string {
+  return value.normalize("NFC").replace(/\s+/g, " ").trim()
+}
+
+function containsDevanagari(value: string): boolean {
+  return /[\u0900-\u097F]/.test(value)
+}
+
+export function countDhanauraHeaderSignals(headers: string[]): {
+  hindi: number
+  specific: number
+} {
+  const seenHindi = new Set<string>()
+  const seenSpecific = new Set<string>()
+  let hindi = 0
+  let specific = 0
+  for (const header of headers) {
+    const token = normLoose(header ?? "")
+    if (!token) continue
+    const hindiHit = HINDI_EXACT.has(token) && containsDevanagari(header ?? "")
+    if (hindiHit && !seenHindi.has(token)) {
+      seenHindi.add(token)
+      hindi++
+    }
+    if (SPECIFIC_EXACT.has(token) && !seenSpecific.has(token)) {
+      seenSpecific.add(token)
+      specific++
+    }
+  }
+  return { hindi, specific }
+}
+
+export function isDhanauraHeaders(headers: string[]): boolean {
+  const english = countEnglishHeaderMatches(headers)
+  const { hindi, specific } = countDhanauraHeaderSignals(headers)
+  if (hindi >= MIN_HEADER_SCORE && hindi >= english) return true
+  return specific >= MIN_HEADER_SCORE && specific > english
+}
+
+export function findHeaderRow(rows: string[][]): {
+  rowIndex: number
+  headers: string[]
+  dhanaura: boolean
+} | null {
+  let best: {
+    rowIndex: number
+    headers: string[]
+    score: number
+    dhanaura: boolean
+  } | null = null
+  const limit = Math.min(rows.length, HEADER_SCAN_LIMIT)
+  for (let rowIndex = 0; rowIndex < limit; rowIndex++) {
+    const headers = rows[rowIndex] ?? []
+    const english = countEnglishHeaderMatches(headers)
+    const { hindi, specific } = countDhanauraHeaderSignals(headers)
+    const dhanaura = isDhanauraHeaders(headers)
+    const score = dhanaura ? Math.max(hindi, specific) : english
+    if (score < MIN_HEADER_SCORE) continue
+    if (!best || score > best.score) {
+      best = { rowIndex, headers, score, dhanaura }
+    }
+  }
+  if (!best) return null
+  return {
+    rowIndex: best.rowIndex,
+    headers: best.headers,
+    dhanaura: best.dhanaura,
+  }
+}
+
+export function emptyDhanauraColumnMap(): DhanauraColumnMap {
+  return {
+    serialNo: -1,
+    oldHouseNo: -1,
+    newHouseNo: -1,
+    previousOwnerName: -1,
+    previousOwnerFatherName: -1,
+    ownerName: -1,
+    ownerFatherName: -1,
+    mobile: -1,
+    propertyTitle: -1,
+    propertyType: -1,
+    buildingType: -1,
+    plotAreaSqFt: -1,
+    vacantPlotArea: -1,
+    propertyWidth: -1,
+    propertyLength: -1,
+    totalBuiltUpAreaSqFt: -1,
+    yearOfConstruction: -1,
+    roomCount: -1,
+    floorCount: -1,
+    basementArea: -1,
+    groundFloorArea: -1,
+    firstFloorArea: -1,
+    secondFloorArea: -1,
+    shopAreaSqFt: -1,
+    shopNumber: -1,
+    shopName: -1,
+    tenantName: -1,
+    waterSupply: -1,
+    roadWidthMeters: -1,
+    roadType: -1,
+    taxpayerInfo: -1,
+    familyMemberCount: -1,
+    wardNumber: -1,
+    locality: -1,
+  }
+}
+
+function precedingOwnerField(
+  headers: string[],
+  fatherIndex: number
+): "ownerName" | "previousOwnerName" | null {
+  for (let index = fatherIndex - 1; index >= 0; index--) {
+    const token = normLoose(headers[index] ?? "")
+    if (!token || FATHER_EXACT.has(token)) continue
+    const alias = ALIAS_BY_EXACT.get(token)
+    if (alias?.field === "ownerName" || alias?.field === "previousOwnerName") {
+      return alias.field
+    }
+  }
+  return null
+}
+
+export function buildDhanauraColumnMap(headers: string[]): DhanauraColumnMap {
+  const map = emptyDhanauraColumnMap()
+  const fatherIndexes: number[] = []
+  headers.forEach((header, index) => {
+    const token = normLoose(header ?? "")
+    if (!token) return
+    if (FATHER_EXACT.has(token)) {
+      fatherIndexes.push(index)
+      return
+    }
+    const alias = ALIAS_BY_EXACT.get(token)
+    if (!alias || map[alias.field] >= 0) return
+    map[alias.field] = index
+  })
+
+  for (const index of fatherIndexes) {
+    const ownerField = precedingOwnerField(headers, index)
+    if (ownerField === "ownerName" && map.ownerFatherName < 0) {
+      map.ownerFatherName = index
+      continue
+    }
+    if (ownerField === "previousOwnerName" && map.previousOwnerFatherName < 0) {
+      map.previousOwnerFatherName = index
+    }
+  }
+  return map
+}
+
+export function unmappedDhanauraHeaders(
+  headers: string[],
+  map: DhanauraColumnMap
+): string[] {
+  const used = new Set(Object.values(map).filter((index) => index >= 0))
+  const unmapped: string[] = []
+  headers.forEach((header, index) => {
+    const label = header.trim()
+    if (!label || used.has(index)) return
+    unmapped.push(label)
+  })
+  return unmapped
+}
+
+export function mappedExtraFields(
+  map: DhanauraColumnMap
+): DhanauraExtraField[] {
+  return DHANAURA_EXTRA_FIELDS.filter((field) => map[field] >= 0)
+}
+
+export function missingDhanauraRequired(map: DhanauraColumnMap): string[] {
+  const missing: string[] = []
+  if (map.wardNumber < 0) missing.push("वार्ड न०")
+  if (map.newHouseNo < 0) missing.push("नया म०न०")
+  return missing
+}
+
+function formattedLeadingZeros(text: string, value: number): string | null {
+  if (!Number.isInteger(value) || value < 0 || !/^0+\d+$/.test(text))
+    return null
+  return Number(text) === value ? text : null
+}
+
+/** ExcelJS drops zero-padding from cell.text. A format of only zeros is that padding. */
+function zeroPadFromNumFmt(
+  value: number,
+  numFmt: string | undefined
+): string | null {
+  if (!Number.isInteger(value) || value < 0 || !numFmt) return null
+  const fmt = numFmt.trim()
+  if (!/^0+$/.test(fmt)) return null
+  const text = String(value).padStart(fmt.length, "0")
+  return text.startsWith("0") ? text : null
+}
+
+export function readCellDisplay(cell: ExcelJS.Cell): string {
+  const value = cell.value
+  if (value == null) return ""
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return ""
+    const formatted =
+      formattedLeadingZeros(cell.text?.trim() ?? "", value) ??
+      zeroPadFromNumFmt(value, cell.numFmt)
+    if (formatted) return formatted
+    return String(value)
+  }
+  if (typeof value === "string") return value.trim()
+  const text = cell.text?.trim() ?? ""
+  if (text) return text
+  return excelValueToString(value)
+}
+
+export function readRowStrings(
+  row: ExcelJS.Row,
+  columnCount: number
+): string[] {
+  const values: string[] = []
+  for (let col = 1; col <= columnCount; col++) {
+    values.push(readCellDisplay(row.getCell(col)))
+  }
+  return values
+}
+
+export type WorkbookLayout = {
+  sheet: ExcelJS.Worksheet
+  headerRowNumber: number
+  headers: string[]
+  columnCount: number
+  preset: MappingPreset
+  map: ColumnMap
+  dhanauraMap: DhanauraColumnMap | null
+  unmappedColumns: string[]
+  storedExtraFields: DhanauraExtraField[]
+  missingRequired: string[]
+}
+
+export function resolveWorkbookLayout(
+  workbook: ExcelJS.Workbook
+): WorkbookLayout | null {
+  const named = workbook.getWorksheet("Survey Data")
+  const candidates: ExcelJS.Worksheet[] = []
+  if (named) candidates.push(named)
+  for (const sheet of workbook.worksheets) {
+    if (sheet !== named) candidates.push(sheet)
+  }
+
+  for (const sheet of candidates) {
+    const columnCount = Math.max(sheet.columnCount, 1)
+    const last = Math.min(sheet.rowCount || 0, HEADER_SCAN_LIMIT)
+    const preview: string[][] = []
+    for (let rowNumber = 1; rowNumber <= last; rowNumber++) {
+      preview.push(readRowStrings(sheet.getRow(rowNumber), columnCount))
+    }
+    const found = findHeaderRow(preview)
+    if (!found) continue
+    const dhanauraMap = found.dhanaura
+      ? buildDhanauraColumnMap(found.headers)
+      : null
+    const resolved = resolveColumnMap(found.headers, found.headers.length)
+    return {
+      sheet,
+      headerRowNumber: found.rowIndex + 1,
+      headers: found.headers,
+      columnCount,
+      preset: found.dhanaura ? "dhanaura-gis" : resolved.preset,
+      map: resolved.map,
+      dhanauraMap,
+      unmappedColumns: dhanauraMap
+        ? unmappedDhanauraHeaders(found.headers, dhanauraMap)
+        : [],
+      storedExtraFields: dhanauraMap ? mappedExtraFields(dhanauraMap) : [],
+      missingRequired: dhanauraMap ? missingDhanauraRequired(dhanauraMap) : [],
+    }
+  }
+  return null
+}
+
+const DEFAULT_UNIT_NO = "001"
+
+const GIS_USE_BY_PROPERTY_TYPE: Record<string, string> = {
+  residential: "R",
+  आवासीय: "R",
+  रिहायशी: "R",
+  commercial: "C",
+  व्यावसायिक: "C",
+  वाणिज्यिक: "C",
+  mix: "M",
+  mixed: "M",
+  मिश्रित: "M",
+  "open land": "P",
+  खुला: "P",
+  "खाली प्लाट": "P",
+}
+
+function asciiDigits(value: string): string {
+  return value.replace(/[०-९]/g, (digit) =>
+    String(DEVANAGARI_DIGITS.indexOf(digit))
+  )
+}
+
+/** Positive integer digits from a house number. Null when the text is not numeric. */
+export function parcelDigitsFromHouse(houseKey: string): string | null {
+  const ascii = asciiDigits(normalizeHouseKey(houseKey))
+  if (!/^[1-9]\d*$/.test(ascii) && !/^0+[1-9]\d*$/.test(ascii)) return null
+  return ascii.replace(/^0+/, "")
+}
+
+export function gisUseFromPropertyType(propertyType: string): {
+  letter: string
+  recognized: boolean
+} {
+  const token = propertyType
+    .normalize("NFC")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+  const letter = GIS_USE_BY_PROPERTY_TYPE[token]
+  if (!letter) return { letter: "R", recognized: false }
+  return { letter, recognized: true }
+}
+
+/**
+ * GIS Survey Id from the new house number.
+ * Parcel is that number padded to at least 6 digits. Unit is 001.
+ * The original house text stays on presentHouseNo.
+ */
+export function surveyIdForHouse(input: {
+  ulbCode: string
+  wardNumber: number
+  houseKey: string
+  propertyType?: string
+}): {
+  surveyId: string
+  parcelNo: string
+  propertyNo: string
+  gisUseCode: string
+  gisUseRecognized: boolean
+} {
+  const digits = parcelDigitsFromHouse(input.houseKey)
+  if (!digits) {
+    throw new Error("House number must be numeric to build the parcel segment")
+  }
+  const gis = gisUseFromPropertyType(input.propertyType ?? "")
+  const parcelNo = normalizeParcelNo(digits)
+  const propertyNo = normalizePropertyNo(DEFAULT_UNIT_NO)
+  return {
+    parcelNo,
+    propertyNo,
+    gisUseCode: gis.letter,
+    gisUseRecognized: gis.recognized,
+    surveyId: generateSurveyId({
+      ulbCode: input.ulbCode,
+      wardNo: input.wardNumber,
+      parcelNo,
+      propertyNo,
+      gisUseCode: gis.letter,
+    }),
+  }
+}
+
+export type ImportedTaxRateZoneDecision =
+  | { kind: "set"; taxRateZone: string }
+  | { kind: "keep"; warning: string | null }
+  | { kind: "error"; field: "roadWidthMeters"; message: string }
+
+/**
+ * New rows and rows with no saved zone take the width band.
+ * A saved tax road zone is left unchanged. An unresolved width is an error
+ * only when there is no saved zone to keep.
+ */
+export function decideImportedTaxRateZone(input: {
+  roadWidth: string
+  existingTaxRateZone?: string | null
+}): ImportedTaxRateZoneDecision {
+  const label = taxRateZoneLabelFromRoadWidth(input.roadWidth)
+  const existing = input.existingTaxRateZone?.trim() ?? ""
+  if (existing) {
+    return {
+      kind: "keep",
+      warning: label
+        ? null
+        : "Road width could not be resolved to a tax road zone; existing tax road zone was kept",
+    }
+  }
+  if (!label) {
+    return {
+      kind: "error",
+      field: "roadWidthMeters",
+      message: input.roadWidth.trim()
+        ? `Road width "${input.roadWidth.trim()}" does not match a tax road zone`
+        : "Road width is required to assign the tax road zone",
+    }
+  }
+  return { kind: "set", taxRateZone: label }
+}
+
+export function readImportLayout(value: unknown): string | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null
+  const layout = (value as { importLayout?: unknown }).importLayout
+  return typeof layout === "string" ? layout : null
+}
+
+export type HouseMatch = {
+  id: string
+  presentHouseNo: string | null
+  houseNo: string | null
+  surveyId?: string | null
+  parcelNo?: string | null
+  importLayout?: string | null
+}
+
+export function houseTextMatches(
+  row: HouseMatch,
+  houseKey: string,
+  usesNewHouse: boolean
+): boolean {
+  if (usesNewHouse) {
+    return normalizeHouseKey(row.presentHouseNo ?? "") === houseKey
+  }
+  return (
+    normalizeHouseKey(row.houseNo ?? "") === houseKey &&
+    normalizeHouseKey(row.presentHouseNo ?? "") === ""
+  )
+}
+
+export function decideDhanauraMatch(input: {
+  matches: HouseMatch[]
+  surveyIdHit: HouseMatch | null
+  houseKey: string
+  usesNewHouse: boolean
+  parcelNo?: string
+}):
+  | { kind: "create" }
+  | { kind: "existing"; id: string; replaceSurveyId: boolean }
+  | { kind: "error"; message: string } {
+  const unique = new Map<string, HouseMatch>()
+  for (const row of input.matches) unique.set(row.id, row)
+
+  const target = [...unique.values()][0]
+  const writingNewId =
+    unique.size === 0 || target?.importLayout === DHANAURA_IMPORT_LAYOUT
+
+  if (input.surveyIdHit && !unique.has(input.surveyIdHit.id)) {
+    if (
+      houseTextMatches(input.surveyIdHit, input.houseKey, input.usesNewHouse)
+    ) {
+      unique.set(input.surveyIdHit.id, input.surveyIdHit)
+    } else if (writingNewId) {
+      return {
+        kind: "error",
+        message: "Survey Id already belongs to a different house number",
+      }
+    }
+  }
+
+  if (unique.size > 1) {
+    return {
+      kind: "error",
+      message: "Multiple surveys match this house number in the ward",
+    }
+  }
+  const only = [...unique.values()][0]
+  if (!only) return { kind: "create" }
+
+  const replaceSurveyId = only.importLayout === DHANAURA_IMPORT_LAYOUT
+  if (!replaceSurveyId && input.parcelNo && only.surveyId) {
+    const parsed = parseGisSurveyId(only.surveyId)
+    if (parsed && parsed.parcelNo !== input.parcelNo) {
+      return {
+        kind: "error",
+        message: "Existing survey id parcel does not match this house number",
+      }
+    }
+  }
+  return { kind: "existing", id: only.id, replaceSurveyId }
+}
+
+const EMPTY_CELL = /^(n\/a|na|null|-|none)$/i
+
+function fieldText(values: string[], index: number): string {
+  if (index < 0) return ""
+  const text = (values[index] ?? "").trim()
+  if (!text || EMPTY_CELL.test(text)) return ""
+  return text
+}
+
+export type DhanauraFloor = {
+  floorLabel: string
+  areaSqFt: number
+  buildingType: string | null
+  sortOrder: number
+  rawSegment: string
+}
+
+export type ParsedDhanauraRow = {
+  empty: boolean
+  errors: Array<{ field: string; message: string }>
+  houseKey: string
+  usesNewHouse: boolean
+  oldHouseNo: string
+  newHouseNo: string
+  wardNumber: number | null
+  locality: string
+  ownerName: string
+  ownerFatherName: string
+  mobile: string
+  propertyType: string
+  buildingType: string
+  yearOfConstruction: string
+  roadType: string
+  roadWidthMeters: string
+  taxRateZone: string | null
+  plotAreaSqFt?: number
+  totalBuiltUpAreaSqFt?: number
+  hasMunicipalWaterSupply?: boolean
+  waterSourceType: string | null
+  floors: DhanauraFloor[]
+  sourceExtras: Record<string, string>
+}
+
+function readMeasurement(
+  raw: string,
+  field: string,
+  errors: Array<{ field: string; message: string }>
+): number | undefined {
+  if (!raw) return undefined
+  const value = parseNumber(raw)
+  if (value === undefined) {
+    errors.push({ field, message: `${field} must be a number` })
+    return undefined
+  }
+  if (value < 0) {
+    errors.push({ field, message: `${field} cannot be negative` })
+    return undefined
+  }
+  return value
+}
+
+function pushFloor(
+  floors: DhanauraFloor[],
+  label: string,
+  area: number | undefined,
+  buildingType: string
+) {
+  if (area === undefined) return
+  floors.push({
+    floorLabel: label,
+    areaSqFt: area,
+    buildingType: buildingType || null,
+    sortOrder: floors.length,
+    rawSegment: `${label} - ${area} SqFt`,
+  })
+}
+
+export function parseDhanauraRow(
+  values: string[],
+  map: DhanauraColumnMap
+): ParsedDhanauraRow {
+  const errors: Array<{ field: string; message: string }> = []
+  const oldHouseNo = normalizeHouseKey(fieldText(values, map.oldHouseNo))
+  const newHouseNo = normalizeHouseKey(fieldText(values, map.newHouseNo))
+  const houseKey = newHouseNo
+
+  const extras: Record<string, string> = {
+    importLayout: DHANAURA_IMPORT_LAYOUT,
+  }
+  if (houseKey) extras.identityHouseKey = houseKey
+  for (const field of DHANAURA_EXTRA_FIELDS) {
+    const text = fieldText(values, map[field])
+    if (text) extras[field] = text
+  }
+
+  const mappedValues = DHANAURA_FIELD_ORDER.map((field) =>
+    fieldText(values, map[field])
+  )
+  const empty = mappedValues.every((value) => value.length === 0)
+
+  const wardRaw = fieldText(values, map.wardNumber)
+  const wardNumber = wardRaw ? extractWardNumber(wardRaw, "") : null
+  const plotAreaSqFt = readMeasurement(
+    fieldText(values, map.plotAreaSqFt),
+    "plotAreaSqFt",
+    errors
+  )
+  const totalBuiltUpAreaSqFt = readMeasurement(
+    fieldText(values, map.totalBuiltUpAreaSqFt),
+    "totalBuiltUpAreaSqFt",
+    errors
+  )
+  const buildingType = fieldText(values, map.buildingType)
+  const floors: DhanauraFloor[] = []
+  pushFloor(
+    floors,
+    DHANAURA_FLOOR_LABELS.basement,
+    readMeasurement(
+      fieldText(values, map.basementArea),
+      "basementArea",
+      errors
+    ),
+    buildingType
+  )
+  pushFloor(
+    floors,
+    DHANAURA_FLOOR_LABELS.ground,
+    readMeasurement(
+      fieldText(values, map.groundFloorArea),
+      "groundFloorArea",
+      errors
+    ),
+    buildingType
+  )
+  pushFloor(
+    floors,
+    DHANAURA_FLOOR_LABELS.first,
+    readMeasurement(
+      fieldText(values, map.firstFloorArea),
+      "firstFloorArea",
+      errors
+    ),
+    buildingType
+  )
+  pushFloor(
+    floors,
+    DHANAURA_FLOOR_LABELS.second,
+    readMeasurement(
+      fieldText(values, map.secondFloorArea),
+      "secondFloorArea",
+      errors
+    ),
+    buildingType
+  )
+
+  const waterRaw = fieldText(values, map.waterSupply)
+  const water = parseWater(waterRaw)
+  const mobileRaw = fieldText(values, map.mobile)
+  const mobile = !mobileRaw || mobileRaw === "0" ? "" : mobileRaw
+  const roadWidthMeters = fieldText(values, map.roadWidthMeters)
+  const taxRateZone = taxRateZoneLabelFromRoadWidth(roadWidthMeters)
+
+  if (!empty && !newHouseNo) {
+    errors.push({
+      field: "newHouseNo",
+      message: "New house number (नया म०न०) is required",
+    })
+  } else if (!empty && !parcelDigitsFromHouse(newHouseNo)) {
+    errors.push({
+      field: "newHouseNo",
+      message: "New house number must be numeric to build the parcel segment",
+    })
+  }
+  if (!empty && map.wardNumber >= 0 && !wardNumber) {
+    errors.push({
+      field: "wardNumber",
+      message: wardRaw
+        ? `Ward number is invalid: ${wardRaw}`
+        : "Ward number is required",
+    })
+  }
+
+  return {
+    empty,
+    errors,
+    houseKey,
+    usesNewHouse: newHouseNo.length > 0,
+    oldHouseNo,
+    newHouseNo,
+    wardNumber,
+    locality: fieldText(values, map.locality),
+    ownerName: fieldText(values, map.ownerName),
+    ownerFatherName: fieldText(values, map.ownerFatherName),
+    mobile,
+    propertyType: fieldText(values, map.propertyType),
+    buildingType,
+    yearOfConstruction: fieldText(values, map.yearOfConstruction),
+    roadType: fieldText(values, map.roadType),
+    roadWidthMeters,
+    taxRateZone,
+    plotAreaSqFt,
+    totalBuiltUpAreaSqFt,
+    hasMunicipalWaterSupply: water.hasMunicipalWaterSupply,
+    waterSourceType: water.waterSourceType,
+    floors,
+    sourceExtras: extras,
+  }
+}
+
+function parseWater(value: string): {
+  hasMunicipalWaterSupply?: boolean
+  waterSourceType: string | null
+} {
+  if (!value) return { waterSourceType: null }
+  if (["हाँ", "हां", "हा"].includes(value)) {
+    return { hasMunicipalWaterSupply: true, waterSourceType: value }
+  }
+  if (["नहीं", "नही"].includes(value)) {
+    return { hasMunicipalWaterSupply: false, waterSourceType: value }
+  }
+  const bool = parseBool(value)
+  if (bool !== undefined) {
+    return { hasMunicipalWaterSupply: bool, waterSourceType: value }
+  }
+  return { waterSourceType: value }
+}
+
+export function countNonEmptyDataRows(
+  sheet: ExcelJS.Worksheet,
+  layout: Pick<
+    WorkbookLayout,
+    "headerRowNumber" | "columnCount" | "dhanauraMap"
+  >
+): number {
+  let count = 0
+  for (
+    let rowNumber = layout.headerRowNumber + 1;
+    rowNumber <= sheet.rowCount;
+    rowNumber++
+  ) {
+    const values = readRowStrings(sheet.getRow(rowNumber), layout.columnCount)
+    if (layout.dhanauraMap) {
+      if (!parseDhanauraRow(values, layout.dhanauraMap).empty) count++
+      continue
+    }
+    if (values.some((value) => value.trim().length > 0)) count++
+  }
+  return count
+}

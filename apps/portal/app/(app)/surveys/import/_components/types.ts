@@ -41,6 +41,12 @@ export type ImportJob = {
   completedAt: string | null
   createdBy?: { id: string; name: string; email: string } | null
   errors?: ImportErrorRow[]
+  columnMapping?: {
+    unmappedColumns?: string[]
+    storedExtraFields?: string[]
+    emptyRows?: number
+    duplicateRows?: number
+  } | null
 }
 
 export type ImportListMeta = {

@@ -13,13 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
+import { useLocale } from "@workspace/i18n"
 
+import { displayCatalogLabel } from "@/lib/catalog-labels"
 import {
   composeUsageFromFloors,
   parseFloorsRaw,
   validateMixedComposition,
 } from "@/lib/floors"
-import { formatCatalogLabel } from "@/lib/catalog-labels"
 
 type UsageCompositionPanelProps = {
   floorsRaw: string
@@ -32,6 +33,7 @@ export function UsageCompositionPanel({
   onJumpToFloors,
   error,
 }: UsageCompositionPanelProps) {
+  const { locale, t } = useLocale()
   const floors = React.useMemo(() => parseFloorsRaw(floorsRaw), [floorsRaw])
   const composition = React.useMemo(
     () => composeUsageFromFloors(floors),
@@ -67,7 +69,7 @@ export function UsageCompositionPanel({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Usage Type</TableHead>
+              <TableHead>{t("survey.usageType")}</TableHead>
               <TableHead className="text-right">Area SqFt</TableHead>
               <TableHead className="text-right">% Area</TableHead>
             </TableRow>
@@ -77,7 +79,7 @@ export function UsageCompositionPanel({
               composition.rows.map((row) => (
                 <TableRow key={row.usageType}>
                   <TableCell className="font-medium">
-                    {formatCatalogLabel(row.usageType) || row.usageType}
+                    {displayCatalogLabel(row.usageType, locale) || row.usageType}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatArea(row.areaSqFt)}

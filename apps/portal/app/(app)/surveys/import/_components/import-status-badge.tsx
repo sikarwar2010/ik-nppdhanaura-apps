@@ -1,3 +1,6 @@
+"use client"
+
+import { optionLabel, useLocale } from "@workspace/i18n"
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -21,6 +24,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export function ImportStatusBadge({ status }: { status: string }) {
+  const { locale } = useLocale()
   const key = status.toUpperCase()
   return (
     <Badge
@@ -30,7 +34,7 @@ export function ImportStatusBadge({ status }: { status: string }) {
         STATUS_STYLES[key] ?? "text-muted-foreground"
       )}
     >
-      {status.replaceAll("_", " ")}
+      {optionLabel(locale, key)}
     </Badge>
   )
 }

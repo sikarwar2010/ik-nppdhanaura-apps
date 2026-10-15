@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@workspace/ui/components/table"
+import { useLocale } from "@workspace/i18n"
 import { buildStringSelectItems } from "@workspace/ui/lib/select-items"
 
 import {
@@ -43,7 +44,7 @@ import {
   sqFtToSqM,
   sumFloorAreaSqFt,
 } from "@/lib/floors"
-import { formatCatalogLabel } from "@/lib/catalog-labels"
+import { displayCatalogLabel } from "@/lib/catalog-labels"
 import { floorUsageChecks, formatArea } from "@/lib/survey-format"
 import { withCurrentOption } from "@/lib/ward1-catalog"
 
@@ -82,6 +83,8 @@ export function FloorsEditor({
   onBuiltUpChange,
   error,
 }: FloorsEditorProps) {
+  const { locale, t } = useLocale()
+  const labelFor = (value: string) => displayCatalogLabel(value, locale)
   const floors = React.useMemo(() => parseFloorsRaw(value), [value])
   const floorLabels = React.useMemo(
     () => floorLabelsForPropertyUse(propertyUse),
@@ -216,12 +219,12 @@ export function FloorsEditor({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Floor</TableHead>
-              <TableHead>Usage Type</TableHead>
-              <TableHead>Usage Factor</TableHead>
-              <TableHead>Construction</TableHead>
-              <TableHead className="text-right">Area</TableHead>
-              <TableHead className="w-28 text-right">Actions</TableHead>
+              <TableHead>{t("survey.floor")}</TableHead>
+              <TableHead>{t("survey.usageType")}</TableHead>
+              <TableHead>{t("survey.usageFactor")}</TableHead>
+              <TableHead>{t("survey.construction")}</TableHead>
+              <TableHead className="text-right">{t("survey.area")}</TableHead>
+              <TableHead className="w-28 text-right">{t("survey.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -233,21 +236,21 @@ export function FloorsEditor({
                   data-state={editingId === floor.id ? "selected" : undefined}
                 >
                   <TableCell className="font-medium">
-                    {formatCatalogLabel(floor.floorLabel) || floor.floorLabel}
+                    {labelFor(floor.floorLabel) || floor.floorLabel}
                   </TableCell>
                   <TableCell>
                     {floor.usageType
-                      ? formatCatalogLabel(floor.usageType)
+                      ? labelFor(floor.usageType)
                       : "—"}
                   </TableCell>
                   <TableCell>
                     {floor.usageFactor
-                      ? formatCatalogLabel(floor.usageFactor)
+                      ? labelFor(floor.usageFactor)
                       : "—"}
                   </TableCell>
                   <TableCell className="max-w-[16rem] whitespace-normal break-words">
                     {floor.buildingType
-                      ? formatCatalogLabel(floor.buildingType)
+                      ? labelFor(floor.buildingType)
                       : "—"}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -316,7 +319,7 @@ export function FloorsEditor({
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">
-            {editingId ? "Edit floor" : "Add floor"}
+            {editingId ? t("survey.editFloor") : t("survey.addFloor")}
           </h3>
           {!editingId ? (
             <Button
@@ -332,7 +335,7 @@ export function FloorsEditor({
               }}
             >
               <Plus className="size-3.5" aria-hidden />
-              Add Floor
+              {t("survey.addFloor")}
             </Button>
           ) : null}
         </div>
@@ -340,7 +343,7 @@ export function FloorsEditor({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(7rem,0.9fr)_minmax(7rem,0.9fr)_minmax(7rem,0.9fr)_minmax(12rem,1.6fr)_minmax(5.5rem,0.7fr)_minmax(5.5rem,0.7fr)]">
           <FloorSelect
             id="floor-label"
-            label="Floor"
+            label={t("survey.floor")}
             value={draft.floorLabel}
             options={floorLabels}
             onChange={(floorLabel) =>
@@ -349,7 +352,7 @@ export function FloorsEditor({
           />
           <FloorSelect
             id="floor-usage-type"
-            label="Usage Type"
+            label={t("survey.usageType")}
             value={draft.usageType}
             options={FLOOR_USAGE_TYPES}
             onChange={(usageType) =>
@@ -358,7 +361,7 @@ export function FloorsEditor({
           />
           <FloorSelect
             id="floor-usage-factor"
-            label="Usage Factor"
+            label={t("survey.usageFactor")}
             value={draft.usageFactor}
             options={FLOOR_USAGE_FACTORS}
             onChange={(usageFactor) =>
@@ -367,7 +370,7 @@ export function FloorsEditor({
           />
           <FloorSelect
             id="floor-construction"
-            label="Construction"
+            label={t("survey.construction")}
             value={draft.buildingType}
             options={FLOOR_CONSTRUCTION_TYPES}
             truncate
@@ -376,7 +379,7 @@ export function FloorsEditor({
             }
           />
           <div className="space-y-1.5">
-            <Label htmlFor="floor-area">Area (sq ft)</Label>
+            <Label htmlFor="floor-area">{t("survey.areaSqFt")}</Label>
             <Input
               id="floor-area"
               inputMode="decimal"
@@ -392,7 +395,7 @@ export function FloorsEditor({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="floor-area-sqm">Area (sq m)</Label>
+            <Label htmlFor="floor-area-sqm">{t("survey.areaSqM")}</Label>
             <Input
               id="floor-area-sqm"
               readOnly
@@ -480,13 +483,15 @@ function FloorSelect({
   onChange: (value: string) => void
   truncate?: boolean
 }) {
+  const { locale } = useLocale()
+  const labelFor = (option: string) => displayCatalogLabel(option, locale)
   const optionList = withCurrentOption(options, value)
   return (
     <div className="min-w-0 space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Select
         value={value === "" ? null : value}
-        items={buildStringSelectItems(optionList, formatCatalogLabel)}
+        items={buildStringSelectItems(optionList, labelFor)}
         onValueChange={(next) => onChange(next ?? "")}
       >
         <SelectTrigger
@@ -508,11 +513,11 @@ function FloorSelect({
             <SelectItem
               key={option}
               value={option}
-              label={formatCatalogLabel(option)}
+              label={labelFor(option)}
               className="items-start whitespace-normal"
             >
               <span className="whitespace-normal break-words">
-                {formatCatalogLabel(option)}
+                {labelFor(option)}
               </span>
             </SelectItem>
           ))}

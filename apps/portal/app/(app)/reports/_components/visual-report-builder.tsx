@@ -1,18 +1,17 @@
 "use client"
 
 import {
+  Building2,
   ClipboardList,
   Download,
   FileSpreadsheet,
-  Building2,
   ScrollText,
-  Upload,
   Trash2,
+  Upload,
 } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
 
-import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
   Card,
@@ -21,6 +20,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 
+import { formatLocaleDate, useLocale } from "@workspace/i18n"
 import type { ReportFilters } from "./filter-control-panel"
 
 type ReportCard = {
@@ -70,12 +70,15 @@ export function VisualReportBuilder({
   taxPublished,
   onExportSurvey,
   onExportTax,
+  onExportGis,
 }: {
   filters: ReportFilters
   taxPublished: boolean
   onExportSurvey: () => Promise<void>
   onExportTax: () => Promise<void>
+  onExportGis?: () => Promise<void>
 }) {
+  const { locale, t } = useLocale()
   const [recent, setRecent] = React.useState<RecentExport[]>([])
   React.useEffect(() => setRecent(getRecentExports()), [])
 
@@ -90,56 +93,60 @@ export function VisualReportBuilder({
   const cards: ReportCard[] = [
     {
       id: "survey",
-      title: "Survey Report",
-      description:
-        "All survey records for the selected ward (any QC status). No tax demand columns.",
+      title: t("reports.survey"),
+      description: t("reports.surveyHint"),
       icon: ClipboardList,
       actions: [
         {
-          label: "Export Excel",
-          onClick: () => void handleExport(onExportSurvey, "Survey Report"),
+          label: t("reports.export"),
+          onClick: () => void handleExport(onExportSurvey, t("reports.survey")),
         },
-        { label: "Import Excel", href: "/surveys/import", variant: "outline" },
+        ...(onExportGis
+          ? [
+            {
+              label: t("reports.exportGis"),
+              onClick: () =>
+                void handleExport(onExportGis, t("reports.exportGis")),
+            },
+          ]
+          : []),
+        { label: t("reports.import"), href: "/surveys/import", variant: "outline" as const },
       ],
     },
     {
       id: "municipality",
-      title: "Municipality Summary",
-      description: "Per-ward totals and approval rates.",
+      title: t("reports.summary"),
+      description: t("reports.summaryHint"),
       icon: Building2,
       actions: [
         {
-          label: "Export Excel",
-          onClick: () => void handleExport(onExportSurvey, "Municipality Summary"),
+          label: t("reports.export"),
+          onClick: () => void handleExport(onExportSurvey, t("reports.summary")),
         },
       ],
     },
     {
       id: "qc-final",
-      title: "QC Final Report",
-      description:
-        "Ward-wise Excel of properties. Includes shared survey fields plus tax demand from published rates.",
+      title: t("reports.qc"),
+      description: t("reports.qcHint"),
       icon: FileSpreadsheet,
       actions: [
         {
-          label: "Export Excel",
+          label: t("reports.export"),
           disabled: taxDisabled,
-          disabledReason: taxDisabled
-            ? "Select a ward and publish tax rates first"
-            : undefined,
-          onClick: () => void handleExport(onExportTax, "QC Final Report"),
+          disabledReason: taxDisabled ? t("reports.taxDisabled") : undefined,
+          onClick: () => void handleExport(onExportTax, t("reports.qc")),
         },
       ],
     },
     {
       id: "notice",
-      title: "Property Tax Demand Notice",
-      description:
-        "Bulk A4 demand notices by ward and assessment year — validate, generate PDF, print.",
+      title: t("reports.notice"),
+      description: t("reports.noticeHint"),
       icon: ScrollText,
       actions: [
         {
-          label: "Open Panel",
+          label: t("reports.open"),
           href: "/reports/notice",
           variant: "default",
         },
@@ -150,7 +157,7 @@ export function VisualReportBuilder({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
       <div>
-        <h2 className="mb-1 text-base font-semibold">VISUAL REPORT BUILDER</h2>
+        <h2 className="mb-1 text-base font-semibold">{t("reports.builder")}</h2>
         <p className="mb-4 text-xs text-muted-foreground">
           Configure and export reports
         </p>
@@ -238,7 +245,7 @@ export function VisualReportBuilder({
                   <div>
                     <p className="text-sm font-medium">{r.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(r.date).toLocaleDateString("en-IN")}
+                      {formatLocaleDate(r.date, locale)}
                     </p>
                   </div>
                   <Button

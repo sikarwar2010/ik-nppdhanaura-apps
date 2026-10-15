@@ -27,7 +27,11 @@ import {
   parseFloorsRaw,
   validateMixedComposition,
 } from "@/lib/floors"
-import { generateSurveyId, parseGisSurveyId } from "@/lib/survey-format"
+import {
+  DHA_ULB_CODE,
+  generateSurveyId,
+  parseGisSurveyId,
+} from "@/lib/survey-format"
 import {
   CITIES,
   COMMERCIAL_USES,
@@ -43,6 +47,7 @@ import {
   YEARS_OF_CONSTRUCTION,
   YES_NO,
 } from "@/lib/ward1-catalog"
+import { useLocale } from "@workspace/i18n"
 
 import { FloorsEditor } from "../_components/floors-editor"
 import { SurveyEditHeader } from "../_components/survey-edit-header"
@@ -254,6 +259,7 @@ function focusFirstError(errors: Record<string, unknown>) {
 }
 
 export default function SurveyFormPage() {
+  const { t } = useLocale()
   const params = useParams<{ id?: string }>()
   const pathname = usePathname() ?? ""
   const editPathMatch = pathname.match(/^\/surveys\/([^/]+)\/edit\/?$/)
@@ -341,7 +347,10 @@ export default function SurveyFormPage() {
     }
     try {
       return generateSurveyId({
-        ulbCode: "249044",
+        ulbCode: isEdit
+          ? parseGisSurveyId(form.getValues("surveyId"))?.ulbCode ||
+            DHA_ULB_CODE
+          : DHA_ULB_CODE,
         wardNo: ward.number,
         parcelNo: parcelNo.trim(),
         propertyNo: propertyNo.trim(),
@@ -456,12 +465,10 @@ export default function SurveyFormPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
-              {isEdit ? "Edit Survey" : "Create Survey"}
+              {isEdit ? t("survey.editTitle") : t("survey.createTitle")}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {isEdit
-                ? "Review and update survey details for QC."
-                : "Enter survey details for this property."}
+              {isEdit ? t("survey.editHint") : t("survey.createHint")}
             </p>
           </div>
           <div className="flex gap-2">
@@ -471,7 +478,7 @@ export default function SurveyFormPage() {
               className="cursor-pointer"
               onClick={() => guard.requestLeave(cancelHref)}
             >
-              Cancel
+              {t("survey.cancel")}
             </Button>
             <Button
               type="submit"
@@ -479,10 +486,10 @@ export default function SurveyFormPage() {
               disabled={mutation.isPending || (isEdit && !isDirty)}
             >
               {mutation.isPending
-                ? "Saving…"
+                ? t("common.saving")
                 : isEdit
-                  ? "Save Changes"
-                  : "Save"}
+                  ? t("common.saveChanges")
+                  : t("common.save")}
             </Button>
           </div>
         </div>
@@ -505,13 +512,13 @@ export default function SurveyFormPage() {
 
         <SurveyFormSection
           id="section-owner"
-          title="Survey & Owner"
-          description="Owner identity and survey metadata."
+          title={t("survey.sectionOwner")}
+          description={t("survey.sectionOwnerHint")}
           hasError={ownerHasError}
           storageKey={`${storagePrefix}:owner`}
         >
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="surveyIdPreview">Survey Id</Label>
+            <Label htmlFor="surveyIdPreview">{t("survey.surveyId")}</Label>
             <Input
               id="surveyIdPreview"
               readOnly
@@ -520,42 +527,42 @@ export default function SurveyFormPage() {
               className="font-mono text-sm"
             />
             <p className="text-xs text-muted-foreground">
-              Generated automatically from ward, parcel, property, and GIS use
+              {t("survey.idHint")}
               code.
             </p>
           </div>
           <TextField
             id="surveyedAt"
-            label="Date of Survey"
+            label={t("survey.date")}
             type="datetime-local"
             register={form.register("surveyedAt")}
           />
           <TextField
             id="ownerName"
-            label="Owner Name"
+            label={t("survey.ownerName")}
             register={form.register("ownerName")}
           />
           <TextField
             id="ownerFatherName"
-            label="Owner Father Name"
+            label={t("survey.ownerFather")}
             register={form.register("ownerFatherName")}
           />
           <TextField
             id="mobile"
-            label="Mobile No"
+            label={t("survey.mobile")}
             inputMode="numeric"
             register={form.register("mobile")}
           />
           <FieldShell
             id="wardId"
-            label="Ward Name"
+            label={t("survey.ward")}
             required
             error={errors.wardId ? "Ward is required" : undefined}
           >
             <Controller
               name="wardId"
               control={control}
-              rules={{ required: "Ward is required" }}
+              rules={{ required: t("survey.wardRequired") }}
               render={({ field }) => (
                 <Select
                   value={field.value === "" ? null : field.value}
@@ -591,7 +598,7 @@ export default function SurveyFormPage() {
           </FieldShell>
           <CatalogField
             id="isSlum"
-            label="Is Slum"
+            label={t("survey.slum")}
             control={control}
             name="isSlum"
             options={YES_NO}
@@ -600,32 +607,32 @@ export default function SurveyFormPage() {
 
         <SurveyFormSection
           id="section-parcel"
-          title="Parcel"
-          description="Parcel and property identifiers."
+          title={t("survey.sectionParcel")}
+          description={t("survey.sectionParcelHint")}
           hasError={parcelHasError}
           storageKey={`${storagePrefix}:parcel`}
         >
           <TextField
             id="parcelNo"
-            label="Parcel No"
+            label={t("survey.parcelNo")}
             required={!isEdit}
-            error={errors.parcelNo ? "Parcel No is required" : undefined}
+            error={errors.parcelNo ? t("survey.parcelRequired") : undefined}
             register={form.register("parcelNo", {
-              required: !isEdit ? "Parcel No is required" : false,
+              required: !isEdit ? t("survey.parcelRequired") : false,
             })}
           />
           <TextField
             id="propertyNo"
-            label="Property No"
+            label={t("survey.propertyNo")}
             required={!isEdit}
-            error={errors.propertyNo ? "Property No is required" : undefined}
+            error={errors.propertyNo ? t("survey.propertyRequired") : undefined}
             register={form.register("propertyNo", {
-              required: !isEdit ? "Property No is required" : false,
+              required: !isEdit ? t("survey.propertyRequired") : false,
             })}
           />
           <TextField
             id="gisUseCode"
-            label="GIS Use Code"
+            label={t("survey.gisUse")}
             required
             error={
               errors.gisUseCode
@@ -642,18 +649,18 @@ export default function SurveyFormPage() {
 
         <SurveyFormSection
           id="section-respondent"
-          title="Respondent"
-          description="Person who provided survey answers."
+          title={t("survey.sectionRespondent")}
+          description={t("survey.sectionRespondentHint")}
           storageKey={`${storagePrefix}:respondent`}
         >
           <TextField
             id="respondentName"
-            label="Respondent Name"
+            label={t("survey.respondentName")}
             register={form.register("respondentName")}
           />
           <CatalogField
             id="respondentRelationship"
-            label="Respondent Relationship"
+            label={t("survey.respondentRelationship")}
             control={control}
             name="respondentRelationship"
             options={RESPONDENT_RELATIONSHIPS}
@@ -662,79 +669,79 @@ export default function SurveyFormPage() {
 
         <SurveyFormSection
           id="section-address"
-          title="Address"
-          description="Property location details."
+          title={t("survey.sectionAddress")}
+          description={t("survey.sectionAddressHint")}
           storageKey={`${storagePrefix}:address`}
         >
           <CatalogField
             id="city"
-            label="City"
+            label={t("survey.city")}
             control={control}
             name="city"
             options={CITIES}
           />
           <TextField
             id="pincode"
-            label="Pincode"
+            label={t("survey.pincode")}
             inputMode="numeric"
             className="sm:max-w-40"
             register={form.register("pincode")}
           />
           <TextField
             id="houseNo"
-            label="House No"
+            label={t("survey.houseNo")}
             className="sm:max-w-40"
             register={form.register("houseNo")}
           />
           <TextField
             id="streetName"
-            label="Street Name"
+            label={t("survey.street")}
             className="sm:col-span-1 lg:col-span-1"
             register={form.register("streetName")}
           />
           <TextField
             id="locality"
-            label="Locality"
+            label={t("survey.locality")}
             register={form.register("locality")}
           />
           <TextField
             id="colony"
-            label="Colony"
+            label={t("survey.colony")}
             register={form.register("colony")}
           />
         </SurveyFormSection>
 
         <SurveyFormSection
           id="section-classification"
-          title="Classification"
-          description="Tax and property classification."
+          title={t("survey.sectionClass")}
+          description={t("survey.sectionClassHint")}
           hasError={classificationHasError}
           storageKey={`${storagePrefix}:classification`}
         >
           <CatalogField
             id="taxRateZone"
-            label="Tax Rate Zone"
+            label={t("survey.taxZone")}
             control={control}
             name="taxRateZone"
             options={TAX_RATE_ZONES}
           />
           <CatalogField
             id="propertyOwnership"
-            label="Property Ownership"
+            label={t("survey.ownership")}
             control={control}
             name="propertyOwnership"
             options={PROPERTY_OWNERSHIPS}
           />
           <CatalogField
             id="propertyType"
-            label="Property Type"
+            label={t("survey.propertyType")}
             control={control}
             name="propertyType"
             options={PROPERTY_TYPES}
           />
           <CatalogField
             id="propertyUse"
-            label="Property Use"
+            label={t("survey.propertyUse")}
             control={control}
             name="propertyUse"
             options={PROPERTY_USES}
@@ -750,11 +757,11 @@ export default function SurveyFormPage() {
           {showCommercial ? (
             <CatalogField
               id="commercial"
-              label="Commercial subtype"
+              label={t("survey.commercial")}
               control={control}
               name="commercial"
               options={COMMERCIAL_USES}
-              hint="Commercial subtype for this property."
+              hint={t("survey.commercialHint")}
             />
           ) : null}
           {showMixed ? (
@@ -766,21 +773,21 @@ export default function SurveyFormPage() {
           ) : null}
           <CatalogField
             id="yearOfConstruction"
-            label="Year of Construction"
+            label={t("survey.year")}
             control={control}
             name="yearOfConstruction"
             options={YEARS_OF_CONSTRUCTION}
           />
           <CatalogField
             id="situation"
-            label="Situation"
+            label={t("survey.situation")}
             control={control}
             name="situation"
             options={SITUATIONS}
           />
           <CatalogField
             id="roadType"
-            label="Road Type"
+            label={t("survey.roadType")}
             control={control}
             name="roadType"
             options={ROAD_TYPES}
@@ -789,8 +796,8 @@ export default function SurveyFormPage() {
 
         <SurveyFormSection
           id="section-floors"
-          title="Floors & Area"
-          description="Floor summary and area measurements."
+          title={t("survey.sectionFloors")}
+          description={t("survey.sectionFloorsHint")}
           hasError={floorsHasError}
           storageKey={`${storagePrefix}:floors`}
           contentClassName="gap-3"
@@ -798,7 +805,7 @@ export default function SurveyFormPage() {
           <AreaPairField
             sqFtId="plotAreaSqFt"
             sqMId="plotAreaSqMeter"
-            label="Plot Area"
+            label={t("survey.plotArea")}
             sqFtRegister={form.register("plotAreaSqFt")}
             sqMValue={plotAreaSqMeter}
             onSqFtChange={(sqFt, sqM) => {
@@ -809,7 +816,7 @@ export default function SurveyFormPage() {
           <AreaPairField
             sqFtId="plinthAreaSqFt"
             sqMId="plinthAreaSqMeter"
-            label="Plinth Area"
+            label={t("survey.plinthArea")}
             sqFtRegister={form.register("plinthAreaSqFt")}
             sqMValue={plinthAreaSqMeter}
             onSqFtChange={(sqFt, sqM) => {
@@ -819,7 +826,7 @@ export default function SurveyFormPage() {
           />
           <FieldShell
             id="totalBuiltUpAreaSqFt"
-            label="Total Built Up Area SqFt"
+            label={t("survey.builtSqFt")}
             hint="Calculated from floors"
             className="sm:col-span-1"
           >
@@ -833,7 +840,7 @@ export default function SurveyFormPage() {
           </FieldShell>
           <FieldShell
             id="totalBuiltUpAreaSqMeter"
-            label="Total Built Up Area SqMeter"
+            label={t("survey.builtSqM")}
             hint="Calculated"
           >
             <Input
@@ -885,53 +892,53 @@ export default function SurveyFormPage() {
 
         <SurveyFormSection
           id="section-municipal"
-          title="Municipal Services"
-          description="Utilities and municipal service connections."
+          title={t("survey.sectionServices")}
+          description={t("survey.sectionServicesHint")}
           defaultOpen={false}
           storageKey={`${storagePrefix}:municipal`}
         >
           <CatalogField
             id="hasMunicipalWaterSupply"
-            label="Is Muncipal Water Supply"
+            label={t("survey.water")}
             control={control}
             name="hasMunicipalWaterSupply"
             options={YES_NO}
           />
           <TextField
             id="totalWaterConnections"
-            label="Total Water Connection"
+            label={t("survey.waterConnections")}
             inputMode="numeric"
             register={form.register("totalWaterConnections")}
           />
           <TextField
             id="waterConnectionIdType"
-            label="Water Connection Id/Type"
+            label={t("survey.waterId")}
             register={form.register("waterConnectionIdType")}
           />
           <CatalogField
             id="toiletType"
-            label="Toilet Type"
+            label={t("survey.toilet")}
             control={control}
             name="toiletType"
             options={TOILET_TYPES}
           />
           <CatalogField
             id="hasMunicipalWasteService"
-            label="Is Muncipal Waste Service"
+            label={t("survey.waste")}
             control={control}
             name="hasMunicipalWasteService"
             options={YES_NO}
           />
           <CatalogField
             id="hasAlternateWater"
-            label="Alternate Water"
+            label={t("survey.altWater")}
             control={control}
             name="hasAlternateWater"
             options={YES_NO}
           />
           <CatalogField
             id="waterSourceType"
-            label="Water Source"
+            label={t("survey.waterSource")}
             control={control}
             name="waterSourceType"
             options={WATER_SOURCES}

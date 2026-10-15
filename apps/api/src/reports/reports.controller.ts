@@ -163,8 +163,11 @@ export class ReportsController {
       take: EXPORT_ROW_LIMIT,
     })
 
-    if (template === "import") {
-      const preset = detectExportPreset(ward?.number)
+    if (template === "import" || template === "dhanaura-gis") {
+      const preset =
+        template === "dhanaura-gis"
+          ? "dhanaura-gis"
+          : detectExportPreset(ward?.number)
       const workbook = buildSurveyExportWorkbook(
         surveys as SurveyExportRecord[],
         preset

@@ -55,6 +55,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useCan } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 import { formatApiError } from "@/lib/format-api-error"
+import { useLocale } from "@workspace/i18n"
 
 type WardCardStatus = "PENDING" | "COMPLETED"
 
@@ -150,6 +151,7 @@ function formatPct(value: number): string {
 }
 
 export default function DashboardPage() {
+  const { t } = useLocale()
   const {
     allowed,
     isLoading: permLoading,
@@ -267,14 +269,14 @@ export default function DashboardPage() {
         <div>
           <nav aria-label="Breadcrumb" className="mb-1">
             <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <li>Dashboard</li>
+              <li>{t("nav.dashboard")}</li>
             </ol>
           </nav>
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             Nagar Palika Parishad Dhanaura,Amroha
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Ward-wise survey progress and assessed tax demand
+            {t("dashboard.progress")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

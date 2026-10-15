@@ -1,5 +1,6 @@
 /** Parcel / property display matching GIS Survey Id `249044-001-000001-001-R`. */
 
+import { optionLabel, type Locale } from "@workspace/i18n"
 import {
   buildSurveyIdFromRecord,
   formatParcelNo as formatParcelNoShared,
@@ -152,7 +153,9 @@ export function floorUsageChecks(input: {
   return checks
 }
 
-export function qualityLabel(status: string): string {
+export function qualityLabel(status: string, locale: Locale = "en"): string {
+  const label = optionLabel(locale, status)
+  if (label !== status) return label
   return status.replaceAll("_", " ")
 }
 

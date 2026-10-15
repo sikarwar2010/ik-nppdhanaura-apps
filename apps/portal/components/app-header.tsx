@@ -6,6 +6,7 @@ import { HeaderSearch } from "@/components/header-search"
 import { RoleBadge } from "@/components/role-badge"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserMenu } from "@/components/user-menu"
+import { LanguageToggle } from "@workspace/i18n"
 
 export function AppHeader() {
   return (
@@ -14,6 +15,7 @@ export function AppHeader() {
       <HeaderSearch />
       <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
         <RoleBadge />
+        <LanguageToggle />
         <ThemeToggle />
         <UserMenu />
       </div>

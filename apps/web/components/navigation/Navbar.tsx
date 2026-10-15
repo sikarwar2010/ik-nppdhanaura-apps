@@ -1,32 +1,34 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
-import Link from "next/link"
+import { useLocale, type MessageKey } from "@workspace/i18n"
 import {
-  Menu,
-  X,
-  ChevronDown,
-  Building2,
-  FileSpreadsheet,
-  Newspaper,
   Award,
-  Layers3,
-  ShieldCheck,
-  Mail,
+  Building2,
+  ChevronDown,
+  Construction,
+  Droplets,
+  ExternalLink,
+  FileSpreadsheet,
+  FileText,
   Home,
   Image as ImageIcon,
-  Search,
-  ExternalLink,
   Landmark,
-  FileText,
-  Droplets,
-  Construction,
+  Layers3,
+  Mail,
+  Menu,
+  Newspaper,
   Recycle,
+  Search,
+  ShieldCheck,
+  X,
 } from "lucide-react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 interface MenuItem {
   name: string
+  labelKey: MessageKey
   href: string
   hasDropdown?: boolean
   megaMenuType?: "departments" | "services" | null
@@ -34,6 +36,7 @@ interface MenuItem {
 }
 
 export default function Navbar() {
+  const { t } = useLocale()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -87,53 +90,63 @@ export default function Navbar() {
   const menuItems: MenuItem[] = [
     {
       name: "Home",
+      labelKey: "web.nav.home",
       href: "/",
       hasDropdown: false,
     },
     {
       name: "About",
+      labelKey: "web.nav.about",
       href: "/about",
       hasDropdown: false,
     },
     {
       name: "Departments",
+      labelKey: "web.nav.departments",
       href: "/departments",
       hasDropdown: true,
       megaMenuType: "departments",
     },
     {
       name: "Services",
+      labelKey: "web.nav.services",
       href: "/services",
       hasDropdown: true,
       megaMenuType: "services",
     },
     {
       name: "Public Grievance",
+      labelKey: "web.nav.grievance",
       href: "/public-grievance",
       hasDropdown: false,
     },
     {
       name: "Schemes",
+      labelKey: "web.nav.schemes",
       href: "/schemes",
       hasDropdown: false,
     },
     {
       name: "Gallery",
+      labelKey: "web.nav.gallery",
       href: "/gallery",
       hasDropdown: false,
     },
     {
       name: "Staff",
+      labelKey: "web.nav.staff",
       href: "/staff",
       hasDropdown: false,
     },
     {
       name: "Contact",
+      labelKey: "web.nav.contact",
       href: "/contact",
       hasDropdown: false,
     },
     {
       name: "Property Tax",
+      labelKey: "web.nav.propertyTax",
       href: "/propertytax",
       hasDropdown: false,
     },
@@ -325,10 +338,9 @@ export default function Navbar() {
           sticky top-0 z-50 w-full
           border-b border-emerald-700/70
           transition-all duration-500
-          ${
-            scrolled
-              ? "bg-emerald-950/95 shadow-[0_12px_40px_rgba(2,44,34,0.35)] backdrop-blur-xl"
-              : "bg-linear-to-r from-emerald-950 via-emerald-900 to-emerald-950"
+          ${scrolled
+            ? "bg-emerald-950/95 shadow-[0_12px_40px_rgba(2,44,34,0.35)] backdrop-blur-xl"
+            : "bg-linear-to-r from-emerald-950 via-emerald-900 to-emerald-950"
           }
         `}
       >
@@ -373,10 +385,9 @@ export default function Navbar() {
             className={`
               group flex shrink-0 items-center gap-3
               transition-all duration-300
-              ${
-                scrolled
-                  ? "w-auto translate-x-0 opacity-100"
-                  : "pointer-events-none w-0 -translate-x-5 overflow-hidden opacity-0"
+              ${scrolled
+                ? "w-auto translate-x-0 opacity-100"
+                : "pointer-events-none w-0 -translate-x-5 overflow-hidden opacity-0"
               }
             `}
             aria-label="Nagar Panchayat Goverdhan Mathura Home"
@@ -463,16 +474,15 @@ export default function Navbar() {
                         tracking-[0.055em]
                         transition-all
                         duration-300
-                        ${
-                          isActive
-                            ? "bg-white text-emerald-800 shadow-[0_6px_18px_rgba(0,0,0,0.16)]"
-                            : isPropertyTax
-                              ? "bg-linear-to-r from-amber-400 to-yellow-400 text-emerald-950 shadow-[0_5px_16px_rgba(251,191,36,0.18)] hover:from-yellow-300 hover:to-amber-300"
-                              : "text-emerald-50 hover:bg-white/10 hover:text-white"
+                        ${isActive
+                          ? "bg-white text-emerald-800 shadow-[0_6px_18px_rgba(0,0,0,0.16)]"
+                          : isPropertyTax
+                            ? "bg-linear-to-r from-amber-400 to-yellow-400 text-emerald-950 shadow-[0_5px_16px_rgba(251,191,36,0.18)] hover:from-yellow-300 hover:to-amber-300"
+                            : "text-emerald-50 hover:bg-white/10 hover:text-white"
                         }
                       `}
                     >
-                      <span>{item.name}</span>
+                      <span>{t(item.labelKey)}</span>
 
                       {item.hasDropdown && (
                         <ChevronDown
@@ -480,10 +490,9 @@ export default function Navbar() {
                             h-3.5 w-3.5
                             transition-all
                             duration-300
-                            ${
-                              isDropdownOpen
-                                ? "rotate-180"
-                                : "group-hover:translate-y-0.5"
+                            ${isDropdownOpen
+                              ? "rotate-180"
+                              : "group-hover:translate-y-0.5"
                             }
                           `}
                         />
@@ -553,18 +562,17 @@ export default function Navbar() {
                                         items-center justify-center
                                         rounded-2xl
                                         bg-linear-to-br
-                                        ${
-                                          item.megaMenuType ===
+                                        ${item.megaMenuType ===
                                           "departments"
-                                            ? "from-orange-400 to-amber-500"
-                                            : "from-cyan-400 to-teal-400"
+                                          ? "from-orange-400 to-amber-500"
+                                          : "from-cyan-400 to-teal-400"
                                         }
                                         text-white
                                         shadow-lg
                                       `}
                                     >
                                       {item.megaMenuType ===
-                                      "departments" ? (
+                                        "departments" ? (
                                         <Building2 className="h-6 w-6" />
                                       ) : (
                                         <Layers3 className="h-6 w-6" />
@@ -576,12 +584,12 @@ export default function Navbar() {
                                     </p>
 
                                     <h3 className="mt-1.5 text-2xl font-extrabold tracking-tight">
-                                      {item.name}
+                                      {t(item.labelKey)}
                                     </h3>
 
                                     <p className="mt-3 text-[11px] leading-6 text-emerald-100/75">
                                       {item.megaMenuType ===
-                                      "departments"
+                                        "departments"
                                         ? "Explore municipal departments, responsibilities and administrative functions of Nagar Palika Parishad, Mainpuri."
                                         : "Access important civic services and digital facilities provided by Nagar Palika Parishad, Mainpuri."}
                                     </p>
@@ -606,7 +614,7 @@ export default function Navbar() {
                               <div className="bg-[#FAFDFB] p-5">
                                 <div className="grid grid-cols-2 gap-2.5">
                                   {(item.megaMenuType ===
-                                  "departments"
+                                    "departments"
                                     ? departments
                                     : services
                                   ).map((subItem) => {
@@ -771,60 +779,60 @@ export default function Navbar() {
       ======================================================== */}
 
       {isOpen && (
-          <div className="fixed inset-0 top-0 z-100 lg:hidden">
-            {/* Backdrop */}
+        <div className="fixed inset-0 top-0 z-100 lg:hidden">
+          {/* Backdrop */}
 
-            <button
-              type="button"
-              aria-label="Close mobile navigation"
-              onClick={() => setIsOpen(false)}
-              className="absolute inset-0 cursor-default bg-emerald-950/75 backdrop-blur-sm"
-            />
+          <button
+            type="button"
+            aria-label="Close mobile navigation"
+            onClick={() => setIsOpen(false)}
+            className="absolute inset-0 cursor-default bg-emerald-950/75 backdrop-blur-sm"
+          />
 
-            {/* Drawer */}
+          {/* Drawer */}
 
-            <aside className="absolute right-0 top-0 flex h-full w-[90%] max-w-102.5 flex-col overflow-hidden border-l border-emerald-200 bg-[#F4FAF6] shadow-[-25px_0_80px_rgba(2,44,34,0.35)]">
-              {/* =================================================
+          <aside className="absolute right-0 top-0 flex h-full w-[90%] max-w-102.5 flex-col overflow-hidden border-l border-emerald-200 bg-[#F4FAF6] shadow-[-25px_0_80px_rgba(2,44,34,0.35)]">
+            {/* =================================================
                   DRAWER HEADER
               ================================================== */}
 
-              <div className="relative overflow-hidden bg-linear-to-br from-emerald-950 via-emerald-900 to-teal-900 text-white">
-                <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-emerald-400/10 blur-2xl" />
+            <div className="relative overflow-hidden bg-linear-to-br from-emerald-950 via-emerald-900 to-teal-900 text-white">
+              <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-emerald-400/10 blur-2xl" />
 
-                <div className="relative flex items-center justify-between px-5 py-4">
-                  <Link
-                    href="/"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3"
-                  >
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full border border-amber-200/30 bg-white p-1.5 shadow-lg">
-                      <img
-                        src="/governmentlogo.png"
-                        alt="Government Emblem"
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
+              <div className="relative flex items-center justify-between px-5 py-4">
+                <Link
+                  href="/"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3"
+                >
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full border border-amber-200/30 bg-white p-1.5 shadow-lg">
+                    <img
+                      src="/governmentlogo.png"
+                      alt="Government Emblem"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
 
-                    <div>
-                      <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-amber-300">
-                        Government of Uttar Pradesh
-                      </p>
+                  <div>
+                    <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-amber-300">
+                      Government of Uttar Pradesh
+                    </p>
 
-                      <p className="mt-0.5 text-[13px] font-extrabold text-white">
-                        Nagar Panchayat Goverdhan
-                      </p>
+                    <p className="mt-0.5 text-[13px] font-extrabold text-white">
+                      Nagar Panchayat Goverdhan
+                    </p>
 
-                      <p className="text-[10px] font-semibold text-emerald-200">
-                        Mathura
-                      </p>
-                    </div>
-                  </Link>
+                    <p className="text-[10px] font-semibold text-emerald-200">
+                      Mathura
+                    </p>
+                  </div>
+                </Link>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    aria-label="Close menu"
-                    className="
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close menu"
+                  className="
                       flex h-9 w-9
                       cursor-pointer
                       items-center justify-center
@@ -836,82 +844,82 @@ export default function Navbar() {
                       hover:bg-amber-400
                       hover:text-emerald-950
                     "
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="h-1 bg-linear-to-r from-amber-300 via-yellow-400 to-emerald-300" />
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
 
-              {/* =================================================
+              <div className="h-1 bg-linear-to-r from-amber-300 via-yellow-400 to-emerald-300" />
+            </div>
+
+            {/* =================================================
                   MOBILE SEARCH
               ================================================== */}
 
-              <div className="border-b border-emerald-100 bg-white px-5 py-3.5">
-                <div className="group flex h-11 w-full items-center gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 transition-all focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-400/20">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-emerald-600 to-teal-600 text-white shadow-sm">
-                    <Search className="h-3.5 w-3.5" />
-                  </span>
+            <div className="border-b border-emerald-100 bg-white px-5 py-3.5">
+              <div className="group flex h-11 w-full items-center gap-2.5 rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 transition-all focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-400/20">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-emerald-600 to-teal-600 text-white shadow-sm">
+                  <Search className="h-3.5 w-3.5" />
+                </span>
 
-                  <input
-                    type="text"
-                    value={mobileSearch}
-                    onChange={(e) => setMobileSearch(e.target.value)}
-                    placeholder="Search services, pages..."
-                    className="w-full bg-transparent text-[12px] font-semibold text-emerald-950 placeholder-slate-400 outline-none"
-                  />
+                <input
+                  type="text"
+                  value={mobileSearch}
+                  onChange={(e) => setMobileSearch(e.target.value)}
+                  placeholder={t("web.search.placeholder")}
+                  className="w-full bg-transparent text-[12px] font-semibold text-emerald-950 placeholder-slate-400 outline-none"
+                />
 
-                  {mobileSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setMobileSearch("")}
-                      aria-label="Clear mobile search"
-                      className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
-                </div>
+                {mobileSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileSearch("")}
+                    aria-label={t("web.search.clear")}
+                    className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
+            </div>
 
-              {/* =================================================
+            {/* =================================================
                   MOBILE MENU
               ================================================== */}
 
-              <div className="flex-1 overflow-y-auto px-4 py-4">
-                <div className="space-y-1.5">
-                  {menuItems.map((item) => {
-                    const isActive =
-                      activeTab === item.name
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="space-y-1.5">
+                {menuItems.map((item) => {
+                  const isActive =
+                    activeTab === item.name
 
-                    const hasSub = item.hasDropdown
+                  const hasSub = item.hasDropdown
 
-                    const isDropdownOpen =
-                      openDropdown === item.name
+                  const isDropdownOpen =
+                    openDropdown === item.name
 
-                    const isPropertyTax =
-                      item.name === "Property Tax"
+                  const isPropertyTax =
+                    item.name === "Property Tax"
 
-                    return (
-                      <div key={item.name}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (hasSub) {
-                              setOpenDropdown(
-                                isDropdownOpen
-                                  ? null
-                                  : item.name,
-                              )
-                            } else {
-                              handleMenuClick(
-                                item.name,
-                                item.href,
-                              )
-                            }
-                          }}
-                          className={`
+                  return (
+                    <div key={item.name}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (hasSub) {
+                            setOpenDropdown(
+                              isDropdownOpen
+                                ? null
+                                : item.name,
+                            )
+                          } else {
+                            handleMenuClick(
+                              item.name,
+                              item.href,
+                            )
+                          }
+                        }}
+                        className={`
                             group flex w-full
                             cursor-pointer
                             items-center
@@ -921,104 +929,102 @@ export default function Navbar() {
                             text-left
                             transition-all
                             duration-200
-                            ${
-                              isActive
-                                ? "bg-linear-to-r from-emerald-700 to-teal-700 text-white shadow-lg shadow-emerald-700/20"
-                                : isPropertyTax
-                                  ? "bg-linear-to-r from-amber-400 to-yellow-400 text-emerald-950"
-                                  : "text-emerald-950 hover:bg-white hover:text-emerald-700 hover:shadow-sm"
-                            }
+                            ${isActive
+                            ? "bg-linear-to-r from-emerald-700 to-teal-700 text-white shadow-lg shadow-emerald-700/20"
+                            : isPropertyTax
+                              ? "bg-linear-to-r from-amber-400 to-yellow-400 text-emerald-950"
+                              : "text-emerald-950 hover:bg-white hover:text-emerald-700 hover:shadow-sm"
+                          }
                           `}
-                        >
-                          <span className="flex items-center gap-3">
-                            {item.name === "Home" && (
-                              <Home className="h-4 w-4" />
-                            )}
+                      >
+                        <span className="flex items-center gap-3">
+                          {item.name === "Home" && (
+                            <Home className="h-4 w-4" />
+                          )}
 
-                            {item.name === "About" && (
-                              <ShieldCheck className="h-4 w-4" />
-                            )}
+                          {item.name === "About" && (
+                            <ShieldCheck className="h-4 w-4" />
+                          )}
 
-                            {item.name ===
-                              "Departments" && (
+                          {item.name ===
+                            "Departments" && (
                               <Building2 className="h-4 w-4" />
                             )}
 
-                            {item.name === "Services" && (
-                              <Layers3 className="h-4 w-4" />
-                            )}
+                          {item.name === "Services" && (
+                            <Layers3 className="h-4 w-4" />
+                          )}
 
-                            {item.name ===
-                              "Public Grievance" && (
+                          {item.name ===
+                            "Public Grievance" && (
                               <Mail className="h-4 w-4" />
                             )}
 
-                            {item.name === "Schemes" && (
-                              <Award className="h-4 w-4" />
-                            )}
+                          {item.name === "Schemes" && (
+                            <Award className="h-4 w-4" />
+                          )}
 
-                            {item.name === "Gallery" && (
-                              <ImageIcon className="h-4 w-4" />
-                            )}
+                          {item.name === "Gallery" && (
+                            <ImageIcon className="h-4 w-4" />
+                          )}
 
-                            {item.name === "Staff" && (
-                              <Building2 className="h-4 w-4" />
-                            )}
+                          {item.name === "Staff" && (
+                            <Building2 className="h-4 w-4" />
+                          )}
 
-                            {item.name === "Contact" && (
-                              <Mail className="h-4 w-4" />
-                            )}
+                          {item.name === "Contact" && (
+                            <Mail className="h-4 w-4" />
+                          )}
 
-                            {item.name ===
-                              "Property Tax" && (
+                          {item.name ===
+                            "Property Tax" && (
                               <FileSpreadsheet className="h-4 w-4" />
                             )}
 
-                            <span className="text-[12px] font-bold uppercase tracking-[0.045em]">
-                              {item.name}
-                            </span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.045em]">
+                            {t(item.labelKey)}
                           </span>
+                        </span>
 
-                          {hasSub && (
-                            <ChevronDown
-                              className={`
+                        {hasSub && (
+                          <ChevronDown
+                            className={`
                                 h-4 w-4
                                 transition-transform
-                                ${
-                                  isDropdownOpen
-                                    ? "rotate-180"
-                                    : ""
-                                }
+                                ${isDropdownOpen
+                                ? "rotate-180"
+                                : ""
+                              }
                               `}
-                            />
-                          )}
-                        </button>
+                          />
+                        )}
+                      </button>
 
-                        {/* =================================================
+                      {/* =================================================
                             MOBILE SUBMENU
                         ================================================== */}
 
-                        {hasSub &&
-                          isDropdownOpen && (
-                            <div className="ml-4 mt-1.5 space-y-1.5 border-l-2 border-emerald-200 pl-3">
-                              {(item.megaMenuType ===
+                      {hasSub &&
+                        isDropdownOpen && (
+                          <div className="ml-4 mt-1.5 space-y-1.5 border-l-2 border-emerald-200 pl-3">
+                            {(item.megaMenuType ===
                               "departments"
-                                ? departments
-                                : services
-                              ).map((subItem) => {
-                                const Icon = subItem.icon
+                              ? departments
+                              : services
+                            ).map((subItem) => {
+                              const Icon = subItem.icon
 
-                                return (
-                                  <button
-                                    type="button"
-                                    key={subItem.name}
-                                    onClick={() =>
-                                      handleMenuClick(
-                                        item.name,
-                                        item.href,
-                                      )
-                                    }
-                                    className="
+                              return (
+                                <button
+                                  type="button"
+                                  key={subItem.name}
+                                  onClick={() =>
+                                    handleMenuClick(
+                                      item.name,
+                                      item.href,
+                                    )
+                                  }
+                                  className="
                                       group flex w-full
                                       cursor-pointer
                                       items-center gap-2.5
@@ -1032,9 +1038,9 @@ export default function Navbar() {
                                       hover:bg-emerald-50
                                       hover:shadow-sm
                                     "
-                                  >
-                                    <div
-                                      className={`
+                                >
+                                  <div
+                                    className={`
                                         flex h-8 w-8
                                         shrink-0
                                         items-center
@@ -1045,69 +1051,69 @@ export default function Navbar() {
                                         text-white
                                         shadow-sm
                                       `}
-                                    >
-                                      <Icon className="h-3.5 w-3.5" />
-                                    </div>
+                                  >
+                                    <Icon className="h-3.5 w-3.5" />
+                                  </div>
 
-                                    <div className="min-w-0">
-                                      <p className="text-[10px] font-bold text-emerald-950">
-                                        {subItem.name}
-                                      </p>
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-bold text-emerald-950">
+                                      {subItem.name}
+                                    </p>
 
-                                      <p className="mt-0.5 line-clamp-1 text-[8px] text-slate-500">
-                                        {subItem.desc}
-                                      </p>
-                                    </div>
+                                    <p className="mt-0.5 line-clamp-1 text-[8px] text-slate-500">
+                                      {subItem.desc}
+                                    </p>
+                                  </div>
 
-                                    <ChevronDown className="ml-auto h-3 w-3 -rotate-90 text-emerald-500 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          )}
-                      </div>
-                    )
-                  })}
-                </div>
+                                  <ChevronDown className="ml-auto h-3 w-3 -rotate-90 text-emerald-500 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                    </div>
+                  )
+                })}
               </div>
+            </div>
 
-              {/* =================================================
+            {/* =================================================
                   DRAWER FOOTER
               ================================================== */}
 
-              <div className="border-t border-emerald-100 bg-white p-5">
-                <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-linear-to-br from-emerald-50 to-teal-50 p-4">
-                  <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-300/20 blur-xl" />
+            <div className="border-t border-emerald-100 bg-white p-5">
+              <div className="relative overflow-hidden rounded-2xl border border-emerald-200 bg-linear-to-br from-emerald-50 to-teal-50 p-4">
+                <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-emerald-300/20 blur-xl" />
 
-                  <div className="relative flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-600 to-teal-600 text-white shadow-md">
-                      <ShieldCheck className="h-4 w-4" />
-                    </div>
+                <div className="relative flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-600 to-teal-600 text-white shadow-md">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
 
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-950">
-                        Official Portal
-                      </p>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-950">
+                      Official Portal
+                    </p>
 
-                      <p className="mt-1 text-[9px] leading-4 text-slate-500">
-                        Nagar Panchayat Goverdhan,
-                        Mathura
-                      </p>
+                    <p className="mt-1 text-[9px] leading-4 text-slate-500">
+                      Nagar Panchayat Goverdhan,
+                      Mathura
+                    </p>
 
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <div className="mt-2 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
 
-                        <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-700">
-                          Government of Uttar Pradesh
-                        </span>
-                      </div>
+                      <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-700">
+                        Government of Uttar Pradesh
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-            </aside>
-          </div>
-        )}
+            </div>
+          </aside>
+        </div>
+      )}
     </>
   )
 }

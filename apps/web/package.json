@@ -14,6 +14,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",
     "@workspace/api-client": "workspace:*",
+    "@workspace/i18n": "workspace:*",
     "@workspace/types": "workspace:*",
     "@workspace/ui": "workspace:*",
     "clsx": "^2.1.1",

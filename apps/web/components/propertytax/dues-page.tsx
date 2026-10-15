@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useMutation, useQuery } from "@tanstack/react-query"
+import { optionLabel, useLocale } from "@workspace/i18n"
 import {
   AlertCircle,
   ArrowLeft,
@@ -84,6 +85,12 @@ async function loadAtomCheckout(url: string): Promise<void> {
 }
 
 export default function PropertyTaxDuesPage({ id }: { id: string }) {
+  const { locale, t } = useLocale()
+  const option = (value?: string | null) => {
+    const text = value?.trim()
+    if (!text) return "—"
+    return optionLabel(locale, text)
+  }
   const [payerMobile, setPayerMobile] = useState("")
   const [payerEmail, setPayerEmail] = useState("")
   const [paymentError, setPaymentError] = useState("")
@@ -137,7 +144,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#f4fff8] via-white to-[#fff9ef]">
+    <main className="min-h-screen bg-linear-to-br from-[#f4fff8] via-white to-[#fff9ef]">
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <nav
@@ -197,7 +204,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
         {dues.data && (
           <>
             <header className="relative overflow-hidden rounded-3xl border border-emerald-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,80,50,0.08)] sm:p-8">
-              <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-orange-500 via-white to-emerald-600" />
+              <div className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-orange-500 via-white to-emerald-600" />
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="inline-flex items-center gap-2 text-[10px] font-black tracking-[0.16em] text-emerald-700 uppercase">
@@ -256,10 +263,10 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                   <Detail label="Registered owner" value={dues.data.ownerName ?? "—"} />
                   <Detail label="Father / guardian" value={dues.data.ownerFatherName ?? "—"} />
                   <Detail label="Registered mobile" value={dues.data.mobileMasked} />
-                  <Detail label="Property type" value={dues.data.propertyType ?? "—"} />
-                  <Detail label="Property use" value={dues.data.propertyUse ?? "—"} />
-                  <Detail label="Tax zone" value={dues.data.taxRateZone ?? "—"} />
-                  <Detail label="Road type" value={dues.data.roadType ?? "—"} />
+                  <Detail label={t("survey.propertyType")} value={option(dues.data.propertyType)} />
+                  <Detail label={t("survey.propertyUse")} value={option(dues.data.propertyUse)} />
+                  <Detail label={t("survey.taxZone")} value={option(dues.data.taxRateZone)} />
+                  <Detail label={t("survey.roadType")} value={option(dues.data.roadType)} />
                   <Detail
                     label="Address"
                     value={
@@ -320,7 +327,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                 </p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[680px] text-left text-xs">
+                <table className="w-full min-w-170 text-left text-xs">
                   <thead className="bg-slate-50 text-[10px] font-black tracking-wide text-slate-600 uppercase">
                     <tr>
                       <th className="px-6 py-4">Floor</th>
@@ -396,7 +403,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-orange-100 bg-gradient-to-br from-white to-orange-50 p-6 shadow-sm sm:p-7">
+              <div className="rounded-3xl border border-orange-100 bg-linear-to-br from-white to-orange-50 p-6 shadow-sm sm:p-7">
                 <h2 className="text-lg font-black text-slate-900">
                   Pay property tax online
                 </h2>
@@ -466,7 +473,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                         !dues.data.onlinePaymentEnabled ||
                         dues.data.tax.totalDemand <= 0
                       }
-                      className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-5 text-sm font-black text-white shadow-lg shadow-orange-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-amber-600 px-5 text-sm font-black text-white shadow-lg shadow-orange-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <CreditCard className="h-4 w-4" />
                       {payment.isPending
@@ -504,7 +511,7 @@ function Summary({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm font-black text-slate-900">
+      <p className="mt-1 wrap-break-word text-sm font-black text-slate-900">
         {value}
       </p>
     </div>
@@ -517,7 +524,7 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold tracking-wide text-slate-500 uppercase">
         {label}
       </p>
-      <p className="mt-1 break-words text-sm font-semibold text-slate-800">
+      <p className="mt-1 wrap-break-word text-sm font-semibold text-slate-800">
         {value}
       </p>
     </div>

@@ -20,13 +20,53 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 import { usePermission } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 
+import { useLocale } from "@workspace/i18n"
 import { ImportDropzone } from "./_components/import-dropzone"
 import { ImportErrorsTable } from "./_components/import-errors-table"
 import { ImportKpis, ImportProgress } from "./_components/import-kpis"
 import { ImportStatusBadge } from "./_components/import-status-badge"
 import type { DuplicateStrategy, ImportJob } from "./_components/types"
 
+function ImportColumnSummary({
+  mapping,
+}: {
+  mapping: ImportJob["columnMapping"]
+}) {
+  const { t } = useLocale()
+  if (!mapping) return null
+  const unmapped = mapping.unmappedColumns ?? []
+  const extras = mapping.storedExtraFields ?? []
+  if (
+    unmapped.length === 0 &&
+    extras.length === 0 &&
+    !mapping.emptyRows &&
+    !mapping.duplicateRows
+  ) {
+    return null
+  }
+  return (
+    <div className="space-y-1 text-sm text-muted-foreground">
+      <p>
+        {t("import.emptyRows")}: {mapping.emptyRows ?? 0}
+        {" · "}
+        {t("import.duplicates")}: {mapping.duplicateRows ?? 0}
+      </p>
+      {extras.length > 0 ? (
+        <p>
+          {t("import.extras")}: {extras.join(", ")}
+        </p>
+      ) : null}
+      {unmapped.length > 0 ? (
+        <p>
+          {t("import.unmapped")}: {unmapped.join(", ")}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function ImportWizard() {
+  const { t } = useLocale()
   const [file, setFile] = React.useState<File | null>(null)
   const [strategy, setStrategy] = React.useState<DuplicateStrategy>("UPDATE")
   const searchParams = useSearchParams()
@@ -48,7 +88,7 @@ function ImportWizard() {
 
   const upload = useMutation({
     mutationFn: async () => {
-      if (!file) throw new Error("Select a file")
+      if (!file) throw new Error(t("import.selectFile"))
       const form = new FormData()
       form.append("file", file)
       form.append("duplicateStrategy", strategy)
@@ -57,7 +97,7 @@ function ImportWizard() {
     },
     onSuccess: (data) => {
       setFile(null)
-      toast.success(`Uploaded. Preset: ${data.mappingPreset ?? "detected"}`)
+      toast.success(`${t("import.uploaded")}. ${data.mappingPreset ?? ""}`)
       void qc.invalidateQueries({ queryKey: ["imports"] })
       router.replace(`/surveys/import?job=${data.id}`)
     },
@@ -70,7 +110,7 @@ function ImportWizard() {
       return (await api.post<ImportJob>(`/api/v1/imports/${jobId}/start`)).data
     },
     onSuccess: () => {
-      toast.success("Import started")
+      toast.success(t("import.started"))
       void qc.invalidateQueries({ queryKey: ["import-job", jobId] })
       void qc.invalidateQueries({ queryKey: ["imports"] })
     },
@@ -93,7 +133,7 @@ function ImportWizard() {
       {canCreate && !jobId ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Upload workbook</CardTitle>
+            <CardTitle className="text-base">{t("import.title")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <ImportDropzone
@@ -102,9 +142,7 @@ function ImportWizard() {
               disabled={upload.isPending}
             />
             <fieldset className="space-y-2">
-              <legend className="text-sm font-medium">
-                When Survey ID already exists
-              </legend>
+              <legend className="text-sm font-medium">{t("import.strategy")}</legend>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Label className="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
                   <input
@@ -115,7 +153,7 @@ function ImportWizard() {
                     checked={strategy === "UPDATE"}
                     onChange={() => setStrategy("UPDATE")}
                   />
-                  Update existing
+                  {t("import.update")}
                 </Label>
                 <Label className="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
                   <input
@@ -126,7 +164,7 @@ function ImportWizard() {
                     checked={strategy === "SKIP"}
                     onChange={() => setStrategy("SKIP")}
                   />
-                  Skip duplicates
+                  {t("import.skip")}
                 </Label>
               </div>
             </fieldset>
@@ -135,7 +173,7 @@ function ImportWizard() {
               disabled={!file || upload.isPending}
               onClick={() => upload.mutate()}
             >
-              {upload.isPending ? "Uploading…" : "Upload & validate"}
+              {upload.isPending ? t("common.loading") : t("import.upload")}
             </Button>
           </CardContent>
         </Card>
@@ -143,7 +181,7 @@ function ImportWizard() {
 
       {!canCreate && !jobId ? (
         <div className="rounded-xl border bg-card px-4 py-10 text-center">
-          <p className="text-sm font-medium">You can view past imports only.</p>
+          <p className="text-sm font-medium">{t("import.noPermission")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Ask an admin for import permission to upload a workbook.
           </p>
@@ -168,7 +206,7 @@ function ImportWizard() {
                 <p className="text-sm text-muted-foreground">
                   {job.fileName}
                   {job.mappingPreset ? ` · Preset ${job.mappingPreset}` : null}
-                  {` · ${job.duplicateStrategy === "SKIP" ? "Skip duplicates" : "Update existing"}`}
+                  {` · ${job.duplicateStrategy === "SKIP" ? t("import.skipDuplicates") : t("import.update")}`}
                 </p>
               ) : null}
             </div>
@@ -200,7 +238,7 @@ function ImportWizard() {
                 <p className="text-sm text-destructive">
                   {jobQuery.error instanceof Error
                     ? jobQuery.error.message
-                    : "Could not load this import job."}
+                    : t("import.loadFailed")}
                 </p>
                 <Button
                   variant="outline"
@@ -213,6 +251,7 @@ function ImportWizard() {
             ) : job ? (
               <>
                 <ImportKpis job={job} />
+                <ImportColumnSummary mapping={job.columnMapping} />
                 {job.status === "PROCESSING" ? (
                   <ImportProgress
                     processed={job.processedRows}
@@ -225,7 +264,7 @@ function ImportWizard() {
                     disabled={start.isPending}
                     onClick={() => start.mutate()}
                   >
-                    {start.isPending ? "Starting…" : "Start import"}
+                    {start.isPending ? t("common.loading") : t("import.start")}
                   </Button>
                 ) : null}
                 <ImportErrorsTable errors={job.errors ?? []} />

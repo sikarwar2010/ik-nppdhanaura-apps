@@ -15,7 +15,12 @@ const repoRoot = path.join(
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: repoRoot,
-  transpilePackages: ["@workspace/ui", "@workspace/types", "@workspace/api-client"],
+  transpilePackages: [
+    "@workspace/ui",
+    "@workspace/types",
+    "@workspace/api-client",
+    "@workspace/i18n",
+  ],
   async rewrites() {
     // Production Atom gateway callbacks use ATOM_CALLBACK_URL on PUBLIC_WEB_URL;
     // server-to-server POSTs to /api/v1/payments/gateway/callback are proxied

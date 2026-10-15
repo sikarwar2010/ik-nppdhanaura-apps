@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     "@workspace/ui",
     "@workspace/api-client",
     "@workspace/types",
+    "@workspace/i18n",
   ],
   async headers() {
     return [

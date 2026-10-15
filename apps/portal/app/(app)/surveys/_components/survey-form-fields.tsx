@@ -18,10 +18,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@workspace/ui/components/select"
+import { useLocale } from "@workspace/i18n"
 import { buildStringSelectItems } from "@workspace/ui/lib/select-items"
 import { cn } from "@workspace/ui/lib/utils"
 
-import { formatCatalogLabel } from "@/lib/catalog-labels"
+import { displayCatalogLabel } from "@/lib/catalog-labels"
 import { sqFtToSqM } from "@/lib/floors"
 import { knownCatalogValue, withCurrentOption } from "@/lib/ward1-catalog"
 
@@ -150,6 +151,8 @@ export function CatalogField<T extends FieldValues>({
   includeCurrent?: boolean
   onValueChange?: (value: string) => void
 }) {
+  const { locale } = useLocale()
+  const labelFor = (option: string) => displayCatalogLabel(option, locale)
   return (
     <FieldShell
       id={id}
@@ -174,7 +177,7 @@ export function CatalogField<T extends FieldValues>({
           return (
             <Select
               value={toSelectValue(selectValue)}
-              items={buildStringSelectItems(optionList, formatCatalogLabel)}
+              items={buildStringSelectItems(optionList, labelFor)}
               onValueChange={(value) => {
                 const next = value ?? ""
                 field.onChange(next)
@@ -200,11 +203,11 @@ export function CatalogField<T extends FieldValues>({
                   <SelectItem
                     key={option}
                     value={option}
-                    label={formatCatalogLabel(option)}
+                    label={labelFor(option)}
                     className="items-start whitespace-normal"
                   >
                     <span className="whitespace-normal break-words">
-                      {formatCatalogLabel(option)}
+                      {labelFor(option)}
                     </span>
                   </SelectItem>
                 ))}

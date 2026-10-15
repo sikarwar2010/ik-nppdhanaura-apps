@@ -16,6 +16,7 @@ import { useParams, useRouter } from "next/navigation"
 import * as React from "react"
 import { toast } from "sonner"
 
+import { optionLabel, useLocale } from "@workspace/i18n"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -48,8 +49,8 @@ import { cn } from "@workspace/ui/lib/utils"
 import { useCan } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 import {
+  displayCatalogLabel,
   formatCatalogDisplay,
-  formatCatalogLabel,
 } from "@/lib/catalog-labels"
 import {
   ULB_NAME,
@@ -168,6 +169,15 @@ export default function SurveyDetailPage() {
   const [parcelQuery, setParcelQuery] = React.useState("")
   const [goPending, setGoPending] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
+  const { locale, t } = useLocale()
+  const catalog = (value?: string | null) =>
+    formatCatalogDisplay(value, locale)
+  const catalogText = (value?: string | null) =>
+    displayCatalogLabel(value, locale)
+  const yesNo = (value?: boolean | null) => {
+    if (value == null) return "—"
+    return value ? t("survey.yes") : t("survey.no")
+  }
 
   const query = useQuery({
     queryKey: ["survey", params.id],
@@ -374,9 +384,11 @@ export default function SurveyDetailPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge className={qualityBadgeClass(s.dataQualityStatus)}>
-            {qualityLabel(s.dataQualityStatus)}
+            {qualityLabel(s.dataQualityStatus, locale)}
           </Badge>
-          <Badge className={statusBadgeClass(s.status)}>{s.status}</Badge>
+          <Badge className={statusBadgeClass(s.status)}>
+            {optionLabel(locale, s.status)}
+          </Badge>
         </div>
       </div>
 
@@ -420,7 +432,7 @@ export default function SurveyDetailPage() {
         </CardContent>
       </Card>
 
-      <SectionCard title="Survey & Owner">
+      <SectionCard title={t("survey.sectionOwner")}>
         <FieldGrid>
           <Field label="Survey Id" value={s.surveyId} />
           <Field
@@ -435,7 +447,7 @@ export default function SurveyDetailPage() {
             value={`Ward ${s.ward.number} — ${s.ward.name}`}
             deva
           />
-          <Field label="Is Slum" value={yn(s.isSlum)} />
+          <Field label="Is Slum" value={yesNo(s.isSlum)} />
         </FieldGrid>
       </SectionCard>
 
@@ -468,39 +480,39 @@ export default function SurveyDetailPage() {
         </FieldGrid>
       </SectionCard>
 
-      <SectionCard title="Classification">
+      <SectionCard title={t("survey.sectionClassification")}>
         <FieldGrid>
           <Field
             label="Tax Rate Zone"
-            value={formatCatalogDisplay(s.taxRateZone)}
+            value={catalog(s.taxRateZone)}
           />
           <Field
             label="Property Ownership"
-            value={formatCatalogDisplay(s.propertyOwnership)}
+            value={catalog(s.propertyOwnership)}
           />
           <Field
             label="Property Type"
-            value={formatCatalogDisplay(s.propertyType)}
+            value={catalog(s.propertyType)}
           />
           <Field
             label="Property Use"
-            value={formatCatalogDisplay(s.propertyUse)}
+            value={catalog(s.propertyUse)}
           />
           <Field
             label="Commercial subtype"
-            value={formatCatalogDisplay(s.commercial)}
+            value={catalog(s.commercial)}
           />
           <Field
             label="Year of Construction"
-            value={formatCatalogDisplay(s.yearOfConstruction)}
+            value={catalog(s.yearOfConstruction)}
           />
           <Field
             label="Situation"
-            value={formatCatalogDisplay(s.situation)}
+            value={catalog(s.situation)}
           />
           <Field
             label="Road Type"
-            value={formatCatalogDisplay(s.roadType)}
+            value={catalog(s.roadType)}
           />
         </FieldGrid>
       </SectionCard>
@@ -552,10 +564,10 @@ export default function SurveyDetailPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>S. No.</TableHead>
-                <TableHead>Floor</TableHead>
-                <TableHead>Usage Type</TableHead>
-                <TableHead>Usage Factor</TableHead>
-                <TableHead>Construction</TableHead>
+                <TableHead>{t("survey.floor")}</TableHead>
+                <TableHead>{t("survey.usageType")}</TableHead>
+                <TableHead>{t("survey.usageFactor")}</TableHead>
+                <TableHead>{t("survey.construction")}</TableHead>
                 <TableHead className="text-right">Area (Sq Ft)</TableHead>
               </TableRow>
             </TableHeader>
@@ -565,21 +577,21 @@ export default function SurveyDetailPage() {
                   <TableRow key={floor.id}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>
-                      {formatCatalogLabel(floor.floorLabel) || floor.floorLabel}
+                      {catalogText(floor.floorLabel) || floor.floorLabel}
                     </TableCell>
                     <TableCell>
                       {floor.usageType
-                        ? formatCatalogLabel(floor.usageType)
+                        ? catalogText(floor.usageType)
                         : "—"}
                     </TableCell>
                     <TableCell>
                       {floor.usageFactor
-                        ? formatCatalogLabel(floor.usageFactor)
+                        ? catalogText(floor.usageFactor)
                         : "—"}
                     </TableCell>
                     <TableCell className="max-w-[16rem] whitespace-normal wrap-break-word">
                       {floor.buildingType
-                        ? formatCatalogLabel(floor.buildingType)
+                        ? catalogText(floor.buildingType)
                         : "—"}
                     </TableCell>
                     <TableCell className="text-right">
@@ -612,11 +624,11 @@ export default function SurveyDetailPage() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Municipal Services">
+      <SectionCard title={t("survey.sectionMunicipal")}>
         <FieldGrid>
           <Field
             label="Is Muncipal Water Supply"
-            value={yn(s.hasMunicipalWaterSupply)}
+            value={yesNo(s.hasMunicipalWaterSupply)}
           />
           <Field
             label="Total Water Connection"
@@ -629,15 +641,15 @@ export default function SurveyDetailPage() {
           <Field label="Toilet Type" value={s.toiletType} />
           <Field
             label="Is Muncipal Waste Service"
-            value={yn(s.hasMunicipalWasteService)}
+            value={yesNo(s.hasMunicipalWasteService)}
           />
-          <Field label="Alternate Water" value={yn(s.hasAlternateWater)} />
-          <Field label="Water Source" value={s.waterSourceType} />
+          <Field label="Alternate Water" value={yesNo(s.hasAlternateWater)} />
+          <Field label="Water Source" value={catalog(s.waterSourceType)} />
         </FieldGrid>
       </SectionCard>
 
       {canAudit ? (
-        <SectionCard title="Audit History" id="audit-history">
+        <SectionCard title={t("survey.sectionAudit")} id="audit-history">
           <div className="overflow-hidden rounded-xl border">
             <Table>
               <TableHeader>
@@ -828,11 +840,6 @@ function dash(value?: string | number | null) {
   if (value == null) return "—"
   const text = String(value).trim()
   return text.length > 0 ? text : "—"
-}
-
-function yn(value?: boolean | null) {
-  if (value == null) return "—"
-  return value ? "Yes" : "No"
 }
 
 function statusBadgeClass(status: string) {

@@ -32,10 +32,12 @@ import {
   NAV_ITEMS,
   isNavHrefActive,
   isSurveyNavActive,
+  navTitleKey,
   type NavItem,
 } from "@/components/app-nav"
 import { usePermission } from "@/hooks/use-permission"
 import { formatApiError } from "@/lib/format-api-error"
+import { useLocale } from "@workspace/i18n"
 
 function canSee(
   item: NavItem,
@@ -69,6 +71,11 @@ function NavCollapsibleGroup({
   item: NavItem
   pathname: string
 }) {
+  const { t } = useLocale()
+  const label = (title: string) => {
+    const key = navTitleKey(title)
+    return key ? t(key) : title
+  }
   const isActive = isItemActive(item, pathname)
   const [open, setOpen] = useState(isActive)
 
@@ -87,11 +94,11 @@ function NavCollapsibleGroup({
       <SidebarMenuItem>
         <SidebarMenuButton
           render={<CollapsibleTrigger />}
-          tooltip={item.title}
+          tooltip={label(item.title)}
           className="cursor-pointer text-sidebar-foreground"
         >
           {item.icon ? <item.icon /> : null}
-          <span>{item.title}</span>
+          <span>{label(item.title)}</span>
           <ChevronDown className="ml-auto size-4 opacity-60 transition-transform duration-200 group-data-open/collapsible:rotate-180" />
         </SidebarMenuButton>
         <CollapsibleContent>
@@ -107,7 +114,7 @@ function NavCollapsibleGroup({
                   }
                   className="cursor-pointer rounded-lg transition-colors duration-200"
                 >
-                  <span>{child.title}</span>
+                  <span>{label(child.title)}</span>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             ))}
@@ -120,6 +127,11 @@ function NavCollapsibleGroup({
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { t } = useLocale()
+  const label = (title: string) => {
+    const key = navTitleKey(title)
+    return key ? t(key) : title
+  }
   const { hasPermission, isLoading, isError, error, refetch } = usePermission()
 
   const visible = NAV_ITEMS.filter((item) => canSee(item, hasPermission)).map(
@@ -207,11 +219,11 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         render={<Link href={item.href!} />}
                         isActive={isItemActive(item, pathname)}
-                        tooltip={item.title}
+                        tooltip={label(item.title)}
                         className="cursor-pointer text-sidebar-foreground"
                       >
                         {item.icon ? <item.icon /> : null}
-                        <span>{item.title}</span>
+                        <span>{label(item.title)}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

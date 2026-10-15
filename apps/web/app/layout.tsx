@@ -1,8 +1,10 @@
+import QueryProvider from "@/components/providers/query-providers"
 import { cn } from "@/lib/utils"
+import { LOCALE_COOKIE, LocaleProvider, parseLocale } from "@workspace/i18n"
 import type { Metadata } from "next"
 import { Geist } from "next/font/google"
+import { cookies } from "next/headers"
 import "./globals.css"
-import QueryProvider from "@/components/providers/query-providers"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -14,20 +16,24 @@ export const metadata: Metadata = {
     "Nagar Panchayat , Goverdhan , Mathura , Uttar Pradesh , Property Tax, Water Tax , Birth Certificate , Death Certificate , Tenders , Grievances",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const cookieStore = await cookies()
+  const locale = parseLocale(cookieStore.get(LOCALE_COOKIE)?.value)
   return (
-      <html
-        lang="en"
-        suppressHydrationWarning
-        className={cn("font-sans", geist.variable)}
-      >
-        <body className="flex min-h-screen flex-col bg-white text-slate-800">
+    <html
+      lang={locale}
+      suppressHydrationWarning
+      className={cn("font-sans", geist.variable)}
+    >
+      <body className="flex min-h-screen flex-col bg-white text-slate-800">
+        <LocaleProvider initialLocale={locale}>
           <QueryProvider>{children}</QueryProvider>
-        </body>
-      </html>
+        </LocaleProvider>
+      </body>
+    </html>
   )
 }

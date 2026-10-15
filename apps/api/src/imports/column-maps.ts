@@ -211,6 +211,47 @@ export type MappingPreset =
   | "chhata-v1-39"
   | "chhata-v2-55"
   | "mainpuri-v1-41"
+  | "dhanaura-gis"
+
+/** ColumnMap used only so callers of getMapping never read shifted neighbors. */
+const DHANAURA_GIS_UNUSED: ColumnMap = {
+  surveyId: -1,
+  surveyedAt: -1,
+  ownerName: -1,
+  ownerFatherName: -1,
+  mobile: -1,
+  wardName: -1,
+  isSlum: -1,
+  parcelNo: -1,
+  propertyNo: -1,
+  respondentName: -1,
+  respondentRelationship: -1,
+  city: -1,
+  pincode: -1,
+  houseNo: -1,
+  streetName: -1,
+  locality: -1,
+  colony: -1,
+  taxRateZone: -1,
+  propertyOwnership: -1,
+  propertyUse: -1,
+  commercial: -1,
+  yearOfConstruction: -1,
+  situation: -1,
+  roadType: -1,
+  floorsRaw: -1,
+  plotAreaSqFt: -1,
+  plotAreaSqMeter: -1,
+  plinthAreaSqFt: -1,
+  plinthAreaSqMeter: -1,
+  totalBuiltUpAreaSqFt: -1,
+  totalBuiltUpAreaSqMeter: -1,
+  hasMunicipalWaterSupply: -1,
+  totalWaterConnections: -1,
+  waterConnectionIdType: -1,
+  toiletType: -1,
+  hasMunicipalWasteService: -1,
+}
 
 const EMPTY_CELL = /^(n\/a|na|null|-|none)$/i
 
@@ -290,6 +331,25 @@ const HEADER_TOKEN_KEYS = new Set<keyof ColumnMap>(
   HEADER_FIELD_TOKENS.map((t) => t.key)
 )
 
+const ENGLISH_HEADER_TOKEN_SET = new Set(
+  HEADER_FIELD_TOKENS.map((entry) => entry.token)
+)
+
+/** How many distinct English survey headers this row contains. */
+export function countEnglishHeaderMatches(headers: string[]): number {
+  const seen = new Set<string>()
+  let count = 0
+  for (const header of headers) {
+    const token = normHeader(header ?? "")
+    if (!token || seen.has(token) || !ENGLISH_HEADER_TOKEN_SET.has(token)) {
+      continue
+    }
+    seen.add(token)
+    count++
+  }
+  return count
+}
+
 /**
  * Override preset indexes using actual header row labels.
  * Prevents Floors/areas/zone corruption when Excel variants insert columns.
@@ -357,9 +417,7 @@ export function detectPresetFromHeaders(
   }
   if (first.includes("surveyid")) {
     const hasAadhaar = headers.some((h) => /aadhaar/i.test(h ?? ""))
-    const floorsIdx = headers.findIndex(
-      (h) => normHeader(h ?? "") === "floors"
-    )
+    const floorsIdx = headers.findIndex((h) => normHeader(h ?? "") === "floors")
     // Survey-Id-first sheets with Owner Aadhaar (or Floors at col 26) use v1-39.
     if (hasAadhaar || floorsIdx === 25) return "chhata-v1-39"
     return "chhata-v1-38"
@@ -414,6 +472,7 @@ export const MAINPURI_V1_41: ColumnMap = {
 }
 
 export function getMapping(preset: MappingPreset): ColumnMap {
+  if (preset === "dhanaura-gis") return DHANAURA_GIS_UNUSED
   if (preset === "chhata-v2-55") return CHHATA_V2_55
   if (preset === "chhata-v1-39") return CHHATA_V1_39
   if (preset === "mainpuri-v1-41") return MAINPURI_V1_41
@@ -484,11 +543,21 @@ export function parseSurveyedAt(value: string): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d
 }
 
-export function extractWardNumber(wardName: string, surveyId: string): number | null {
-  const fromName = wardName.match(/वार्ड\s*नंबर\s*(\d+)|ward\s*(?:no\.?|number)?\s*(\d+)/i)
+export function extractWardNumber(
+  wardName: string,
+  surveyId: string
+): number | null {
+  const trimmed = wardName.trim()
+  if (/^\d+$/.test(trimmed)) {
+    const plain = Number(trimmed)
+    return Number.isFinite(plain) && plain > 0 ? plain : null
+  }
+  const fromName = wardName.match(
+    /वार्ड\s*(?:नंबर|न०|नं\.?)?\s*(\d+)|ward\s*(?:no\.?|number)?\s*(\d+)/i
+  )
   if (fromName) {
     const n = Number(fromName[1] ?? fromName[2])
-    return Number.isFinite(n) ? n : null
+    return Number.isFinite(n) && n > 0 ? n : null
   }
   const fromId = wardNumberFromSurveyId(surveyId)
   if (fromId != null) return fromId
