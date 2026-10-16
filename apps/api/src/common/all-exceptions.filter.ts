@@ -45,6 +45,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     let code = "INTERNAL_ERROR"
     let message = "An unexpected error occurred"
+    let details: unknown
 
     if (typeof exceptionResponse === "string") {
       message = exceptionResponse
@@ -53,8 +54,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       typeof exceptionResponse === "object" &&
       "message" in exceptionResponse
     ) {
-      const raw = (exceptionResponse as { message?: string | string[]; error?: string })
-        .message
+      const raw = (
+        exceptionResponse as { message?: string | string[]; error?: string }
+      ).message
       message = Array.isArray(raw) ? raw.join(", ") : (raw ?? message)
       if (
         "error" in exceptionResponse &&
@@ -63,6 +65,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         code = (exceptionResponse as { error: string }).error
           .toUpperCase()
           .replace(/\s+/g, "_")
+      }
+      if (
+        "details" in exceptionResponse &&
+        (exceptionResponse as { details?: unknown }).details != null
+      ) {
+        details = (exceptionResponse as { details: unknown }).details
       }
     } else if (exception instanceof Error) {
       message =
@@ -124,6 +132,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         code,
         message,
         requestId: request.requestId,
+        ...(details !== undefined ? { details } : {}),
       },
     })
   }

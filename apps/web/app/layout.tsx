@@ -9,11 +9,11 @@ import "./globals.css"
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 export const metadata: Metadata = {
-  title: "Nagar Panchayat , Goverdhan, Mathura",
+  title: "Nagar Palika Parishad , Dhanaura, Amroha",
   description:
-    "Official portal of Nagar Panchayat,Goverdhan,Mathura, Uttar Pradesh. Settle property tax, pay water tax, apply for birth/death certificates, browse active tenders, and submit grievances online.",
+    "Official portal of Nagar Palika Parishad,Dhanaura,Amroha, Uttar Pradesh. Settle property tax, pay water tax, apply for birth/death certificates, browse active tenders, and submit grievances online.",
   keywords:
-    "Nagar Panchayat , Goverdhan , Mathura , Uttar Pradesh , Property Tax, Water Tax , Birth Certificate , Death Certificate , Tenders , Grievances",
+    "Nagar Palika Parishad , Dhanaura , Amroha , Uttar Pradesh , Property Tax, Water Tax , Birth Certificate , Death Certificate , Tenders , Grievances",
 }
 
 export default async function RootLayout({

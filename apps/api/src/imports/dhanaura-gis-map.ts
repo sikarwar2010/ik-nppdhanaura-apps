@@ -18,6 +18,11 @@ import {
   type ColumnMap,
   type MappingPreset,
 } from "./column-maps"
+import {
+  isLegacyHindiFont,
+  krutiDevToUnicode,
+  looksLikeKrutiDev,
+} from "./kruti-dev"
 
 export const DHANAURA_IMPORT_LAYOUT = "dhanaura-gis"
 export const HEADER_SCAN_LIMIT = 20
@@ -28,6 +33,7 @@ export const DHANAURA_FLOOR_LABELS = {
   ground: "Ground Floor",
   first: "First Floor",
   second: "Second Floor",
+  third: "Third Floor",
 } as const
 
 const DEVANAGARI_DIGITS = "०१२३४५६७८९"
@@ -95,6 +101,7 @@ const DHANAURA_FIELD_ORDER = [
   "groundFloorArea",
   "firstFloorArea",
   "secondFloorArea",
+  "thirdFloorArea",
   "shopAreaSqFt",
   "shopNumber",
   "shopName",
@@ -139,15 +146,24 @@ type Alias = {
   specific: boolean
 }
 
+/** Owner label without पुराना/नया — resolved after other owner columns are known. */
+const AMBIGUOUS_OWNER_EXACT = new Set(["मकानमालिककानाम"])
+
 const ALIASES: Alias[] = [
   {
     field: "serialNo",
-    exact: ["क्रमसं0", "क्रमसं", "serialnumber", "serialno"],
+    exact: ["क्रमसं0", "क्रमसं", "क्र0सं0", "serialnumber", "serialno"],
     specific: true,
   },
   {
     field: "oldHouseNo",
-    exact: ["पुरानाम0न0", "पुरानामकाननंबर", "oldhousenumber", "oldhouseno"],
+    exact: [
+      "पुरानाम0न0",
+      "पुरानाम0नं0",
+      "पुरानामकाननंबर",
+      "oldhousenumber",
+      "oldhouseno",
+    ],
     specific: true,
   },
   {
@@ -162,12 +178,24 @@ const ALIASES: Alias[] = [
   },
   {
     field: "ownerName",
-    exact: ["नयामकानमालिक", "currentpropertyowner", "currentowner"],
+    exact: [
+      "नयामकानमालिक",
+      "नयेमकानमालिककानाम",
+      "currentpropertyowner",
+      "currentowner",
+    ],
     specific: true,
   },
   {
     field: "mobile",
-    exact: ["मोबाईलन0", "मोबाइलन0", "mobilenumber", "mobileno"],
+    exact: [
+      "मोबाईलन0",
+      "मोबाइलन0",
+      "मोबाईलनं0",
+      "मोबाइलनं0",
+      "mobilenumber",
+      "mobileno",
+    ],
     specific: false,
   },
   {
@@ -182,7 +210,13 @@ const ALIASES: Alias[] = [
   },
   {
     field: "buildingType",
-    exact: ["मकानकीप्रकृति", "buildingtype", "constructiontype"],
+    exact: [
+      "मकानकीप्रकृति",
+      "सम्पत्तिकीप्रकृति",
+      "संपत्तिकीप्रकृति",
+      "buildingtype",
+      "constructiontype",
+    ],
     specific: true,
   },
   {
@@ -196,23 +230,46 @@ const ALIASES: Alias[] = [
   },
   {
     field: "vacantPlotArea",
-    exact: ["खालीप्लाटकाक्षेत्रफल", "vacantplotarea"],
+    exact: [
+      "खालीप्लाटकाक्षेत्रफल",
+      "खालीप्लाटक्षेत्रफल",
+      "खालीप्लाटक्षे0",
+      "खालीप्लाटकाक्षेत्र0",
+      "vacantplotarea",
+    ],
     specific: true,
   },
   {
     field: "propertyWidth",
-    exact: ["सम्पत्तिक्षेत्रचौड़ाई", "संपत्तिक्षेत्रचौड़ाई", "propertywidth"],
+    exact: [
+      "सम्पत्तिक्षेत्रचौड़ाई",
+      "संपत्तिक्षेत्रचौड़ाई",
+      "सम्पत्तिक्षे0चौड़ाई",
+      "संपत्तिक्षे0चौड़ाई",
+      "चौड़ाई",
+      "चैडाई",
+      "propertywidth",
+    ],
     specific: true,
   },
   {
     field: "propertyLength",
-    exact: ["सम्पत्तिक्षेत्रलम्बाई", "सम्पत्तिक्षेत्रलंबाई", "propertylength"],
+    exact: [
+      "सम्पत्तिक्षेत्रलम्बाई",
+      "सम्पत्तिक्षेत्रलंबाई",
+      "सम्पत्तिक्षे0लम्बाई",
+      "सम्पत्तिक्षे0लंबाई",
+      "लम्बाई",
+      "लंबाई",
+      "propertylength",
+    ],
     specific: true,
   },
   {
     field: "totalBuiltUpAreaSqFt",
     exact: [
       "मकाननिर्माणक्षेत्रफलवर्गफुट",
+      "मकाननिर्माणकाक्षेत्रफल",
       "buildingarea",
       "constructionareasqft",
     ],
@@ -225,17 +282,22 @@ const ALIASES: Alias[] = [
   },
   {
     field: "roomCount",
-    exact: ["कमरोंकीसंख्या", "numberofrooms", "roomcount"],
+    exact: ["कमरोंकीसंख्या", "कमरोकीसंख्या", "numberofrooms", "roomcount"],
     specific: true,
   },
   {
     field: "floorCount",
-    exact: ["मंजिलोंकीसंख्या", "numberoffloors", "floorcount"],
+    exact: [
+      "मंजिलोंकीसंख्या",
+      "मंजिलोकीसंख्या",
+      "numberoffloors",
+      "floorcount",
+    ],
     specific: true,
   },
   {
     field: "basementArea",
-    exact: ["भूमिगतक्षेत्रफलवर्गफुट", "basementarea"],
+    exact: ["भूमिगतक्षेत्रफलवर्गफुट", "भूमिगतमंजिल", "basementarea"],
     specific: true,
   },
   {
@@ -245,7 +307,7 @@ const ALIASES: Alias[] = [
   },
   {
     field: "firstFloorArea",
-    exact: ["प्रथममंजिल", "firstfloorarea", "firstfloor"],
+    exact: ["प्रथममंजिल", "पहलीमंजिल", "firstfloorarea", "firstfloor"],
     specific: true,
   },
   {
@@ -254,24 +316,44 @@ const ALIASES: Alias[] = [
     specific: true,
   },
   {
+    field: "thirdFloorArea",
+    exact: ["तीसरीमंजिल", "thirdfloorarea", "thirdfloor"],
+    specific: true,
+  },
+  {
     field: "shopAreaSqFt",
-    exact: ["दुकानकाक्षेत्रफलवर्गफुट", "shoparea"],
+    exact: ["दुकानकाक्षेत्रफलवर्गफुट", "दुकानकाक्षेत्रफल", "shoparea"],
     specific: true,
   },
   { field: "shopNumber", exact: ["दुकानसंख्या", "shopnumber"], specific: true },
   { field: "shopName", exact: ["दुकानकानाम", "shopname"], specific: true },
   {
     field: "tenantName",
-    exact: ["किरायदारकानाम", "tenantname"],
+    exact: ["किरायदारकानाम", "किरायेदारकानाम", "tenantname"],
     specific: true,
   },
-  { field: "waterSupply", exact: ["जलआपूर्ति", "watersupply"], specific: true },
+  {
+    field: "waterSupply",
+    exact: ["जलआपूर्ति", "पानीकनैक्शन", "पानीकनेक्शन", "watersupply"],
+    specific: true,
+  },
   {
     field: "roadWidthMeters",
-    exact: ["सड़कचौड़ाईमी0", "सड़कचौड़ाईमी", "roadwidth"],
+    exact: [
+      "सड़कचौड़ाईमी0",
+      "सड़कचौड़ाईमी",
+      "सडककीचैडाई",
+      "सड़ककीचौड़ाई",
+      "सडककीचौड़ाई",
+      "roadwidth",
+    ],
     specific: true,
   },
-  { field: "roadType", exact: ["सड़ककाप्रकार", "roadtype"], specific: false },
+  {
+    field: "roadType",
+    exact: ["सड़ककाप्रकार", "सडककाप्रकार", "roadtype"],
+    specific: false,
+  },
   {
     field: "taxpayerInfo",
     exact: ["अन्यकरदाता", "taxpayer", "othertaxpayer"],
@@ -279,7 +361,13 @@ const ALIASES: Alias[] = [
   },
   {
     field: "familyMemberCount",
-    exact: ["फैमिलीमेम्बर", "फैमिलीमेंबर", "familymember", "familymembercount"],
+    exact: [
+      "फैमिलीमेम्बर",
+      "फैमिलीमेंबर",
+      "फेमिलीमंम्बर",
+      "familymember",
+      "familymembercount",
+    ],
     specific: true,
   },
   {
@@ -425,6 +513,7 @@ export function emptyDhanauraColumnMap(): DhanauraColumnMap {
     groundFloorArea: -1,
     firstFloorArea: -1,
     secondFloorArea: -1,
+    thirdFloorArea: -1,
     shopAreaSqFt: -1,
     shopNumber: -1,
     shopName: -1,
@@ -441,11 +530,14 @@ export function emptyDhanauraColumnMap(): DhanauraColumnMap {
 
 function precedingOwnerField(
   headers: string[],
-  fatherIndex: number
+  fatherIndex: number,
+  map: DhanauraColumnMap
 ): "ownerName" | "previousOwnerName" | null {
   for (let index = fatherIndex - 1; index >= 0; index--) {
     const token = normLoose(headers[index] ?? "")
     if (!token || FATHER_EXACT.has(token)) continue
+    if (map.ownerName === index) return "ownerName"
+    if (map.previousOwnerName === index) return "previousOwnerName"
     const alias = ALIAS_BY_EXACT.get(token)
     if (alias?.field === "ownerName" || alias?.field === "previousOwnerName") {
       return alias.field
@@ -457,6 +549,7 @@ function precedingOwnerField(
 export function buildDhanauraColumnMap(headers: string[]): DhanauraColumnMap {
   const map = emptyDhanauraColumnMap()
   const fatherIndexes: number[] = []
+  const ambiguousOwnerIndexes: number[] = []
   headers.forEach((header, index) => {
     const token = normLoose(header ?? "")
     if (!token) return
@@ -464,13 +557,28 @@ export function buildDhanauraColumnMap(headers: string[]): DhanauraColumnMap {
       fatherIndexes.push(index)
       return
     }
+    if (AMBIGUOUS_OWNER_EXACT.has(token)) {
+      ambiguousOwnerIndexes.push(index)
+      return
+    }
     const alias = ALIAS_BY_EXACT.get(token)
     if (!alias || map[alias.field] >= 0) return
     map[alias.field] = index
   })
 
+  for (const index of ambiguousOwnerIndexes) {
+    // When a "नया/नये मकान मालिक" column exists, the unlabeled owner is previous.
+    if (map.ownerName >= 0 && map.previousOwnerName < 0) {
+      map.previousOwnerName = index
+      continue
+    }
+    if (map.ownerName < 0) {
+      map.ownerName = index
+    }
+  }
+
   for (const index of fatherIndexes) {
-    const ownerField = precedingOwnerField(headers, index)
+    const ownerField = precedingOwnerField(headers, index, map)
     if (ownerField === "ownerName" && map.ownerFatherName < 0) {
       map.ownerFatherName = index
       continue
@@ -527,9 +635,27 @@ function zeroPadFromNumFmt(
   return text.startsWith("0") ? text : null
 }
 
-export function readCellDisplay(cell: ExcelJS.Cell): string {
+function decodeLegacyCellText(
+  text: string,
+  fontName: string | undefined
+): string {
+  if (!text) return text
+  if (!isLegacyHindiFont(fontName)) return text
+  if (/[\u0900-\u097F]/.test(text)) return text
+  if (!looksLikeKrutiDev(text)) return text
+  return krutiDevToUnicode(text)
+}
+
+export function readCellDisplay(
+  cell: ExcelJS.Cell,
+  options?: { blankMergedSlaves?: boolean }
+): string {
+  if (options?.blankMergedSlaves && cell.isMerged && cell.master !== cell) {
+    return ""
+  }
   const value = cell.value
   if (value == null) return ""
+  const fontName = cell.font?.name
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return ""
     const formatted =
@@ -538,19 +664,33 @@ export function readCellDisplay(cell: ExcelJS.Cell): string {
     if (formatted) return formatted
     return String(value)
   }
-  if (typeof value === "string") return value.trim()
+  if (typeof value === "string") {
+    return decodeLegacyCellText(value.trim(), fontName)
+  }
+  if (
+    typeof value === "object" &&
+    value &&
+    Array.isArray((value as { richText?: Array<{ text?: string }> }).richText)
+  ) {
+    const rich = (value as { richText: Array<{ text?: string }> }).richText
+      .map((part) => part.text ?? "")
+      .join("")
+      .trim()
+    return decodeLegacyCellText(rich, fontName)
+  }
   const text = cell.text?.trim() ?? ""
-  if (text) return text
-  return excelValueToString(value)
+  if (text) return decodeLegacyCellText(text, fontName)
+  return decodeLegacyCellText(excelValueToString(value), fontName)
 }
 
 export function readRowStrings(
   row: ExcelJS.Row,
-  columnCount: number
+  columnCount: number,
+  options?: { blankMergedSlaves?: boolean }
 ): string[] {
   const values: string[] = []
   for (let col = 1; col <= columnCount; col++) {
-    values.push(readCellDisplay(row.getCell(col)))
+    values.push(readCellDisplay(row.getCell(col), options))
   }
   return values
 }
@@ -568,22 +708,114 @@ export type WorkbookLayout = {
   missingRequired: string[]
 }
 
-export function resolveWorkbookLayout(
+function workbookSheetCandidates(
   workbook: ExcelJS.Workbook
-): WorkbookLayout | null {
+): ExcelJS.Worksheet[] {
   const named = workbook.getWorksheet("Survey Data")
   const candidates: ExcelJS.Worksheet[] = []
   if (named) candidates.push(named)
   for (const sheet of workbook.worksheets) {
     if (sheet !== named) candidates.push(sheet)
   }
+  return candidates
+}
+
+export type WorkbookHeaderFailure = {
+  code: "IMPORT_HEADER_INVALID"
+  message: string
+  selectedSheet: string | null
+  headerRowNumber: number | null
+  normalizedHeaders: string[]
+  missingRequired: string[]
+  unrecognizedHeaders: string[]
+  suggestedCorrection: string
+}
+
+export function describeWorkbookHeaderFailure(
+  workbook: ExcelJS.Workbook
+): WorkbookHeaderFailure {
+  const suggestedCorrection =
+    "Add a header row that includes वार्ड न० and नया म०न० (or English Ward Number / New House Number)."
+  const candidates = workbookSheetCandidates(workbook)
+  let best: {
+    sheet: ExcelJS.Worksheet
+    rowIndex: number
+    headers: string[]
+    score: number
+    dhanaura: boolean
+  } | null = null
 
   for (const sheet of candidates) {
     const columnCount = Math.max(sheet.columnCount, 1)
     const last = Math.min(sheet.rowCount || 0, HEADER_SCAN_LIMIT)
     const preview: string[][] = []
     for (let rowNumber = 1; rowNumber <= last; rowNumber++) {
-      preview.push(readRowStrings(sheet.getRow(rowNumber), columnCount))
+      preview.push(
+        readRowStrings(sheet.getRow(rowNumber), columnCount, {
+          blankMergedSlaves: true,
+        })
+      )
+    }
+    const found = findHeaderRow(preview)
+    if (found) {
+      const dhanauraMap = found.dhanaura
+        ? buildDhanauraColumnMap(found.headers)
+        : null
+      const missing = dhanauraMap ? missingDhanauraRequired(dhanauraMap) : []
+      const unmapped = dhanauraMap
+        ? unmappedDhanauraHeaders(found.headers, dhanauraMap)
+        : found.headers.filter((h) => h.trim())
+      return {
+        code: "IMPORT_HEADER_INVALID",
+        message:
+          missing.length > 0
+            ? `Missing required columns: ${missing.join(", ")}`
+            : "Workbook has no usable header row or survey columns",
+        selectedSheet: sheet.name,
+        headerRowNumber: found.rowIndex + 1,
+        normalizedHeaders: found.headers.map((h) => normLoose(h)),
+        missingRequired: missing,
+        unrecognizedHeaders: unmapped,
+        suggestedCorrection,
+      }
+    }
+    for (let rowIndex = 0; rowIndex < preview.length; rowIndex++) {
+      const headers = preview[rowIndex] ?? []
+      const english = countEnglishHeaderMatches(headers)
+      const { hindi, specific } = countDhanauraHeaderSignals(headers)
+      const dhanaura = isDhanauraHeaders(headers)
+      const score = dhanaura ? Math.max(hindi, specific) : english
+      if (!best || score > best.score) {
+        best = { sheet, rowIndex, headers, score, dhanaura }
+      }
+    }
+  }
+
+  return {
+    code: "IMPORT_HEADER_INVALID",
+    message: "Workbook has no usable header row or survey columns",
+    selectedSheet: best?.sheet.name ?? candidates[0]?.name ?? null,
+    headerRowNumber: best && best.score > 0 ? best.rowIndex + 1 : null,
+    normalizedHeaders: (best?.headers ?? []).map((h) => normLoose(h)),
+    missingRequired: ["वार्ड न०", "नया म०न०"],
+    unrecognizedHeaders: (best?.headers ?? []).filter((h) => h.trim()),
+    suggestedCorrection,
+  }
+}
+
+export function resolveWorkbookLayout(
+  workbook: ExcelJS.Workbook
+): WorkbookLayout | null {
+  for (const sheet of workbookSheetCandidates(workbook)) {
+    const columnCount = Math.max(sheet.columnCount, 1)
+    const last = Math.min(sheet.rowCount || 0, HEADER_SCAN_LIMIT)
+    const preview: string[][] = []
+    for (let rowNumber = 1; rowNumber <= last; rowNumber++) {
+      preview.push(
+        readRowStrings(sheet.getRow(rowNumber), columnCount, {
+          blankMergedSlaves: true,
+        })
+      )
     }
     const found = findHeaderRow(preview)
     if (!found) continue
@@ -739,7 +971,8 @@ export function readSourceExtraString(
   extras: unknown,
   key: string
 ): string | null {
-  if (!extras || typeof extras !== "object" || Array.isArray(extras)) return null
+  if (!extras || typeof extras !== "object" || Array.isArray(extras))
+    return null
   const value = (extras as Record<string, unknown>)[key]
   if (typeof value !== "string") return null
   const trimmed = value.trim()
@@ -1005,6 +1238,16 @@ export function parseDhanauraRow(
     readMeasurement(
       fieldText(values, map.secondFloorArea),
       "secondFloorArea",
+      errors
+    ),
+    buildingType
+  )
+  pushFloor(
+    floors,
+    DHANAURA_FLOOR_LABELS.third,
+    readMeasurement(
+      fieldText(values, map.thirdFloorArea),
+      "thirdFloorArea",
       errors
     ),
     buildingType

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
 import ExcelJS from "exceljs"
@@ -8,8 +8,10 @@ import {
   DHANAURA_HEADERS,
   DHANAURA_IMPORT_LAYOUT,
   buildDhanauraColumnMap,
+  countNonEmptyDataRows,
   decideDhanauraMatch,
   decideImportedTaxRateZone,
+  describeWorkbookHeaderFailure,
   dhanauraOwnerFieldsForUpdate,
   findHeaderRow,
   gisUseFromPropertyType,
@@ -18,6 +20,7 @@ import {
   missingDhanauraRequired,
   parseDhanauraRow,
   readCellDisplay,
+  readRowStrings,
   resolveWorkbookLayout,
   surveyIdForHouse,
 } from "./dhanaura-gis-map"
@@ -27,6 +30,16 @@ import {
   detectExportPreset,
   getExportHeaders,
 } from "./survey-excel-export"
+
+const GIS_FIXTURES = join(__dirname, "../../../../fixtures/gis")
+
+async function loadGisFixture(fileName: string): Promise<ExcelJS.Workbook> {
+  const filePath = join(GIS_FIXTURES, fileName)
+  expect(existsSync(filePath)).toBe(true)
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.readFile(filePath)
+  return workbook
+}
 
 function gisWorkbook(
   rows: string[][],
@@ -97,7 +110,7 @@ describe("dhanaura GIS workbook layout", () => {
 
   it("reports a missing ward column and unknown headers", () => {
     const headers = DHANAURA_HEADERS.filter((header) => header !== "वार्ड न०")
-    headers.push("अतिरिक्त टिप्पणी")
+    headers.push("अतिरिक्त टिप्पणी" as never)
     const map = buildDhanauraColumnMap([...headers])
     expect(missingDhanauraRequired(map)).toContain("वार्ड न०")
     const layout = resolveWorkbookLayout(gisWorkbook([blankGisRow()], headers))
@@ -796,5 +809,85 @@ describe("dhanaura GIS workbook layout", () => {
     expect(parsed.locality).toBe("गांधी नगर")
     expect(parsed.mobile).toBe("09876543210")
     expect(parsed.newHouseNo).toBe("12")
+  })
+
+  it("maps the real Ward 1 Unicode GIS workbook", async () => {
+    const workbook = await loadGisFixture("ward-1-gis.xlsx")
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout).not.toBeNull()
+    expect(layout?.sheet.name).toBe("Sheet1")
+    expect(layout?.headerRowNumber).toBe(2)
+    expect(layout?.preset).toBe("dhanaura-gis")
+    expect(layout?.missingRequired).toEqual([])
+    expect(layout?.dhanauraMap?.ownerName).toBe(5)
+    expect(layout?.dhanauraMap?.ownerFatherName).toBe(6)
+    expect(layout?.dhanauraMap?.previousOwnerName).toBe(3)
+    expect(layout?.dhanauraMap?.previousOwnerFatherName).toBe(4)
+    expect(layout?.dhanauraMap?.propertyWidth).toBe(13)
+    expect(layout?.dhanauraMap?.propertyLength).toBe(14)
+    expect(layout?.dhanauraMap?.wardNumber).toBe(32)
+    expect(layout?.dhanauraMap?.newHouseNo).toBe(2)
+  })
+
+  it("maps the real Ward 5 Kruti Dev GIS workbook", async () => {
+    const workbook = await loadGisFixture("ward-5-gis.xlsx")
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout).not.toBeNull()
+    expect(layout?.sheet.name).toBe("Sheet1")
+    expect(layout?.headerRowNumber).toBe(2)
+    expect(layout?.preset).toBe("dhanaura-gis")
+    expect(layout?.missingRequired).toEqual([])
+    expect(layout?.dhanauraMap?.previousOwnerName).toBe(3)
+    expect(layout?.dhanauraMap?.previousOwnerFatherName).toBe(4)
+    expect(layout?.dhanauraMap?.ownerName).toBe(5)
+    expect(layout?.dhanauraMap?.ownerFatherName).toBe(6)
+    expect(layout?.dhanauraMap?.wardNumber).toBe(32)
+    expect(layout?.dhanauraMap?.newHouseNo).toBe(2)
+    expect(layout?.dhanauraMap?.firstFloorArea).toBe(20)
+    expect(layout?.dhanauraMap?.thirdFloorArea).toBe(22)
+
+    const values = readRowStrings(
+      layout!.sheet.getRow(layout!.headerRowNumber + 1),
+      layout!.columnCount
+    )
+    const parsed = parseDhanauraRow(values, layout!.dhanauraMap!)
+    expect(parsed.errors).toEqual([])
+    expect(parsed.sourceExtras.previousOwnerName).toBe("पवन कुमार")
+    expect(parsed.newHouseNo).toBe("1")
+    expect(parsed.wardNumber).toBe(5)
+    expect(parsed.locality).toBe("कंचन बाजार")
+    expect(countNonEmptyDataRows(layout!.sheet, layout!)).toBe(897)
+
+    const houseCounts = new Map<string, number>()
+    for (
+      let rowNumber = layout!.headerRowNumber + 1;
+      rowNumber <= layout!.sheet.rowCount;
+      rowNumber++
+    ) {
+      const row = parseDhanauraRow(
+        readRowStrings(layout!.sheet.getRow(rowNumber), layout!.columnCount),
+        layout!.dhanauraMap!
+      )
+      if (row.empty || !row.newHouseNo) continue
+      houseCounts.set(
+        row.newHouseNo,
+        (houseCounts.get(row.newHouseNo) ?? 0) + 1
+      )
+    }
+    expect([...houseCounts.values()].some((count) => count > 1)).toBe(true)
+  })
+
+  it("describes invalid header workbooks with sheet and column diagnostics", () => {
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet("Sheet1")
+    sheet.addRow(["धनौरा वार्ड 5 GIS डाटा"])
+    sheet.mergeCells(1, 1, 1, 8)
+    const failure = describeWorkbookHeaderFailure(workbook)
+    expect(failure).not.toBeNull()
+    expect(failure?.selectedSheet).toBe("Sheet1")
+    expect(failure?.message).toContain("usable header")
+    expect(failure?.suggestedCorrection).toContain("वार्ड न०")
+    expect(failure?.suggestedCorrection).toContain("नया म०न०")
+    expect(failure?.code).toBe("IMPORT_HEADER_INVALID")
   })
 })

@@ -33,6 +33,7 @@ import {
   countNonEmptyDataRows,
   decideDhanauraMatch,
   decideImportedTaxRateZone,
+  describeWorkbookHeaderFailure,
   dhanauraOwnerFieldsForUpdate,
   mergeDhanauraSourceExtras,
   parseDhanauraRow,
@@ -41,6 +42,7 @@ import {
   resolveWorkbookLayout,
   surveyIdForHouse,
   type HouseMatch,
+  type WorkbookHeaderFailure,
   type WorkbookLayout,
 } from "./dhanaura-gis-map"
 import {
@@ -90,14 +92,24 @@ export class ImportsService {
     const workbook = await readWorkbook(file.buffer)
     const layout = resolveWorkbookLayout(workbook)
     if (!layout) {
-      throw new BadRequestException(
-        "Workbook has no usable header row or survey columns"
+      throwImportHeaderFailure(
+        this.logger,
+        describeWorkbookHeaderFailure(workbook)
       )
     }
     if (layout.missingRequired.length > 0) {
-      throw new BadRequestException(
-        `Missing required columns: ${layout.missingRequired.join(", ")}`
-      )
+      const failure = describeWorkbookHeaderFailure(workbook)
+      throwImportHeaderFailure(this.logger, {
+        ...failure,
+        message: `Missing required columns: ${layout.missingRequired.join(", ")}`,
+        missingRequired: layout.missingRequired,
+        unrecognizedHeaders: layout.unmappedColumns,
+        selectedSheet: layout.sheet.name,
+        headerRowNumber: layout.headerRowNumber,
+        normalizedHeaders: layout.headers.map((header) =>
+          header.normalize("NFC")
+        ),
+      })
     }
     const dataRows = countNonEmptyDataRows(layout.sheet, layout)
     if (dataRows === 0) {
@@ -235,12 +247,16 @@ export class ImportsService {
     }
     const layout = resolveWorkbookLayout(workbook)
     if (!layout) {
-      return this.failJob(
-        job.id,
-        "Workbook has no usable header row or survey columns"
+      const failure = describeWorkbookHeaderFailure(workbook)
+      this.logger.warn(
+        `Import ${job.id} header failure sheet=${failure.selectedSheet} headerRow=${failure.headerRowNumber} missing=${failure.missingRequired.join("|")}`
       )
+      return this.failJob(job.id, failure.message)
     }
     if (layout.missingRequired.length > 0) {
+      this.logger.warn(
+        `Import ${job.id} missing columns sheet=${layout.sheet.name} headerRow=${layout.headerRowNumber} missing=${layout.missingRequired.join("|")}`
+      )
       return this.failJob(
         job.id,
         `Missing required columns: ${layout.missingRequired.join(", ")}`
@@ -1177,6 +1193,27 @@ function formatImportErrorMessage(err: unknown): string {
     return first && first.length > 0 ? first : "Import row failed"
   }
   return "Import row failed"
+}
+
+function throwImportHeaderFailure(
+  logger: Logger,
+  failure: WorkbookHeaderFailure
+): never {
+  logger.warn(
+    `Import header invalid sheet=${failure.selectedSheet} headerRow=${failure.headerRowNumber} missing=${failure.missingRequired.join("|")} unrecognized=${failure.unrecognizedHeaders.slice(0, 20).join("|")}`
+  )
+  throw new BadRequestException({
+    code: failure.code,
+    message: failure.message,
+    details: {
+      selectedSheet: failure.selectedSheet,
+      headerRowNumber: failure.headerRowNumber,
+      missingRequired: failure.missingRequired,
+      unrecognizedHeaders: failure.unrecognizedHeaders,
+      suggestedCorrection: failure.suggestedCorrection,
+      normalizedHeaders: failure.normalizedHeaders,
+    },
+  })
 }
 
 function assertImportFile(file: Express.Multer.File) {
