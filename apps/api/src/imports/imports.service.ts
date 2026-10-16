@@ -695,7 +695,7 @@ export class ImportsService {
         layout.sheet.getRow(rowNumber),
         layout.columnCount
       )
-      const parsed = parseDhanauraRow(values, map)
+      const parsed = parseDhanauraRow(values, map, layout.sheetWardNumber)
       if (parsed.empty) {
         emptyRows++
         continue

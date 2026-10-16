@@ -43,11 +43,12 @@ async function loadGisFixture(fileName: string): Promise<ExcelJS.Workbook> {
 
 function gisWorkbook(
   rows: string[][],
-  headers: readonly string[] = DHANAURA_HEADERS
+  headers: readonly string[] = DHANAURA_HEADERS,
+  title = "धनौरा वार्ड 1 GIS डाटा"
 ) {
   const workbook = new ExcelJS.Workbook()
   const sheet = workbook.addWorksheet("Sheet1")
-  sheet.addRow(["धनौरा वार्ड 1 GIS डाटा"])
+  sheet.addRow([title])
   sheet.mergeCells(1, 1, 1, headers.length)
   sheet.addRow([...headers])
   for (const row of rows) sheet.addRow(row)
@@ -113,8 +114,11 @@ describe("dhanaura GIS workbook layout", () => {
     headers.push("अतिरिक्त टिप्पणी" as never)
     const map = buildDhanauraColumnMap([...headers])
     expect(missingDhanauraRequired(map)).toContain("वार्ड न०")
-    const layout = resolveWorkbookLayout(gisWorkbook([blankGisRow()], headers))
+    const layout = resolveWorkbookLayout(
+      gisWorkbook([blankGisRow()], headers, "सर्वेक्षण विवरण")
+    )
     expect(layout?.missingRequired).toContain("वार्ड न०")
+    expect(layout?.sheetWardNumber).toBeNull()
     expect(layout?.unmappedColumns).toContain("अतिरिक्त टिप्पणी")
   })
 
@@ -827,6 +831,13 @@ describe("dhanaura GIS workbook layout", () => {
     expect(layout?.dhanauraMap?.propertyLength).toBe(14)
     expect(layout?.dhanauraMap?.wardNumber).toBe(32)
     expect(layout?.dhanauraMap?.newHouseNo).toBe(2)
+    expect(layout?.sheetWardNumber).toBeNull()
+    const values = readRowStrings(
+      layout!.sheet.getRow(layout!.headerRowNumber + 1),
+      layout!.columnCount
+    )
+    const parsed = parseDhanauraRow(values, layout!.dhanauraMap!)
+    expect(parsed.wardNumber).toBe(1)
   })
 
   it("maps the real Ward 5 Kruti Dev GIS workbook", async () => {
@@ -842,6 +853,7 @@ describe("dhanaura GIS workbook layout", () => {
     expect(layout?.dhanauraMap?.ownerName).toBe(5)
     expect(layout?.dhanauraMap?.ownerFatherName).toBe(6)
     expect(layout?.dhanauraMap?.wardNumber).toBe(32)
+    expect(layout?.sheetWardNumber).toBeNull()
     expect(layout?.dhanauraMap?.newHouseNo).toBe(2)
     expect(layout?.dhanauraMap?.firstFloorArea).toBe(20)
     expect(layout?.dhanauraMap?.thirdFloorArea).toBe(22)
@@ -875,6 +887,136 @@ describe("dhanaura GIS workbook layout", () => {
       )
     }
     expect([...houseCounts.values()].some((count) => count > 1)).toBe(true)
+  })
+
+  it("maps ward number aliases and a Kruti header stored in Calibri", () => {
+    const aliases = [
+      "वार्ड नं",
+      "वार्ड नंबर",
+      "वार्ड संख्या",
+      "Ward No",
+      "Ward Number",
+      "Ward No.",
+    ]
+    for (const header of aliases) {
+      const headers = [...DHANAURA_HEADERS]
+      headers[32] = header
+      expect(buildDhanauraColumnMap(headers).wardNumber).toBe(32)
+    }
+
+    const headers = [...DHANAURA_HEADERS]
+    headers[32] = "okMZ ua0"
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet("Sheet1")
+    sheet.addRow(["Survey title"])
+    const headerRow = sheet.addRow(headers)
+    headerRow.getCell(33).font = { name: "Calibri" }
+    sheet.addRow(sampleGisRow())
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout?.preset).toBe("dhanaura-gis")
+    expect(layout?.dhanauraMap?.wardNumber).toBe(32)
+    expect(layout?.sheetWardNumber).toBeNull()
+    expect(layout?.missingRequired).toEqual([])
+    const decoded = readRowStrings(sheet.getRow(2), headers.length)
+    expect(decoded[32]).toBe("वार्ड नं0")
+    const parsed = parseDhanauraRow(
+      readRowStrings(sheet.getRow(3), headers.length),
+      layout!.dhanauraMap!
+    )
+    expect(parsed.wardNumber).toBe(1)
+  })
+
+  it("keeps English ward labels out of the Kruti converter", () => {
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet("Sheet1")
+    const headers = [
+      "Serial Number",
+      "Old House Number",
+      "New House Number",
+      "Previous Property Owner",
+      "Father/Husband Name",
+      "Current Property Owner",
+      "Father/Husband Name",
+      "Mobile Number",
+      "Ward No.",
+      "Mohalla",
+    ]
+    const headerRow = sheet.addRow(headers)
+    headerRow.eachCell((cell) => {
+      cell.font = { name: "Calibri" }
+    })
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout?.dhanauraMap?.wardNumber).toBe(8)
+    expect(readRowStrings(sheet.getRow(1), headers.length)[8]).toBe("Ward No.")
+  })
+
+  it("uses one title ward when the ward column is absent and rejects mixed titles", () => {
+    const headers = DHANAURA_HEADERS.filter((header) => header !== "वार्ड न०")
+    const data = sampleGisRow().filter((_, index) => index !== 32)
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet("Sheet1")
+    const title = sheet.addRow(["okMZ ua0 11 uxj ikfydk"])
+    title.getCell(1).font = { name: "Calibri" }
+    sheet.addRow([...headers])
+    sheet.addRow(data)
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout?.headerRowNumber).toBe(2)
+    expect(layout?.missingRequired).toEqual([])
+    expect(layout?.sheetWardNumber).toBe(11)
+    expect(layout?.dhanauraMap?.wardNumber).toBe(-1)
+    const parsed = parseDhanauraRow(
+      readRowStrings(
+        layout!.sheet.getRow(layout!.headerRowNumber + 1),
+        layout!.columnCount
+      ),
+      layout!.dhanauraMap!,
+      layout!.sheetWardNumber
+    )
+    expect(
+      parsed.errors.filter((error) => error.field === "wardNumber")
+    ).toEqual([])
+    expect(parsed.wardNumber).toBe(11)
+
+    const mixed = new ExcelJS.Workbook()
+    const mixedSheet = mixed.addWorksheet("Sheet1")
+    const mixedTitle = mixedSheet.addRow(["okMZ ua0 11", "वार्ड नं0 5"])
+    mixedTitle.getCell(1).font = { name: "Calibri" }
+    mixedTitle.getCell(2).font = { name: "Calibri" }
+    mixedSheet.addRow([...headers])
+    mixedSheet.addRow(data)
+    const mixedLayout = resolveWorkbookLayout(mixed)
+    expect(mixedLayout?.sheetWardNumber).toBeNull()
+    expect(mixedLayout?.missingRequired).toContain("वार्ड न०")
+  })
+
+  it("maps the real Ward 11 Kruti workbook from its title ward", async () => {
+    const workbook = await loadGisFixture("ward-11-gis.xlsx")
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout).not.toBeNull()
+    expect(layout?.sheet.name).toBe("Sheet1")
+    expect(layout?.headerRowNumber).toBe(2)
+    expect(layout?.preset).toBe("dhanaura-gis")
+    expect(layout?.missingRequired).toEqual([])
+    expect(layout?.dhanauraMap?.wardNumber).toBe(-1)
+    expect(layout?.dhanauraMap?.newHouseNo).toBeGreaterThanOrEqual(0)
+    expect(layout?.sheetWardNumber).toBe(11)
+
+    let dataRows = 0
+    for (
+      let rowNumber = layout!.headerRowNumber + 1;
+      rowNumber <= layout!.sheet.rowCount;
+      rowNumber++
+    ) {
+      const parsed = parseDhanauraRow(
+        readRowStrings(layout!.sheet.getRow(rowNumber), layout!.columnCount),
+        layout!.dhanauraMap!,
+        layout!.sheetWardNumber
+      )
+      if (parsed.empty) continue
+      dataRows++
+      expect(parsed.wardNumber).toBe(11)
+    }
+    expect(dataRows).toBeGreaterThan(0)
   })
 
   it("describes invalid header workbooks with sheet and column diagnostics", () => {

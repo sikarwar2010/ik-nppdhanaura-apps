@@ -372,7 +372,16 @@ const ALIASES: Alias[] = [
   },
   {
     field: "wardNumber",
-    exact: ["वार्डन0", "वार्डनंबर", "wardnumber", "wardno"],
+    exact: [
+      "वार्डन0",
+      "वार्डनं",
+      "वार्डनं0",
+      "वार्डनंबर",
+      "वार्डसंख्या",
+      "वार्डसं0",
+      "wardnumber",
+      "wardno",
+    ],
     specific: true,
   },
   {
@@ -610,11 +619,31 @@ export function mappedExtraFields(
   return DHANAURA_EXTRA_FIELDS.filter((field) => map[field] >= 0)
 }
 
-export function missingDhanauraRequired(map: DhanauraColumnMap): string[] {
+export function missingDhanauraRequired(
+  map: DhanauraColumnMap,
+  sheetWardNumber?: number | null
+): string[] {
   const missing: string[] = []
-  if (map.wardNumber < 0) missing.push("वार्ड न०")
+  if (map.wardNumber < 0 && !(sheetWardNumber != null && sheetWardNumber > 0)) {
+    missing.push("वार्ड न०")
+  }
   if (map.newHouseNo < 0) missing.push("नया म०न०")
   return missing
+}
+
+/** One positive ward number written in the title rows. Null when absent or mixed. */
+export function unambiguousSheetWardNumber(titleRows: string[][]): number | null {
+  const found = new Set<number>()
+  for (const row of titleRows) {
+    for (const cell of row) {
+      const text = cell.trim()
+      if (!text || !/वार्ड|ward/i.test(text)) continue
+      const wardNumber = extractWardNumber(text, "")
+      if (wardNumber != null && wardNumber > 0) found.add(wardNumber)
+    }
+  }
+  if (found.size !== 1) return null
+  return [...found][0] ?? null
 }
 
 function formattedLeadingZeros(text: string, value: number): string | null {
@@ -635,18 +664,36 @@ function zeroPadFromNumFmt(
   return text.startsWith("0") ? text : null
 }
 
+/** Letter glued to an abbreviation zero, or a Kruti glyph outside plain ASCII. */
+function hasKrutiMarker(text: string): boolean {
+  if (!text || /[\u0900-\u097F]/.test(text)) return false
+  if (/okmz/i.test(text)) return true
+  if (/[A-Za-z]0|0[A-Za-z]/.test(text)) return true
+  return /[À-ÿƒ„…†‡ˆ‰Š‹ºí«îØÝæçÁôÄ³÷¥êëìïÈ¸ÜÞß¼½¿À¾Œ]/.test(text)
+}
+
+/** English column labels must not be passed through the Kruti converter. */
+function isPlainEnglishLabel(text: string): boolean {
+  return /^[A-Za-z][A-Za-z .'/()-]*$/.test(text.trim())
+}
+
 function decodeLegacyCellText(
   text: string,
-  fontName: string | undefined
+  fontName: string | undefined,
+  decodeKrutiRow = false
 ): string {
   if (!text) return text
-  if (!isLegacyHindiFont(fontName)) return text
   if (/[\u0900-\u097F]/.test(text)) return text
   if (!looksLikeKrutiDev(text)) return text
+  if (isLegacyHindiFont(fontName)) return krutiDevToUnicode(text)
+  if (isPlainEnglishLabel(text)) return text
+  if (!decodeKrutiRow && !hasKrutiMarker(text)) return text
   return krutiDevToUnicode(text)
 }
 
-export function readCellDisplay(
+type CellReadOptions = { blankMergedSlaves?: boolean; decodeKrutiRow?: boolean }
+
+function cellSourceText(
   cell: ExcelJS.Cell,
   options?: { blankMergedSlaves?: boolean }
 ): string {
@@ -654,8 +701,49 @@ export function readCellDisplay(
     return ""
   }
   const value = cell.value
+  if (value == null || typeof value === "number") return ""
+  if (typeof value === "string") return value.trim()
+  if (
+    typeof value === "object" &&
+    Array.isArray((value as { richText?: Array<{ text?: string }> }).richText)
+  ) {
+    return (value as { richText: Array<{ text?: string }> }).richText
+      .map((part) => part.text ?? "")
+      .join("")
+      .trim()
+  }
+  const text = cell.text?.trim() ?? ""
+  if (text) return text
+  return excelValueToString(value)
+}
+
+function rowHasKrutiSignal(
+  row: ExcelJS.Row,
+  columnCount: number,
+  options?: { blankMergedSlaves?: boolean }
+): boolean {
+  for (let col = 1; col <= columnCount; col++) {
+    const cell = row.getCell(col)
+    if (options?.blankMergedSlaves && cell.isMerged && cell.master !== cell) {
+      continue
+    }
+    if (isLegacyHindiFont(cell.font?.name)) return true
+    if (hasKrutiMarker(cellSourceText(cell, options))) return true
+  }
+  return false
+}
+
+export function readCellDisplay(
+  cell: ExcelJS.Cell,
+  options?: CellReadOptions
+): string {
+  if (options?.blankMergedSlaves && cell.isMerged && cell.master !== cell) {
+    return ""
+  }
+  const value = cell.value
   if (value == null) return ""
   const fontName = cell.font?.name
+  const decodeKrutiRow = options?.decodeKrutiRow === true
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return ""
     const formatted =
@@ -665,7 +753,7 @@ export function readCellDisplay(
     return String(value)
   }
   if (typeof value === "string") {
-    return decodeLegacyCellText(value.trim(), fontName)
+    return decodeLegacyCellText(value.trim(), fontName, decodeKrutiRow)
   }
   if (
     typeof value === "object" &&
@@ -676,11 +764,11 @@ export function readCellDisplay(
       .map((part) => part.text ?? "")
       .join("")
       .trim()
-    return decodeLegacyCellText(rich, fontName)
+    return decodeLegacyCellText(rich, fontName, decodeKrutiRow)
   }
   const text = cell.text?.trim() ?? ""
-  if (text) return decodeLegacyCellText(text, fontName)
-  return decodeLegacyCellText(excelValueToString(value), fontName)
+  if (text) return decodeLegacyCellText(text, fontName, decodeKrutiRow)
+  return decodeLegacyCellText(excelValueToString(value), fontName, decodeKrutiRow)
 }
 
 export function readRowStrings(
@@ -688,9 +776,10 @@ export function readRowStrings(
   columnCount: number,
   options?: { blankMergedSlaves?: boolean }
 ): string[] {
+  const decodeKrutiRow = rowHasKrutiSignal(row, columnCount, options)
   const values: string[] = []
   for (let col = 1; col <= columnCount; col++) {
-    values.push(readCellDisplay(row.getCell(col), options))
+    values.push(readCellDisplay(row.getCell(col), { ...options, decodeKrutiRow }))
   }
   return values
 }
@@ -706,6 +795,8 @@ export type WorkbookLayout = {
   unmappedColumns: string[]
   storedExtraFields: DhanauraExtraField[]
   missingRequired: string[]
+  /** Set only when the ward column is absent and the title names one ward. */
+  sheetWardNumber: number | null
 }
 
 function workbookSheetCandidates(
@@ -729,6 +820,29 @@ export type WorkbookHeaderFailure = {
   missingRequired: string[]
   unrecognizedHeaders: string[]
   suggestedCorrection: string
+}
+
+function resolveDhanauraRequirements(
+  preview: string[][],
+  found: { rowIndex: number; headers: string[]; dhanaura: boolean }
+): {
+  dhanauraMap: DhanauraColumnMap | null
+  sheetWardNumber: number | null
+  missingRequired: string[]
+} {
+  if (!found.dhanaura) {
+    return { dhanauraMap: null, sheetWardNumber: null, missingRequired: [] }
+  }
+  const dhanauraMap = buildDhanauraColumnMap(found.headers)
+  const sheetWardNumber =
+    dhanauraMap.wardNumber < 0
+      ? unambiguousSheetWardNumber(preview.slice(0, found.rowIndex))
+      : null
+  return {
+    dhanauraMap,
+    sheetWardNumber,
+    missingRequired: missingDhanauraRequired(dhanauraMap, sheetWardNumber),
+  }
 }
 
 export function describeWorkbookHeaderFailure(
@@ -758,10 +872,9 @@ export function describeWorkbookHeaderFailure(
     }
     const found = findHeaderRow(preview)
     if (found) {
-      const dhanauraMap = found.dhanaura
-        ? buildDhanauraColumnMap(found.headers)
-        : null
-      const missing = dhanauraMap ? missingDhanauraRequired(dhanauraMap) : []
+      const resolved = resolveDhanauraRequirements(preview, found)
+      const dhanauraMap = resolved.dhanauraMap
+      const missing = resolved.missingRequired
       const unmapped = dhanauraMap
         ? unmappedDhanauraHeaders(found.headers, dhanauraMap)
         : found.headers.filter((h) => h.trim())
@@ -819,9 +932,8 @@ export function resolveWorkbookLayout(
     }
     const found = findHeaderRow(preview)
     if (!found) continue
-    const dhanauraMap = found.dhanaura
-      ? buildDhanauraColumnMap(found.headers)
-      : null
+    const dhanaura = resolveDhanauraRequirements(preview, found)
+    const dhanauraMap = dhanaura.dhanauraMap
     const resolved = resolveColumnMap(found.headers, found.headers.length)
     return {
       sheet,
@@ -835,7 +947,8 @@ export function resolveWorkbookLayout(
         ? unmappedDhanauraHeaders(found.headers, dhanauraMap)
         : [],
       storedExtraFields: dhanauraMap ? mappedExtraFields(dhanauraMap) : [],
-      missingRequired: dhanauraMap ? missingDhanauraRequired(dhanauraMap) : [],
+      missingRequired: dhanaura.missingRequired,
+      sheetWardNumber: dhanaura.sheetWardNumber,
     }
   }
   return null
@@ -1167,7 +1280,8 @@ function pushFloor(
 
 export function parseDhanauraRow(
   values: string[],
-  map: DhanauraColumnMap
+  map: DhanauraColumnMap,
+  sheetWardNumber?: number | null
 ): ParsedDhanauraRow {
   const errors: Array<{ field: string; message: string }> = []
   const oldHouseNo = normalizeHouseKey(fieldText(values, map.oldHouseNo))
@@ -1189,7 +1303,13 @@ export function parseDhanauraRow(
   const empty = mappedValues.every((value) => value.length === 0)
 
   const wardRaw = fieldText(values, map.wardNumber)
-  const wardNumber = wardRaw ? extractWardNumber(wardRaw, "") : null
+  const cellWardNumber = wardRaw ? extractWardNumber(wardRaw, "") : null
+  const wardNumber =
+    map.wardNumber >= 0
+      ? cellWardNumber
+      : sheetWardNumber != null && sheetWardNumber > 0
+        ? sheetWardNumber
+        : null
   const plotAreaSqFt = readMeasurement(
     fieldText(values, map.plotAreaSqFt),
     "plotAreaSqFt",

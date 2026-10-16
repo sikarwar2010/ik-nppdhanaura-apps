@@ -543,17 +543,27 @@ export function parseSurveyedAt(value: string): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d
 }
 
+const DEVANAGARI_DIGITS = "०१२३४५६७८९"
+
+function foldDevanagariDigits(value: string): string {
+  return value.replace(/[०-९]/g, (ch) => {
+    const index = DEVANAGARI_DIGITS.indexOf(ch)
+    return index >= 0 ? String(index) : ch
+  })
+}
+
 export function extractWardNumber(
   wardName: string,
   surveyId: string
 ): number | null {
-  const trimmed = wardName.trim()
+  const trimmed = foldDevanagariDigits(wardName).trim()
   if (/^\d+$/.test(trimmed)) {
     const plain = Number(trimmed)
     return Number.isFinite(plain) && plain > 0 ? plain : null
   }
-  const fromName = wardName.match(
-    /वार्ड\s*(?:नंबर|न०|नं\.?)?\s*(\d+)|ward\s*(?:no\.?|number)?\s*(\d+)/i
+  // Abbreviation zeros (नं0, न0, सं0) are not the ward number.
+  const fromName = trimmed.match(
+    /वार्ड\s*(?:नंबर|संख्या|नं\s*0|न0|नं\.?|सं\s*0)?\s*(\d+)|ward\s*(?:no\.?|number)?\s*(\d+)/i
   )
   if (fromName) {
     const n = Number(fromName[1] ?? fromName[2])

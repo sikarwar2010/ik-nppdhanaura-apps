@@ -6,6 +6,8 @@ import {
 
 describe("krutiDevToUnicode", () => {
   it("decodes Ward 5 owner and property-type glyphs", () => {
+    expect(krutiDevToUnicode("okMZ ua0")).toBe("वार्ड नं0")
+    expect(krutiDevToUnicode("okMZ ua0 11")).toBe("वार्ड नं0 11")
     expect(krutiDevToUnicode("iou dqekj")).toBe("पवन कुमार")
     expect(krutiDevToUnicode('gf"kZr tSu')).toBe("हर्षित जैन")
     expect(krutiDevToUnicode("vkoklh;")).toBe("आवासीय")

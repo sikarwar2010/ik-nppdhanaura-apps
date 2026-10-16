@@ -78,17 +78,25 @@ describe("column-maps", () => {
       "chhata-v2-55"
     )
     expect(detectPresetFromHeaders(["S.No", "Actions"])).toBe("chhata-v2-55")
-    expect(
-      detectPresetFromHeaders([...MAINPURI_WARD01_HEADERS])
-    ).toBe("mainpuri-v1-41")
+    expect(detectPresetFromHeaders([...MAINPURI_WARD01_HEADERS])).toBe(
+      "mainpuri-v1-41"
+    )
   })
 
   it("extracts ward numbers from Hindi names and GIS ids", () => {
     expect(extractWardNumber("वार्ड नंबर 2 - शेरगढ रोड़", "")).toBe(2)
     expect(extractWardNumber("", "249044-001-000001-001-R")).toBe(1)
     expect(extractWardNumber("Vijay singh", "249044-001-000001-001-R")).toBe(1)
-    expect(extractWardNumber("वार्ड नंबर 2 - शेरगढ रोड़", "249044-000-000232-006-C")).toBe(2)
+    expect(
+      extractWardNumber("वार्ड नंबर 2 - शेरगढ रोड़", "249044-000-000232-006-C")
+    ).toBe(2)
     expect(extractWardNumber("", "249044-000-000232-006-C")).toBeNull()
+    expect(extractWardNumber("वार्ड नं0 11", "")).toBe(11)
+    expect(extractWardNumber("वार्ड नं 11", "")).toBe(11)
+    expect(extractWardNumber("वार्ड संख्या 11", "")).toBe(11)
+    expect(extractWardNumber("वार्ड सं0 16", "")).toBe(16)
+    expect(extractWardNumber("वार्ड न० 1 नगर पालिका", "")).toBe(1)
+    expect(extractWardNumber("Ward No. 5", "")).toBe(5)
   })
 
   it("parses sentinels safely", () => {
@@ -135,9 +143,9 @@ describe("column-maps", () => {
     }
     expect(cell(values, map.surveyId)).toMatch(/^\d+-\d{3}-\d+-/)
     expect(cell(values, map.ownerName)).toBe("Vijay singh")
-    expect(normalizeParcelNo(cell(values, map.parcelNo), cell(values, map.surveyId))).toBe(
-      "000001"
-    )
+    expect(
+      normalizeParcelNo(cell(values, map.parcelNo), cell(values, map.surveyId))
+    ).toBe("000001")
     expect(parseBool(cell(values, map.hasMunicipalWaterSupply))).toBe(false)
     expect(parseBool(cell(values, map.hasAlternateWater))).toBe(true)
     expect(cell(values, map.waterSourceType)).toBe("Dug well")
@@ -194,8 +202,7 @@ describe("column-maps", () => {
     const sample: unknown[] = new Array(MAINPURI_WARD01_HEADERS.length).fill("")
     sample[map.pincode] = 205001
     sample[map.colony] = "Nagla Pajwa"
-    sample[map.taxRateZone] =
-      "RATE ZONE 3 (12 meters and upto 24 meters)"
+    sample[map.taxRateZone] = "RATE ZONE 3 (12 meters and upto 24 meters)"
     sample[map.propertyOwnership] = "Individual (Single/Joint)"
     sample[map.propertyType!] = "Mix"
     sample[map.propertyUse] = "Residential/Commercial"
