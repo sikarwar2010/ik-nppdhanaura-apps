@@ -19,6 +19,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { usePermission } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
+import { downloadAuthenticatedExport } from "@/lib/download-blob"
 
 import { useLocale } from "@workspace/i18n"
 import { ImportDropzone } from "./_components/import-dropzone"
@@ -265,6 +266,21 @@ function ImportWizard() {
                     onClick={() => start.mutate()}
                   >
                     {start.isPending ? t("common.loading") : t("import.start")}
+                  </Button>
+                ) : null}
+                {(job.failedRows > 0 || (job.errors?.length ?? 0) > 0) &&
+                canRead ? (
+                  <Button
+                    variant="outline"
+                    className="cursor-pointer"
+                    onClick={() => {
+                      void downloadAuthenticatedExport(
+                        `/api/v1/imports/${job.id}/errors.csv`,
+                        `import-errors-${job.id}.csv`
+                      ).catch((error: Error) => toast.error(error.message))
+                    }}
+                  >
+                    {t("import.downloadErrors")}
                   </Button>
                 ) : null}
                 <ImportErrorsTable errors={job.errors ?? []} />

@@ -15,6 +15,9 @@ import {
   dhanauraOwnerFieldsForUpdate,
   findHeaderRow,
   gisUseFromPropertyType,
+  importErrorMessage,
+  importErrorSurveyId,
+  importErrorsToCsv,
   isDhanauraHeaders,
   mergeDhanauraSourceExtras,
   missingDhanauraRequired,
@@ -581,7 +584,92 @@ describe("dhanaura GIS workbook layout", () => {
       }).surveyId
     ).toBe("249044-007-000012-001-C")
     expect(gisUseFromPropertyType("").recognized).toBe(false)
-    expect(gisUseFromPropertyType("दुकान").letter).toBe("R")
+    expect(gisUseFromPropertyType("").letter).toBe("")
+    expect(gisUseFromPropertyType("दुकान")).toEqual({
+      letter: "",
+      recognized: false,
+    })
+    expect(gisUseFromPropertyType("संयुक्त")).toEqual({
+      letter: "M",
+      recognized: true,
+    })
+    expect(gisUseFromPropertyType("गैरआवासीय")).toEqual({
+      letter: "C",
+      recognized: true,
+    })
+    expect(gisUseFromPropertyType("प्लाट")).toEqual({
+      letter: "P",
+      recognized: true,
+    })
+    expect(gisUseFromPropertyType("आवासीय, व्यावसायिक")).toEqual({
+      letter: "M",
+      recognized: true,
+    })
+    expect(gisUseFromPropertyType("सामाजिक").letter).not.toBe("R")
+    expect(
+      surveyIdForHouse({
+        ulbCode: "800698",
+        wardNumber: 11,
+        houseKey: "12",
+        propertyType: "संयुक्त",
+      }).surveyId
+    ).toBe("800698-011-000012-001-M")
+    expect(
+      surveyIdForHouse({
+        ulbCode: "800698",
+        wardNumber: 11,
+        houseKey: "13",
+        propertyType: "गैरआवासीय",
+      }).surveyId
+    ).toBe("800698-011-000013-001-C")
+    expect(
+      surveyIdForHouse({
+        ulbCode: "800698",
+        wardNumber: 11,
+        houseKey: "15",
+        propertyType: "आवासीय",
+      }).surveyId
+    ).toBe("800698-011-000015-001-R")
+    expect(
+      importErrorSurveyId({
+        ulbCode: "800698",
+        wardNumber: 11,
+        houseKey: "12",
+        propertyType: "संयुक्त",
+      })
+    ).toBe("800698-011-000012-001-M")
+    expect(
+      importErrorSurveyId({
+        ulbCode: "800698",
+        wardNumber: 11,
+        houseKey: "12",
+        propertyType: "सामाजिक",
+      })
+    ).toBeNull()
+    expect(
+      importErrorMessage(
+        "12",
+        null,
+        'Property type "सामाजिक" is not a recognized GIS use'
+      )
+    ).toBe(
+      'New house number 12: Property type "सामाजिक" is not a recognized GIS use'
+    )
+    expect(
+      importErrorMessage(
+        "12",
+        "800698-011-000012-001-M",
+        "Road width is required"
+      )
+    ).toBe("Road width is required")
+    expect(() =>
+      surveyIdForHouse({
+        ulbCode: "249044",
+        wardNumber: 1,
+        houseKey: "12",
+        propertyType: "सामाजिक",
+      })
+    ).toThrow(/not a recognized GIS use/)
     expect(() =>
       surveyIdForHouse({
         ulbCode: "249044",
@@ -691,15 +779,15 @@ describe("dhanaura GIS workbook layout", () => {
     expect(slice.indexOf("$transaction")).toBeLessThan(
       slice.indexOf("updated++")
     )
-    expect(slice).toContain(
-      "message: `Ward not found for ${parsed.wardNumber}`"
-    )
+    expect(slice).toContain("Ward not found for ${parsed.wardNumber}")
   })
 
   it("still requires import:create before upload", () => {
     const src = readFileSync(join(__dirname, "imports.controller.ts"), "utf8")
     expect(src).toContain('@RequirePermission("import:create")')
     expect(src).toContain('@Post("upload")')
+    expect(src).toContain('@Get(":id/errors.csv")')
+    expect(src).toContain('@RequirePermission("import:read")')
   })
 
   it("exports Hindi GIS values from the same columns", () => {
@@ -999,6 +1087,7 @@ describe("dhanaura GIS workbook layout", () => {
     expect(layout?.missingRequired).toEqual([])
     expect(layout?.dhanauraMap?.wardNumber).toBe(-1)
     expect(layout?.dhanauraMap?.newHouseNo).toBeGreaterThanOrEqual(0)
+    expect(layout?.dhanauraMap?.roadWidthMeters).toBe(29)
     expect(layout?.sheetWardNumber).toBe(11)
 
     let dataRows = 0
@@ -1017,6 +1106,133 @@ describe("dhanaura GIS workbook layout", () => {
       expect(parsed.wardNumber).toBe(11)
     }
     expect(dataRows).toBeGreaterThan(0)
+
+    for (const house of ["12", "13", "15"]) {
+      let found = false
+      for (
+        let rowNumber = layout!.headerRowNumber + 1;
+        rowNumber <= layout!.sheet.rowCount;
+        rowNumber++
+      ) {
+        const values = readRowStrings(
+          layout!.sheet.getRow(rowNumber),
+          layout!.columnCount
+        )
+        const parsed = parseDhanauraRow(
+          values,
+          layout!.dhanauraMap!,
+          layout!.sheetWardNumber
+        )
+        if (parsed.newHouseNo !== house) continue
+        found = true
+        expect(values.join(" ")).not.toContain("ख्वइरमबज")
+        expect(values.join(" ")).not.toContain("[object Object]")
+        expect(
+          parsed.errors.filter(
+            (error) => error.field === "totalBuiltUpAreaSqFt"
+          )
+        ).toEqual([])
+        expect(parsed.totalBuiltUpAreaSqFt).toEqual(expect.any(Number))
+        expect(parsed.roadWidthMeters.trim().length).toBeGreaterThan(0)
+        expect(parsed.taxRateZone).toBeTruthy()
+        break
+      }
+      expect(found).toBe(true)
+    }
+  })
+
+  it("maps the Ward 11 road-width header and keeps a blank width unresolved", () => {
+    const headers = [...DHANAURA_HEADERS]
+    headers[28] = "सडक की चैडाई मी0"
+    expect(buildDhanauraColumnMap(headers).roadWidthMeters).toBe(28)
+    headers[28] = "सडक की चैडाई मीटर"
+    expect(buildDhanauraColumnMap(headers).roadWidthMeters).toBe(28)
+    headers[28] = "सडक की चैडाई"
+    expect(buildDhanauraColumnMap(headers).roadWidthMeters).toBe(28)
+
+    const map = buildDhanauraColumnMap([...DHANAURA_HEADERS])
+    const blank = parseDhanauraRow(sampleGisRow({ 28: "" }), map)
+    expect(blank.roadWidthMeters).toBe("")
+    expect(blank.taxRateZone).toBeNull()
+    expect(
+      decideImportedTaxRateZone({
+        roadWidth: blank.roadWidthMeters,
+        existingTaxRateZone: null,
+      })
+    ).toEqual({
+      kind: "error",
+      field: "roadWidthMeters",
+      message: "Road width is required to assign the tax road zone",
+    })
+    expect(
+      decideImportedTaxRateZone({
+        roadWidth: "",
+        existingTaxRateZone: "RATE ZONE 1 (Upto 9 Meters)",
+      }).kind
+    ).toBe("keep")
+  })
+
+  it("sums same-row formulas that have no cached result and rejects other text", () => {
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet("Sheet1")
+    sheet.getCell("T1").value = 100
+    sheet.getCell("U1").value = 25
+    sheet.getCell("V1").value = null
+    sheet.getCell("P1").value = { formula: "T1+U1+V1" }
+    sheet.getCell("P1").font = { name: "Kruti Dev 010" }
+    expect(readCellDisplay(sheet.getCell("P1"))).toBe("125")
+
+    sheet.getCell("T2").value = 10
+    sheet.getCell("P2").value = { formula: "T2+U2", result: 10 }
+    expect(readCellDisplay(sheet.getCell("P2"))).toBe("10")
+
+    sheet.getCell("T3").value = "abc"
+    sheet.getCell("U3").value = 4
+    sheet.getCell("P3").value = { formula: "T3+U3" }
+    expect(readCellDisplay(sheet.getCell("P3"))).toBe("=T3+U3")
+
+    sheet.getCell("P4").value = { formula: "SUM(T4:U4)" }
+    expect(readCellDisplay(sheet.getCell("P4"))).toBe("=SUM(T4:U4)")
+
+    const map = buildDhanauraColumnMap([...DHANAURA_HEADERS])
+    const invalid = parseDhanauraRow(sampleGisRow({ 15: "abc" }), map)
+    expect(invalid.errors).toContainEqual({
+      field: "totalBuiltUpAreaSqFt",
+      message: "totalBuiltUpAreaSqFt must be a number",
+    })
+    expect(invalid.totalBuiltUpAreaSqFt).toBeUndefined()
+
+    const formula = parseDhanauraRow(sampleGisRow({ 15: "=T1+U1" }), map)
+    expect(formula.errors).toContainEqual({
+      field: "totalBuiltUpAreaSqFt",
+      message: "totalBuiltUpAreaSqFt formula =T1+U1 could not be calculated",
+    })
+
+    const unrecognized = parseDhanauraRow(sampleGisRow({ 9: "सामाजिक" }), map)
+    expect(unrecognized.propertyType).toBe("सामाजिक")
+    expect(unrecognized.errors).toContainEqual({
+      field: "propertyType",
+      message: 'Property type "सामाजिक" is not a recognized GIS use',
+    })
+    const missingType = parseDhanauraRow(sampleGisRow({ 9: "" }), map)
+    expect(missingType.errors).toContainEqual({
+      field: "propertyType",
+      message: "Property type is required to assign the GIS use code",
+    })
+
+    expect(
+      importErrorsToCsv([
+        {
+          rowNumber: 14,
+          surveyId: "800698-011-000012-001-M",
+          field: "roadWidthMeters",
+          severity: "error",
+          message: 'Road width "a,b" does not match',
+        },
+      ])
+    ).toBe(
+      'row,surveyId,field,severity,message\r\n14,800698-011-000012-001-M,roadWidthMeters,error,"Road width ""a,b"" does not match"'
+    )
   })
 
   it("describes invalid header workbooks with sheet and column diagnostics", () => {

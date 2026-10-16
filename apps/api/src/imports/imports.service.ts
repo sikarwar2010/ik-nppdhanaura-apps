@@ -35,6 +35,9 @@ import {
   decideImportedTaxRateZone,
   describeWorkbookHeaderFailure,
   dhanauraOwnerFieldsForUpdate,
+  importErrorMessage,
+  importErrorSurveyId,
+  importErrorsToCsv,
   mergeDhanauraSourceExtras,
   parseDhanauraRow,
   readImportLayout,
@@ -159,6 +162,26 @@ export class ImportsService {
     })
     if (!job) throw new NotFoundException("Import job not found")
     return job
+  }
+
+  async errorsCsv(jobId: string) {
+    const job = await this.prisma.importJob.findUnique({
+      where: { id: jobId },
+      select: { id: true },
+    })
+    if (!job) throw new NotFoundException("Import job not found")
+    const errors = await this.prisma.importError.findMany({
+      where: { importJobId: jobId },
+      orderBy: [{ rowNumber: "asc" }, { field: "asc" }],
+      select: {
+        rowNumber: true,
+        surveyId: true,
+        field: true,
+        severity: true,
+        message: true,
+      },
+    })
+    return importErrorsToCsv(errors)
   }
 
   async list(
@@ -702,6 +725,29 @@ export class ImportsService {
       }
       processed++
 
+      const recordIssue = async (
+        field: string,
+        message: string,
+        severity: "error" | "warning" = "error"
+      ) => {
+        const surveyId = importErrorSurveyId({
+          ulbCode,
+          wardNumber: parsed.wardNumber,
+          houseKey: parsed.houseKey,
+          propertyType: parsed.propertyType,
+        })
+        await this.prisma.importError.create({
+          data: {
+            importJobId: job.id,
+            rowNumber,
+            field,
+            surveyId,
+            message: importErrorMessage(parsed.houseKey, surveyId, message),
+            severity,
+          },
+        })
+      }
+
       if (parsed.errors.length > 0 || parsed.wardNumber == null) {
         failed++
         const rowErrors =
@@ -709,16 +755,7 @@ export class ImportsService {
             ? parsed.errors
             : [{ field: "wardNumber", message: "Ward number is required" }]
         for (const rowError of rowErrors) {
-          await this.prisma.importError.create({
-            data: {
-              importJobId: job.id,
-              rowNumber,
-              field: rowError.field,
-              surveyId: parsed.houseKey || null,
-              message: rowError.message,
-              severity: "error",
-            },
-          })
+          await recordIssue(rowError.field, rowError.message)
         }
         continue
       }
@@ -726,16 +763,10 @@ export class ImportsService {
       const ward = wardByNumber.get(parsed.wardNumber)
       if (!ward) {
         failed++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            field: "wardNumber",
-            surveyId: parsed.houseKey || null,
-            message: `Ward not found for ${parsed.wardNumber}`,
-            severity: "error",
-          },
-        })
+        await recordIssue(
+          "wardNumber",
+          `Ward not found for ${parsed.wardNumber}`
+        )
         continue
       }
 
@@ -748,34 +779,10 @@ export class ImportsService {
       const identityKey = `${ward.id}:${identity.parcelNo}:${identity.propertyNo}`
       if (seenIdentity.has(identityKey)) {
         failed++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            field: "houseNo",
-            surveyId: identity.surveyId,
-            message: "Duplicate house number in this file",
-            severity: "error",
-          },
-        })
+        await recordIssue("houseNo", "Duplicate house number in this file")
         continue
       }
       seenIdentity.add(identityKey)
-      if (!identity.gisUseRecognized) {
-        identityWarnings++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            field: "propertyType",
-            surveyId: identity.surveyId,
-            message: parsed.propertyType
-              ? `GIS use code defaulted to R because property type "${parsed.propertyType}" is not recognized`
-              : "GIS use code defaulted to R because property type is blank",
-            severity: "warning",
-          },
-        })
-      }
       const matchSelect = {
         id: true,
         presentHouseNo: true,
@@ -824,16 +831,7 @@ export class ImportsService {
       })
       if (decision.kind === "error") {
         failed++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            field: "houseNo",
-            surveyId: identity.surveyId,
-            message: decision.message,
-            severity: "error",
-          },
-        })
+        await recordIssue("houseNo", decision.message)
         continue
       }
 
@@ -844,30 +842,12 @@ export class ImportsService {
       })
       if (zoneDecision.kind === "error") {
         failed++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            field: zoneDecision.field,
-            surveyId: identity.surveyId,
-            message: zoneDecision.message,
-            severity: "error",
-          },
-        })
+        await recordIssue(zoneDecision.field, zoneDecision.message)
         continue
       }
       if (zoneDecision.kind === "keep" && zoneDecision.warning) {
         identityWarnings++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            field: "roadWidthMeters",
-            surveyId: identity.surveyId,
-            message: zoneDecision.warning,
-            severity: "warning",
-          },
-        })
+        await recordIssue("roadWidthMeters", zoneDecision.warning, "warning")
       }
 
       const floorsRaw =
@@ -1016,15 +996,7 @@ export class ImportsService {
         }
       } catch (err) {
         failed++
-        await this.prisma.importError.create({
-          data: {
-            importJobId: job.id,
-            rowNumber,
-            surveyId: identity.surveyId,
-            message: formatImportErrorMessage(err),
-            severity: "error",
-          },
-        })
+        await recordIssue("surveyId", formatImportErrorMessage(err))
       }
     }
 

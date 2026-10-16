@@ -500,6 +500,20 @@ export function excelValueToString(value: unknown): string {
   if (typeof value === "object") {
     const obj = value as Record<string, unknown>
     if (typeof obj.text === "string") return obj.text.trim()
+    const formula =
+      typeof obj.formula === "string"
+        ? obj.formula
+        : typeof obj.sharedFormula === "string"
+          ? obj.sharedFormula
+          : null
+    if (formula != null) {
+      if ("result" in obj && obj.result != null && obj.result !== "") {
+        const rendered = excelValueToString(obj.result)
+        if (rendered && rendered !== "[object Object]") return rendered
+      }
+      const source = formula.trim().replace(/^=/, "")
+      return source ? `=${source}` : ""
+    }
     if ("result" in obj) return excelValueToString(obj.result)
     if (Array.isArray(obj.richText)) {
       return obj.richText
@@ -531,8 +545,13 @@ export function parseBool(value: string): boolean | undefined {
 }
 
 export function parseNumber(value: string): number | undefined {
-  if (!value || EMPTY_CELL.test(value.toLowerCase())) return undefined
-  const n = Number(String(value).replace(/,/g, ""))
+  if (!value || EMPTY_CELL.test(value.trim().toLowerCase())) return undefined
+  const folded = foldDevanagariDigits(value)
+    .replace(/,/g, "")
+    .replace(/\s+/g, "")
+  if (!folded || EMPTY_CELL.test(folded.toLowerCase())) return undefined
+  if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(folded)) return undefined
+  const n = Number(folded)
   return Number.isFinite(n) ? n : undefined
 }
 

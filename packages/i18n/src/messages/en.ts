@@ -177,6 +177,7 @@ export const en = {
   "import.skipDuplicates": "Skip duplicates",
   "import.loadFailed": "Could not load this import job.",
   "import.rowIssues": "Row issues",
+  "import.downloadErrors": "Download error report",
   "qc.surveysInScope": "Surveys in scope",
   "qc.complete": "Complete",
   "qc.needsReview": "Needs review",

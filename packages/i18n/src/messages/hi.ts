@@ -178,6 +178,7 @@ export const hi: Record<MessageKey, string> = {
   "import.skipDuplicates": "डुप्लिकेट छोड़ें",
   "import.loadFailed": "यह आयात कार्य लोड नहीं हो सका।",
   "import.rowIssues": "पंक्ति समस्याएँ",
+  "import.downloadErrors": "त्रुटि रिपोर्ट डाउनलोड करें",
   "qc.surveysInScope": "दायरे में सर्वेक्षण",
   "qc.complete": "पूर्ण",
   "qc.needsReview": "समीक्षा आवश्यक",

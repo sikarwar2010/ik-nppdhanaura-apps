@@ -343,6 +343,8 @@ const ALIASES: Alias[] = [
       "सड़कचौड़ाईमी0",
       "सड़कचौड़ाईमी",
       "सडककीचैडाई",
+      "सडककीचैडाईमी0",
+      "सडककीचैडाईमीटर",
       "सड़ककीचौड़ाई",
       "सडककीचौड़ाई",
       "roadwidth",
@@ -632,7 +634,9 @@ export function missingDhanauraRequired(
 }
 
 /** One positive ward number written in the title rows. Null when absent or mixed. */
-export function unambiguousSheetWardNumber(titleRows: string[][]): number | null {
+export function unambiguousSheetWardNumber(
+  titleRows: string[][]
+): number | null {
   const found = new Set<number>()
   for (const row of titleRows) {
     for (const cell of row) {
@@ -733,6 +737,99 @@ function rowHasKrutiSignal(
   return false
 }
 
+function columnIndex(letters: string): number {
+  let index = 0
+  for (const char of letters.toUpperCase()) {
+    index = index * 26 + (char.charCodeAt(0) - 64)
+  }
+  return index
+}
+
+function cellRowNumber(cell: ExcelJS.Cell): number {
+  const match = cell.address.match(/(\d+)$/)
+  return match ? Number(match[1]) : 0
+}
+
+function formulaSource(value: object): string | null {
+  const record = value as { formula?: unknown; sharedFormula?: unknown }
+  if (typeof record.formula === "string" && record.formula.trim()) {
+    return record.formula.trim()
+  }
+  if (typeof record.sharedFormula === "string" && record.sharedFormula.trim()) {
+    return record.sharedFormula.trim()
+  }
+  return null
+}
+
+function cachedFormulaText(value: object): string | null {
+  if (!("result" in value)) return null
+  const result = (value as { result?: unknown }).result
+  if (typeof result === "number" && Number.isFinite(result))
+    return String(result)
+  if (typeof result === "string" && result.trim()) return result.trim()
+  return null
+}
+
+/**
+ * Same-row addition only, for formulas Excel saved without a cached result.
+ * Blank operands are Excel zeros. Any other formula, or a non-numeric operand,
+ * returns null so the row fails instead of becoming zero or "[object Object]".
+ */
+function evaluateSameRowSum(
+  cell: ExcelJS.Cell,
+  formula: string,
+  stack: Set<string>
+): number | null {
+  const cleaned = formula.trim().replace(/^=/, "").replace(/\s+/g, "")
+  if (!/^([A-Za-z]+\d+)(\+[A-Za-z]+\d+)*$/.test(cleaned)) return null
+  const rowNumber = cellRowNumber(cell)
+  let total = 0
+  for (const part of cleaned.split("+")) {
+    const match = part.match(/^([A-Za-z]+)(\d+)$/)
+    const letters = match?.[1]
+    const rowText = match?.[2]
+    if (!letters || !rowText) return null
+    if (Number(rowText) !== rowNumber) return null
+    const operand = cell.worksheet.getCell(rowNumber, columnIndex(letters))
+    const numeric = numericOperand(operand, stack)
+    if (numeric == null) return null
+    total += numeric
+  }
+  return total
+}
+
+function numericOperand(cell: ExcelJS.Cell, stack: Set<string>): number | null {
+  const value = cell.value
+  if (value == null || value === "") return 0
+  if (typeof value === "number") return Number.isFinite(value) ? value : null
+  if (typeof value === "string") {
+    const trimmed = value.trim()
+    if (!trimmed) return 0
+    const parsed = parseNumber(trimmed)
+    return parsed === undefined ? null : parsed
+  }
+  if (typeof value === "object") {
+    const formula = formulaSource(value)
+    if (formula == null) return null
+    const cached = cachedFormulaText(value)
+    if (cached != null) {
+      const parsed = parseNumber(cached)
+      return parsed === undefined ? null : parsed
+    }
+    if (stack.has(cell.address)) return null
+    stack.add(cell.address)
+    const sum = evaluateSameRowSum(cell, formula, stack)
+    stack.delete(cell.address)
+    return sum
+  }
+  return null
+}
+
+function unresolvedFormulaText(formula: string): string {
+  const source = formula.trim().replace(/^=/, "")
+  return source ? `=${source}` : ""
+}
+
 export function readCellDisplay(
   cell: ExcelJS.Cell,
   options?: CellReadOptions
@@ -744,6 +841,16 @@ export function readCellDisplay(
   if (value == null) return ""
   const fontName = cell.font?.name
   const decodeKrutiRow = options?.decodeKrutiRow === true
+  if (typeof value === "object" && formulaSource(value)) {
+    const formula = formulaSource(value) ?? ""
+    const cached = cachedFormulaText(value)
+    if (cached != null) {
+      return decodeLegacyCellText(cached, fontName, decodeKrutiRow)
+    }
+    const sum = evaluateSameRowSum(cell, formula, new Set([cell.address]))
+    if (sum != null) return String(sum)
+    return unresolvedFormulaText(formula)
+  }
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return ""
     const formatted =
@@ -768,7 +875,11 @@ export function readCellDisplay(
   }
   const text = cell.text?.trim() ?? ""
   if (text) return decodeLegacyCellText(text, fontName, decodeKrutiRow)
-  return decodeLegacyCellText(excelValueToString(value), fontName, decodeKrutiRow)
+  return decodeLegacyCellText(
+    excelValueToString(value),
+    fontName,
+    decodeKrutiRow
+  )
 }
 
 export function readRowStrings(
@@ -779,7 +890,9 @@ export function readRowStrings(
   const decodeKrutiRow = rowHasKrutiSignal(row, columnCount, options)
   const values: string[] = []
   for (let col = 1; col <= columnCount; col++) {
-    values.push(readCellDisplay(row.getCell(col), { ...options, decodeKrutiRow }))
+    values.push(
+      readCellDisplay(row.getCell(col), { ...options, decodeKrutiRow })
+    )
   }
   return values
 }
@@ -963,12 +1076,20 @@ const GIS_USE_BY_PROPERTY_TYPE: Record<string, string> = {
   commercial: "C",
   व्यावसायिक: "C",
   वाणिज्यिक: "C",
+  गैरआवासीय: "C",
+  "गैर आवासीय": "C",
+  "non-residential": "C",
+  "non residential": "C",
   mix: "M",
   mixed: "M",
   मिश्रित: "M",
+  संयुक्त: "M",
+  "आवासीय,व्यावसायिक": "M",
+  "आवासीय,वाणिज्यिक": "M",
   "open land": "P",
   खुला: "P",
   "खाली प्लाट": "P",
+  प्लाट: "P",
 }
 
 function asciiDigits(value: string): string {
@@ -992,9 +1113,11 @@ export function gisUseFromPropertyType(propertyType: string): {
     .normalize("NFC")
     .trim()
     .toLowerCase()
+    .replace(/\s*,\s*/g, ",")
     .replace(/\s+/g, " ")
+  if (!token) return { letter: "", recognized: false }
   const letter = GIS_USE_BY_PROPERTY_TYPE[token]
-  if (!letter) return { letter: "R", recognized: false }
+  if (!letter) return { letter: "", recognized: false }
   return { letter, recognized: true }
 }
 
@@ -1020,6 +1143,13 @@ export function surveyIdForHouse(input: {
     throw new Error("House number must be numeric to build the parcel segment")
   }
   const gis = gisUseFromPropertyType(input.propertyType ?? "")
+  if (!gis.recognized) {
+    throw new Error(
+      input.propertyType?.trim()
+        ? `Property type "${input.propertyType.trim()}" is not a recognized GIS use`
+        : "Property type is required to assign the GIS use code"
+    )
+  }
   const parcelNo = normalizeParcelNo(digits)
   const propertyNo = normalizePropertyNo(DEFAULT_UNIT_NO)
   return {
@@ -1035,6 +1165,67 @@ export function surveyIdForHouse(input: {
       gisUseCode: gis.letter,
     }),
   }
+}
+
+/**
+ * Generated GIS id for an error row. Null when the house number is not numeric
+ * or the property type has no GIS letter — never a house number or row number.
+ */
+export function importErrorSurveyId(input: {
+  ulbCode: string
+  wardNumber: number | null
+  houseKey: string
+  propertyType: string
+}): string | null {
+  if (input.wardNumber == null || input.wardNumber <= 0) return null
+  if (!parcelDigitsFromHouse(input.houseKey)) return null
+  if (!gisUseFromPropertyType(input.propertyType).recognized) return null
+  return surveyIdForHouse({
+    ulbCode: input.ulbCode,
+    wardNumber: input.wardNumber,
+    houseKey: input.houseKey,
+    propertyType: input.propertyType,
+  }).surveyId
+}
+
+export function importErrorMessage(
+  houseKey: string,
+  surveyId: string | null,
+  message: string
+): string {
+  if (surveyId || !houseKey.trim()) return message
+  return `New house number ${houseKey.trim()}: ${message}`
+}
+
+export function importErrorsToCsv(
+  errors: Array<{
+    rowNumber: number
+    surveyId: string | null
+    field: string | null
+    severity: string
+    message: string
+  }>
+): string {
+  const lines = ["row,surveyId,field,severity,message"]
+  for (const error of errors) {
+    lines.push(
+      [
+        String(error.rowNumber),
+        error.surveyId ?? "",
+        error.field ?? "",
+        error.severity,
+        error.message,
+      ]
+        .map(csvCell)
+        .join(",")
+    )
+  }
+  return lines.join("\r\n")
+}
+
+function csvCell(value: string): string {
+  if (/[",\r\n]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
 }
 
 export type ImportedTaxRateZoneDecision =
@@ -1250,6 +1441,13 @@ function readMeasurement(
   errors: Array<{ field: string; message: string }>
 ): number | undefined {
   if (!raw) return undefined
+  if (raw.startsWith("=")) {
+    errors.push({
+      field,
+      message: `${field} formula ${raw} could not be calculated`,
+    })
+    return undefined
+  }
   const value = parseNumber(raw)
   if (value === undefined) {
     errors.push({ field, message: `${field} must be a number` })
@@ -1399,6 +1597,18 @@ export function parseDhanauraRow(
         : "Ward number is required",
     })
   }
+  const propertyType = fieldText(values, map.propertyType)
+  if (!empty) {
+    const gis = gisUseFromPropertyType(propertyType)
+    if (!gis.recognized) {
+      errors.push({
+        field: "propertyType",
+        message: propertyType
+          ? `Property type "${propertyType}" is not a recognized GIS use`
+          : "Property type is required to assign the GIS use code",
+      })
+    }
+  }
 
   return {
     empty,
@@ -1412,7 +1622,7 @@ export function parseDhanauraRow(
     ownerName: fieldText(values, map.ownerName),
     ownerFatherName: fieldText(values, map.ownerFatherName),
     mobile,
-    propertyType: fieldText(values, map.propertyType),
+    propertyType,
     buildingType,
     yearOfConstruction: fieldText(values, map.yearOfConstruction),
     roadType: fieldText(values, map.roadType),

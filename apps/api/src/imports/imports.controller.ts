@@ -5,11 +5,13 @@ import {
   Param,
   Post,
   Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common"
 import { FileInterceptor } from "@nestjs/platform-express"
 import { DuplicateStrategy } from "@prisma/client"
+import type { Response } from "express"
 
 import {
   CurrentUser,
@@ -59,6 +61,19 @@ export class ImportsController {
       { status, q }
     )
     return { success: true, data: items, meta }
+  }
+
+  @Get(":id/errors.csv")
+  @RequirePermission("import:read")
+  async downloadErrors(@Param("id") id: string, @Res() res: Response) {
+    const csv = await this.importsService.errorsCsv(id)
+    const safeId = id.replace(/[^a-zA-Z0-9_-]/g, "")
+    res.setHeader("Content-Type", "text/csv; charset=utf-8")
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="import-errors-${safeId || "job"}.csv"`
+    )
+    res.send(`\uFEFF${csv}`)
   }
 
   @Get(":id")
