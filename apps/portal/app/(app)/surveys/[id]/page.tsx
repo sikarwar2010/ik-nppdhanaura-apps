@@ -84,6 +84,7 @@ type SurveyDetail = {
   dataQualityStatus: string
   ownerName: string | null
   ownerFatherName: string | null
+  sourceExtras?: Record<string, unknown> | null
   mobile: string | null
   ownerAadhaar: string | null
   propertyOwnership: string | null
@@ -439,8 +440,22 @@ export default function SurveyDetailPage() {
             label="Date of Survey"
             value={s.surveyedAt ? new Date(s.surveyedAt).toLocaleString() : "—"}
           />
-          <Field label="Owner Name" value={s.ownerName} deva />
-          <Field label="Owner Father Name" value={s.ownerFatherName} deva />
+          <Field
+            label={t("survey.previousOwnerName")}
+            value={sourceExtraText(s.sourceExtras, "previousOwnerName")}
+            deva
+          />
+          <Field
+            label={t("survey.previousOwnerFather")}
+            value={sourceExtraText(s.sourceExtras, "previousOwnerFatherName")}
+            deva
+          />
+          <Field label={t("survey.ownerName")} value={s.ownerName} deva />
+          <Field
+            label={t("survey.ownerFather")}
+            value={s.ownerFatherName}
+            deva
+          />
           <Field label="Mobile No" value={s.mobile} />
           <Field
             label="Ward Name"
@@ -842,6 +857,15 @@ function dash(value?: string | number | null) {
   return text.length > 0 ? text : "—"
 }
 
+function sourceExtraText(
+  extras: Record<string, unknown> | null | undefined,
+  key: string
+): string | null {
+  if (!extras || typeof extras !== "object") return null
+  const value = extras[key]
+  return typeof value === "string" ? value : null
+}
+
 function statusBadgeClass(status: string) {
   if (status === "ACTIVE") {
     return "bg-violet-600/15 text-violet-800 hover:bg-violet-600/15 dark:text-violet-300"
@@ -915,8 +939,10 @@ const AUDIT_FIELD_LABELS: Record<string, string> = {
   parcelNo: "Parcel No",
   propertyNo: "Property No",
   gisUseCode: "GIS Use Code",
-  ownerName: "Owner Name",
-  ownerFatherName: "Owner Father Name",
+  ownerName: "Current Owner Name",
+  ownerFatherName: "Current Owner Father/Husband Name",
+  previousOwnerName: "Previous Owner Name",
+  previousOwnerFatherName: "Previous Owner Father/Husband Name",
 }
 
 function auditFieldLabel(field: string): string {

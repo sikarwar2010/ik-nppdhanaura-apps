@@ -734,6 +734,52 @@ export function readImportLayout(value: unknown): string | null {
   return typeof layout === "string" ? layout : null
 }
 
+/** Read string keys from Survey.sourceExtras JSON without inventing values. */
+export function readSourceExtraString(
+  extras: unknown,
+  key: string
+): string | null {
+  if (!extras || typeof extras !== "object" || Array.isArray(extras)) return null
+  const value = (extras as Record<string, unknown>)[key]
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+/**
+ * Merge newly parsed Dhanaura extras onto existing JSON.
+ * Blank Excel cells omit keys in `incoming` — those existing values are preserved.
+ */
+export function mergeDhanauraSourceExtras(
+  existing: unknown,
+  incoming: Record<string, string>
+): Record<string, unknown> {
+  const base: Record<string, unknown> =
+    existing && typeof existing === "object" && !Array.isArray(existing)
+      ? { ...(existing as Record<string, unknown>) }
+      : {}
+  for (const [key, value] of Object.entries(incoming)) {
+    if (value.trim()) base[key] = value
+  }
+  base.importLayout = DHANAURA_IMPORT_LAYOUT
+  return base
+}
+
+/**
+ * On GIS re-import UPDATE, blank owner cells must not clear existing DB values.
+ * Returns only the owner fields that should be written.
+ */
+export function dhanauraOwnerFieldsForUpdate(parsed: {
+  ownerName: string
+  ownerFatherName: string
+}): { ownerName?: string; ownerFatherName?: string } {
+  const fields: { ownerName?: string; ownerFatherName?: string } = {}
+  if (parsed.ownerName.trim()) fields.ownerName = parsed.ownerName.trim()
+  if (parsed.ownerFatherName.trim())
+    fields.ownerFatherName = parsed.ownerFatherName.trim()
+  return fields
+}
+
 export type HouseMatch = {
   id: string
   presentHouseNo: string | null

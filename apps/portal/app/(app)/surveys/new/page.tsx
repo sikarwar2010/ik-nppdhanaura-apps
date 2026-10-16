@@ -70,6 +70,8 @@ type FormValues = {
   gisUseCode: string
   wardId: string
   surveyedAt: string
+  previousOwnerName: string
+  previousOwnerFatherName: string
   ownerName: string
   ownerFatherName: string
   mobile: string
@@ -136,6 +138,7 @@ type SurveyRecord = {
   surveyedAt?: string | null
   ownerName?: string | null
   ownerFatherName?: string | null
+  sourceExtras?: Record<string, unknown> | null
   mobile?: string | null
   ownerAadhaar?: string | null
   isSlum?: boolean | null
@@ -192,6 +195,8 @@ const emptyForm: FormValues = {
   gisUseCode: "R",
   wardId: "",
   surveyedAt: "",
+  previousOwnerName: "",
+  previousOwnerFatherName: "",
   ownerName: "",
   ownerFatherName: "",
   mobile: "",
@@ -536,6 +541,16 @@ export default function SurveyFormPage() {
             label={t("survey.date")}
             type="datetime-local"
             register={form.register("surveyedAt")}
+          />
+          <TextField
+            id="previousOwnerName"
+            label={t("survey.previousOwnerName")}
+            register={form.register("previousOwnerName")}
+          />
+          <TextField
+            id="previousOwnerFatherName"
+            label={t("survey.previousOwnerFather")}
+            register={form.register("previousOwnerFatherName")}
           />
           <TextField
             id="ownerName"
@@ -962,6 +977,15 @@ export default function SurveyFormPage() {
   )
 }
 
+function sourceExtraText(
+  extras: Record<string, unknown> | null | undefined,
+  key: string
+): string {
+  if (!extras || typeof extras !== "object") return ""
+  const value = extras[key]
+  return typeof value === "string" ? value : ""
+}
+
 function recordToForm(row: SurveyRecord): FormValues {
   const parsed = parseGisSurveyId(row.surveyId)
   return {
@@ -970,6 +994,11 @@ function recordToForm(row: SurveyRecord): FormValues {
     gisUseCode: parsed?.useLetter ?? "R",
     wardId: row.wardId ?? "",
     surveyedAt: toLocalInput(row.surveyedAt),
+    previousOwnerName: sourceExtraText(row.sourceExtras, "previousOwnerName"),
+    previousOwnerFatherName: sourceExtraText(
+      row.sourceExtras,
+      "previousOwnerFatherName"
+    ),
     ownerName: row.ownerName ?? "",
     ownerFatherName: row.ownerFatherName ?? "",
     mobile: row.mobile ?? "",
@@ -1067,6 +1096,8 @@ function toPayload(values: FormValues, isEdit: boolean) {
     surveyedAt: values.surveyedAt
       ? new Date(values.surveyedAt).toISOString()
       : undefined,
+    previousOwnerName: emptyToUndef(values.previousOwnerName),
+    previousOwnerFatherName: emptyToUndef(values.previousOwnerFatherName),
     ownerName: emptyToUndef(values.ownerName),
     ownerFatherName: emptyToUndef(values.ownerFatherName),
     mobile: emptyToUndef(values.mobile),

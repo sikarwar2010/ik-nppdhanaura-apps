@@ -33,6 +33,8 @@ import {
   countNonEmptyDataRows,
   decideDhanauraMatch,
   decideImportedTaxRateZone,
+  dhanauraOwnerFieldsForUpdate,
+  mergeDhanauraSourceExtras,
   parseDhanauraRow,
   readImportLayout,
   readRowStrings,
@@ -923,7 +925,12 @@ export class ImportsService {
             await tx.survey.update({
               where: { id: existing.id },
               data: {
-                ...dhanauraWriteData(payload, decision.replaceSurveyId),
+                ...dhanauraUpdateWriteData(
+                  payload,
+                  existing.sourceExtras,
+                  decision.replaceSurveyId,
+                  parsed
+                ),
                 deletedAt: null,
                 status: "ACTIVE",
                 floors: { create: floorCreate },
@@ -966,9 +973,11 @@ export class ImportsService {
                 await tx.survey.update({
                   where: { id: conflict.id },
                   data: {
-                    ...dhanauraWriteData(
+                    ...dhanauraUpdateWriteData(
                       keepSavedZone ? omitTaxRateZone(payload) : payload,
-                      replaceSurveyId
+                      conflict.sourceExtras,
+                      replaceSurveyId,
+                      parsed
                     ),
                     deletedAt: null,
                     status: "ACTIVE",
@@ -1220,6 +1229,49 @@ function dhanauraWriteData<
   void propertyNo
   void sourceExtras
   return rest
+}
+
+/**
+ * UPDATE path for Dhanaura GIS: preserve blank owner cells and always merge
+ * sourceExtras (previous owners + other GIS extras). Non-GIS matches still
+ * strip surveyId / parcelNo / propertyNo via dhanauraWriteData.
+ */
+export function dhanauraUpdateWriteData<
+  T extends {
+    surveyId: string
+    parcelNo: string
+    propertyNo: string
+    ownerName: string | null
+    ownerFatherName: string | null
+    sourceExtras: Prisma.InputJsonValue
+  },
+>(
+  payload: T,
+  existingSourceExtras: Prisma.JsonValue | null,
+  replaceSurveyId: boolean,
+  parsed: {
+    ownerName: string
+    ownerFatherName: string
+    sourceExtras: Record<string, string>
+  }
+) {
+  const base = dhanauraWriteData(payload, replaceSurveyId)
+  const {
+    ownerName: _ownerName,
+    ownerFatherName: _ownerFatherName,
+    ...rest
+  } = base as T & Record<string, unknown>
+  void _ownerName
+  void _ownerFatherName
+  const ownerFields = dhanauraOwnerFieldsForUpdate(parsed)
+  return {
+    ...rest,
+    ...ownerFields,
+    sourceExtras: mergeDhanauraSourceExtras(
+      existingSourceExtras,
+      parsed.sourceExtras
+    ) as Prisma.InputJsonValue,
+  }
 }
 
 function layoutSummary(

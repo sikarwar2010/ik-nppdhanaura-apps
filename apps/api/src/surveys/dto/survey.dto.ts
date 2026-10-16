@@ -62,6 +62,18 @@ export class CreateSurveyDto {
   @IsString()
   ownerFatherName?: string
 
+  /** Previous/old property owner — stored in Survey.sourceExtras (Dhanaura GIS). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  previousOwnerName?: string
+
+  /** Previous owner's father/husband name — stored in Survey.sourceExtras. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  previousOwnerFatherName?: string
+
   @IsOptional()
   @IsString()
   mobile?: string

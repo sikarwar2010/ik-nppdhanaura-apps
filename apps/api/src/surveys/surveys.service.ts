@@ -29,6 +29,7 @@ import {
   verifySurveyIdMatchesRecord,
 } from "./survey-id.util"
 import { buildSurveySearchOr } from "./survey-search.util"
+import { readSourceExtraString } from "../imports/dhanaura-gis-map"
 
 type SurveyIdentityDto = Pick<
   CreateSurveyDto,
@@ -415,12 +416,22 @@ export class SurveysService {
   }
 
   private buildAuditState(
-    survey: Survey & { wardId: string }
+    survey: Survey & { wardId: string; sourceExtras?: Prisma.JsonValue | null }
   ): Record<string, unknown> {
     const parsed = parseGisSurveyId(survey.surveyId)
     return surveyToAuditSnapshot(
       survey as unknown as Record<string, unknown>,
-      { gisUseCode: parsed?.gisUseCode ?? null }
+      {
+        gisUseCode: parsed?.gisUseCode ?? null,
+        previousOwnerName: readSourceExtraString(
+          survey.sourceExtras,
+          "previousOwnerName"
+        ),
+        previousOwnerFatherName: readSourceExtraString(
+          survey.sourceExtras,
+          "previousOwnerFatherName"
+        ),
+      }
     )
   }
 
@@ -458,10 +469,39 @@ export class SurveysService {
     return where
   }
 
+  private mergePreviousOwnerExtras(
+    existing: Prisma.JsonValue | null | undefined,
+    dto: Pick<CreateSurveyDto, "previousOwnerName" | "previousOwnerFatherName">
+  ): Prisma.InputJsonValue | undefined {
+    const patchingPrevious =
+      dto.previousOwnerName !== undefined ||
+      dto.previousOwnerFatherName !== undefined
+    if (!patchingPrevious) return undefined
+
+    const base: Record<string, unknown> =
+      existing && typeof existing === "object" && !Array.isArray(existing)
+        ? { ...(existing as Record<string, unknown>) }
+        : {}
+
+    if (dto.previousOwnerName !== undefined) {
+      const trimmed = dto.previousOwnerName.trim()
+      if (trimmed) base.previousOwnerName = trimmed
+      else delete base.previousOwnerName
+    }
+    if (dto.previousOwnerFatherName !== undefined) {
+      const trimmed = dto.previousOwnerFatherName.trim()
+      if (trimmed) base.previousOwnerFatherName = trimmed
+      else delete base.previousOwnerFatherName
+    }
+
+    return base as Prisma.InputJsonValue
+  }
+
   private toPrismaCreateData(
     dto: CreateSurveyDto,
     identity: ReturnType<typeof resolveSurveyIdentity>
   ): Prisma.SurveyUncheckedCreateInput {
+    const sourceExtras = this.mergePreviousOwnerExtras(null, dto)
     return {
       surveyId: identity.surveyId,
       wardId: dto.wardId!,
@@ -470,6 +510,7 @@ export class SurveysService {
       surveyedAt: dto.surveyedAt ? new Date(dto.surveyedAt) : undefined,
       ownerName: dto.ownerName,
       ownerFatherName: dto.ownerFatherName,
+      ...(sourceExtras !== undefined ? { sourceExtras } : {}),
       mobile: dto.mobile,
       ownerAadhaar: dto.ownerAadhaar,
       isSlum: dto.isSlum ?? false,
@@ -596,7 +637,11 @@ export class SurveysService {
     assign("hasMunicipalWasteService")
     assign("status")
 
-    void current
+    const sourceExtras = this.mergePreviousOwnerExtras(current.sourceExtras, dto)
+    if (sourceExtras !== undefined) {
+      data.sourceExtras = sourceExtras
+    }
+
     return data
   }
 

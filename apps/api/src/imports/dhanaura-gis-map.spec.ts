@@ -10,16 +10,18 @@ import {
   buildDhanauraColumnMap,
   decideDhanauraMatch,
   decideImportedTaxRateZone,
+  dhanauraOwnerFieldsForUpdate,
   findHeaderRow,
   gisUseFromPropertyType,
   isDhanauraHeaders,
+  mergeDhanauraSourceExtras,
   missingDhanauraRequired,
   parseDhanauraRow,
   readCellDisplay,
   resolveWorkbookLayout,
   surveyIdForHouse,
 } from "./dhanaura-gis-map"
-import { importResultStatus } from "./imports.service"
+import { dhanauraUpdateWriteData, importResultStatus } from "./imports.service"
 import {
   buildSurveyExportWorkbook,
   detectExportPreset,
@@ -237,6 +239,210 @@ describe("dhanaura GIS workbook layout", () => {
     ])
     expect(orphanFather.ownerFatherName).toBe(2)
     expect(orphanFather.previousOwnerFatherName).toBe(-1)
+  })
+
+  it("maps old owner only without filling current owner fields", () => {
+    const map = buildDhanauraColumnMap([...DHANAURA_HEADERS])
+    const parsed = parseDhanauraRow(
+      sampleGisRow({
+        3: "सरोज देवी",
+        4: "त्रिलोकी",
+        5: "",
+        6: "",
+      }),
+      map
+    )
+    expect(parsed.sourceExtras.previousOwnerName).toBe("सरोज देवी")
+    expect(parsed.sourceExtras.previousOwnerFatherName).toBe("त्रिलोकी")
+    expect(parsed.ownerName).toBe("")
+    expect(parsed.ownerFatherName).toBe("")
+  })
+
+  it("maps new owner only without filling previous owner extras", () => {
+    const map = buildDhanauraColumnMap([...DHANAURA_HEADERS])
+    const parsed = parseDhanauraRow(
+      sampleGisRow({
+        3: "",
+        4: "",
+        5: "राम कुमार",
+        6: "मोहन लाल",
+      }),
+      map
+    )
+    expect(parsed.ownerName).toBe("राम कुमार")
+    expect(parsed.ownerFatherName).toBe("मोहन लाल")
+    expect(parsed.sourceExtras.previousOwnerName).toBeUndefined()
+    expect(parsed.sourceExtras.previousOwnerFatherName).toBeUndefined()
+  })
+
+  it("keeps both owner sections separate without swapping", () => {
+    const map = buildDhanauraColumnMap([...DHANAURA_HEADERS])
+    const parsed = parseDhanauraRow(sampleGisRow(), map)
+    expect(parsed.sourceExtras.previousOwnerName).toBe("राम लाल")
+    expect(parsed.sourceExtras.previousOwnerFatherName).toBe("श्याम लाल")
+    expect(parsed.ownerName).toBe("सीता देवी")
+    expect(parsed.ownerFatherName).toBe("मोहन लाल")
+    expect(parsed.ownerName).not.toBe(parsed.sourceExtras.previousOwnerName)
+    expect(parsed.ownerFatherName).not.toBe(
+      parsed.sourceExtras.previousOwnerFatherName
+    )
+  })
+
+  it("maps partial owner details without fabricating or cross-copying", () => {
+    const map = buildDhanauraColumnMap([...DHANAURA_HEADERS])
+
+    const nameOnly = parseDhanauraRow(
+      sampleGisRow({ 3: "सरोज देवी", 4: "", 5: "राम कुमार", 6: "" }),
+      map
+    )
+    expect(nameOnly.sourceExtras.previousOwnerName).toBe("सरोज देवी")
+    expect(nameOnly.sourceExtras.previousOwnerFatherName).toBeUndefined()
+    expect(nameOnly.ownerName).toBe("राम कुमार")
+    expect(nameOnly.ownerFatherName).toBe("")
+
+    const fatherOnly = parseDhanauraRow(
+      sampleGisRow({ 3: "", 4: "त्रिलोकी", 5: "", 6: "मोहन लाल" }),
+      map
+    )
+    expect(fatherOnly.sourceExtras.previousOwnerName).toBeUndefined()
+    expect(fatherOnly.sourceExtras.previousOwnerFatherName).toBe("त्रिलोकी")
+    expect(fatherOnly.ownerName).toBe("")
+    expect(fatherOnly.ownerFatherName).toBe("मोहन लाल")
+  })
+
+  it("preserves existing owners on blank Excel cells during update merge", () => {
+    const existingExtras = {
+      importLayout: DHANAURA_IMPORT_LAYOUT,
+      previousOwnerName: "सरोज देवी",
+      previousOwnerFatherName: "त्रिलोकी",
+      serialNo: "1",
+    }
+    const incomingBlankPrevious = {
+      importLayout: DHANAURA_IMPORT_LAYOUT,
+      serialNo: "1",
+    }
+    const merged = mergeDhanauraSourceExtras(
+      existingExtras,
+      incomingBlankPrevious
+    )
+    expect(merged.previousOwnerName).toBe("सरोज देवी")
+    expect(merged.previousOwnerFatherName).toBe("त्रिलोकी")
+    expect(merged.importLayout).toBe(DHANAURA_IMPORT_LAYOUT)
+
+    const withNewPrevious = mergeDhanauraSourceExtras(existingExtras, {
+      importLayout: DHANAURA_IMPORT_LAYOUT,
+      previousOwnerName: "नया पुराना मालिक",
+    })
+    expect(withNewPrevious.previousOwnerName).toBe("नया पुराना मालिक")
+    expect(withNewPrevious.previousOwnerFatherName).toBe("त्रिलोकी")
+
+    expect(
+      dhanauraOwnerFieldsForUpdate({ ownerName: "", ownerFatherName: "" })
+    ).toEqual({})
+    expect(
+      dhanauraOwnerFieldsForUpdate({
+        ownerName: "राम कुमार",
+        ownerFatherName: "",
+      })
+    ).toEqual({ ownerName: "राम कुमार" })
+    expect(
+      dhanauraOwnerFieldsForUpdate({
+        ownerName: "",
+        ownerFatherName: "मोहन लाल",
+      })
+    ).toEqual({ ownerFatherName: "मोहन लाल" })
+  })
+
+  it("merges previous owners on UPDATE even when replaceSurveyId is false", () => {
+    const payload = {
+      surveyId: "KEEP-ME",
+      parcelNo: "KEEP-PARCEL",
+      propertyNo: "KEEP-PROP",
+      ownerName: null as string | null,
+      ownerFatherName: null as string | null,
+      mobile: "9999999999",
+      sourceExtras: {
+        importLayout: DHANAURA_IMPORT_LAYOUT,
+        previousOwnerName: "should-not-replace-directly",
+      },
+    }
+    const parsed = {
+      ownerName: "सीता देवी",
+      ownerFatherName: "",
+      sourceExtras: {
+        importLayout: DHANAURA_IMPORT_LAYOUT,
+        previousOwnerName: "राम लाल",
+        previousOwnerFatherName: "श्याम लाल",
+        serialNo: "9",
+      },
+    }
+
+    const nonGisOverlay = dhanauraUpdateWriteData(
+      payload,
+      { remark: "manual" },
+      false,
+      parsed
+    )
+    expect(nonGisOverlay).not.toHaveProperty("surveyId")
+    expect(nonGisOverlay).not.toHaveProperty("parcelNo")
+    expect(nonGisOverlay).not.toHaveProperty("propertyNo")
+    expect(nonGisOverlay.ownerName).toBe("सीता देवी")
+    expect(nonGisOverlay).not.toHaveProperty("ownerFatherName")
+    expect(nonGisOverlay.sourceExtras).toMatchObject({
+      remark: "manual",
+      importLayout: DHANAURA_IMPORT_LAYOUT,
+      previousOwnerName: "राम लाल",
+      previousOwnerFatherName: "श्याम लाल",
+      serialNo: "9",
+    })
+
+    const gisReimport = dhanauraUpdateWriteData(
+      payload,
+      {
+        importLayout: DHANAURA_IMPORT_LAYOUT,
+        previousOwnerName: "सरोज देवी",
+        previousOwnerFatherName: "त्रिलोकी",
+      },
+      true,
+      {
+        ownerName: "",
+        ownerFatherName: "मोहन लाल",
+        sourceExtras: {
+          importLayout: DHANAURA_IMPORT_LAYOUT,
+          previousOwnerName: "",
+        },
+      }
+    )
+    expect(gisReimport.surveyId).toBe("KEEP-ME")
+    expect(gisReimport.ownerFatherName).toBe("मोहन लाल")
+    expect(gisReimport).not.toHaveProperty("ownerName")
+    expect(gisReimport.sourceExtras).toMatchObject({
+      previousOwnerName: "सरोज देवी",
+      previousOwnerFatherName: "त्रिलोकी",
+      importLayout: DHANAURA_IMPORT_LAYOUT,
+    })
+  })
+
+  it("detects title+header workbook shape with duplicate father headings", () => {
+    const row = sampleGisRow({
+      3: "सरोज देवी",
+      4: "त्रिलोकी",
+      5: "राम कुमार",
+      6: "मोहन लाल",
+    })
+    const workbook = gisWorkbook([row])
+    const layout = resolveWorkbookLayout(workbook)
+    expect(layout?.headerRowNumber).toBe(2)
+    expect(layout?.dhanauraMap?.previousOwnerName).toBe(3)
+    expect(layout?.dhanauraMap?.previousOwnerFatherName).toBe(4)
+    expect(layout?.dhanauraMap?.ownerName).toBe(5)
+    expect(layout?.dhanauraMap?.ownerFatherName).toBe(6)
+
+    const parsed = parseDhanauraRow(row, layout!.dhanauraMap!)
+    expect(parsed.sourceExtras.previousOwnerName).toBe("सरोज देवी")
+    expect(parsed.sourceExtras.previousOwnerFatherName).toBe("त्रिलोकी")
+    expect(parsed.ownerName).toBe("राम कुमार")
+    expect(parsed.ownerFatherName).toBe("मोहन लाल")
   })
 
   it("builds the parcel from the new house number and keeps leading zeros", () => {
@@ -547,6 +753,7 @@ describe("dhanaura GIS workbook layout", () => {
             importLayout: "dhanaura-gis",
             serialNo: "1",
             previousOwnerName: "राम लाल",
+            previousOwnerFatherName: "श्याम लाल",
             propertyTitle: "निवास",
           },
           floors: [
@@ -567,7 +774,10 @@ describe("dhanaura GIS workbook layout", () => {
     const exported = sheet?.getRow(2).values
     const cells = Array.isArray(exported) ? exported.slice(1).map(String) : []
     expect(cells[2]).toBe("12")
+    expect(cells[3]).toBe("राम लाल")
+    expect(cells[4]).toBe("श्याम लाल")
     expect(cells[5]).toBe("सीता देवी")
+    expect(cells[6]).toBe("मोहन लाल")
     expect(cells[7]).toBe("09876543210")
     expect(cells[19]).toBe("0")
     expect(cells[20]).toBe("400")
@@ -579,7 +789,10 @@ describe("dhanaura GIS workbook layout", () => {
       cells,
       roundTrip?.dhanauraMap ?? buildDhanauraColumnMap([...DHANAURA_HEADERS])
     )
+    expect(parsed.sourceExtras.previousOwnerName).toBe("राम लाल")
+    expect(parsed.sourceExtras.previousOwnerFatherName).toBe("श्याम लाल")
     expect(parsed.ownerName).toBe("सीता देवी")
+    expect(parsed.ownerFatherName).toBe("मोहन लाल")
     expect(parsed.locality).toBe("गांधी नगर")
     expect(parsed.mobile).toBe("09876543210")
     expect(parsed.newHouseNo).toBe("12")

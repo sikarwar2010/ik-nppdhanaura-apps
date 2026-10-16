@@ -21,7 +21,11 @@ describe("locale", () => {
   it("translates interface labels and leaves the key set stable", () => {
     assert.equal(translate("en", "auth.email"), "Email")
     assert.equal(translate("hi", "auth.email"), "ईमेल")
-    assert.equal(translate("hi", "survey.ownerName"), "मकान मालिक")
+    assert.equal(translate("hi", "survey.ownerName"), "नया मकान मालिक")
+    assert.equal(
+      translate("hi", "survey.previousOwnerName"),
+      "पुराना मकान मालिक"
+    )
     assert.notEqual(translate("hi", "survey.ownerName"), "सीता देवी")
   })
 })
