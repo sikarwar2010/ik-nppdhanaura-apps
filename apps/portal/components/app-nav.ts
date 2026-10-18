@@ -1,9 +1,11 @@
 import type { MessageKey } from "@workspace/i18n"
 import {
+  Banknote,
   BarChart3,
   ClipboardList,
   FileUp,
   History,
+  Landmark,
   LayoutDashboard,
   ScrollText,
   Settings,
@@ -26,8 +28,9 @@ export function isNavHrefActive(
   pathname: string,
   exact?: boolean
 ): boolean {
-  if (exact) return pathname === href
-  return pathname === href || pathname.startsWith(`${href}/`)
+  const path = href.split("#")[0] ?? href
+  if (exact) return pathname === path
+  return pathname === path || pathname.startsWith(`${path}/`)
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -58,6 +61,61 @@ export const NAV_ITEMS: NavItem[] = [
         title: "Demand Notice",
         href: "/reports/notice",
         permission: "report:read",
+      },
+    ],
+  },
+  {
+    title: "Tax Administration",
+    icon: Landmark,
+    permission: "report:read",
+    children: [
+      {
+        title: "Assessment Years",
+        href: "/reports/tax-rates#assessment-years",
+        permission: "report:read",
+      },
+      {
+        title: "Tax Rates",
+        href: "/reports/tax-rates#tax-rates",
+        permission: "report:read",
+      },
+      {
+        title: "Rebate Settings",
+        href: "/reports/tax-rates#rebate",
+        permission: "report:read",
+      },
+      {
+        title: "Penalty Settings",
+        href: "/reports/tax-rates#penalty",
+        permission: "report:read",
+      },
+    ],
+  },
+  {
+    title: "Tax Collection",
+    icon: Banknote,
+    permission: ["payment:collect", "demand:read"],
+    children: [
+      {
+        title: "Offline Tax Collection",
+        href: "/collections",
+        permission: "payment:collect",
+        exact: true,
+      },
+      {
+        title: "Payment Receipts",
+        href: "/collections/receipts",
+        permission: "demand:read",
+      },
+      {
+        title: "Customer Ledger",
+        href: "/collections/ledger",
+        permission: "demand:read",
+      },
+      {
+        title: "Outstanding Dues",
+        href: "/collections/dues",
+        permission: "demand:read",
       },
     ],
   },
@@ -131,6 +189,15 @@ const NAV_TITLE_KEYS: Record<string, MessageKey> = {
   "Report Builder": "nav.reportBuilder",
   "Tax Rates": "nav.taxRates",
   "Demand Notice": "nav.demandNotice",
+  "Tax Administration": "nav.taxAdministration",
+  "Assessment Years": "nav.assessmentYears",
+  "Rebate Settings": "nav.rebateSettings",
+  "Penalty Settings": "nav.penaltySettings",
+  "Tax Collection": "nav.taxCollection",
+  "Offline Tax Collection": "nav.offlineCollection",
+  "Payment Receipts": "nav.paymentReceipts",
+  "Customer Ledger": "nav.customerLedger",
+  "Outstanding Dues": "nav.outstandingDues",
   Settings: "nav.settings",
   Users: "nav.users",
   Roles: "nav.roles",
@@ -161,6 +228,7 @@ export function isSurveyNavActive(pathname: string): boolean {
 export function getBreadcrumbLabel(pathname: string): string {
   if (pathname.startsWith("/dashboard")) return "Dashboard"
   if (isSurveyNavActive(pathname)) return "Survey"
+  if (pathname.startsWith("/collections")) return "Tax Collection"
   if (pathname.startsWith("/reports")) return "Reports"
   if (pathname.startsWith("/settings") || pathname.startsWith("/audit-logs")) {
     return "Settings"

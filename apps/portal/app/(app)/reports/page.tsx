@@ -17,12 +17,6 @@ import { VisualReportBuilder } from "./_components/visual-report-builder"
 
 type Ward = { id: string; name: string; number: number }
 
-type TaxConfig = {
-  id: string
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
-  version: number
-}
-
 type RefEntry = { id: string; code: string; name: string }
 
 export default function ReportBuilderPage() {
@@ -34,8 +28,6 @@ export default function ReportBuilderPage() {
     to: "",
     autoFilter: false,
   })
-
-  const [assessmentYearId, setAssessmentYearId] = React.useState("")
 
   const wardsQuery = useQuery({
     queryKey: ["wards"],
@@ -52,18 +44,17 @@ export default function ReportBuilderPage() {
     },
   })
 
-  React.useEffect(() => {
-    if (!assessmentYearId && yearsQuery.data?.[0]) {
-      setAssessmentYearId(yearsQuery.data[0].id)
-    }
-  }, [yearsQuery.data, assessmentYearId])
+  const assessmentYearId = yearsQuery.data?.[0]?.id ?? ""
 
   const taxConfigQuery = useQuery({
     queryKey: ["tax-config", filters.wardId, assessmentYearId],
     enabled: Boolean(filters.wardId && assessmentYearId),
     queryFn: async () =>
       (
-        await api.get<TaxConfig>(
+        await api.get<
+          | { configured: true; status: "DRAFT" | "PUBLISHED" | "ARCHIVED" }
+          | { configured: false }
+        >(
           `/api/v1/tax-configs?wardId=${filters.wardId}&assessmentYearId=${assessmentYearId}`
         )
       ).data,
@@ -108,7 +99,9 @@ export default function ReportBuilderPage() {
     }
     : undefined
 
-  const taxPublished = taxConfigQuery.data?.status === "PUBLISHED"
+  const taxPublished =
+    taxConfigQuery.data?.configured === true &&
+    taxConfigQuery.data.status === "PUBLISHED"
 
   const buildExportParams = () => {
     const params = new URLSearchParams()

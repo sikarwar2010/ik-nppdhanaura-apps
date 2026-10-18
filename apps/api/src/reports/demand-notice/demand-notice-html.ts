@@ -285,10 +285,19 @@ table.alv tr.total td {
 }
 .muted { color: #64748b; font-style: italic; }
 
-.tax-wrap { flex-shrink: 0; }
+.arrears { flex-shrink: 0; margin-top: 6px; }
+.arrears table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 7.5px; }
+.arrears th, .arrears td { border: 1px solid #cbd5e1; padding: 3px 2px; overflow-wrap: anywhere; }
+.arrears th { background: #f8fafc; text-align: left; }
+.arrears td.r, .arrears th.r { text-align: right; font-variant-numeric: tabular-nums; }
+.arrears .sum { margin-top: 4px; font-size: 9px; }
+.arrears .sum div { display: flex; justify-content: space-between; gap: 8px; padding: 1px 0; }
+.arrears .sum .group { margin-top: 4px; padding-top: 3px; border-top: 1px solid #cbd5e1; font-weight: 700; }
+.arrears .warn { margin-top: 4px; color: #9f1239; font-weight: 700; font-size: 9px; }
+.arrears .net { font-weight: 800; border-top: 1px solid #64748b; margin-top: 2px; padding-top: 2px; }
 .tax-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.25fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border: 1.5px solid #94a3b8;
   border-top: none;
   overflow: hidden;
@@ -413,6 +422,75 @@ table.alv tr.total td {
   padding: 8px 12px;
 }
 `
+
+function confirmedMoney(authoritative: boolean, value: number): string {
+  return authoritative ? `₹ ${money(value)}` : "Not confirmed"
+}
+
+function componentCell(value: number | null): string {
+  return value == null ? "—" : money(value)
+}
+
+function renderArrears(vm: PropertyTaxDemandNoticeViewModel): string {
+  const ledger = vm.ledger
+  const rows = ledger.years
+    .map((year) => {
+      const label = year.componentDetail
+        ? esc(year.assessmentYear)
+        : `${esc(year.assessmentYear)} · Historical opening arrears / प्रारंभिक बकाया`
+      if (!year.componentDetail) {
+        return `<tr>
+        <td>${label}</td>
+        <td class="r">—</td>
+        <td class="r">—</td>
+        <td class="r">—</td>
+        <td class="r">—</td>
+        <td class="r">—</td>
+        <td class="r">—</td>
+        <td class="r">${money(year.outstanding)}</td>
+      </tr>`
+      }
+      return `<tr>
+        <td>${label}</td>
+        <td class="r">${componentCell(year.propertyTax)}</td>
+        <td class="r">${componentCell(year.waterTax)}</td>
+        <td class="r">${componentCell(year.drainageTax)}</td>
+        <td class="r">${money((year.penalty ?? 0) + (year.interest ?? 0))}</td>
+        <td class="r">${money(year.rebate + year.credits)}</td>
+        <td class="r">${money(year.payments)}</td>
+        <td class="r">${money(year.outstanding)}</td>
+      </tr>`
+    })
+    .join("")
+  const historical = ledger.hasHistoricalOpening
+    ? `<div><span>Historical opening arrears / प्रारंभिक बकाया</span><span>${confirmedMoney(ledger.authoritative, ledger.historicalOpeningArrears)}</span></div>`
+    : ""
+  return `<div class="arrears">
+    <div class="sec">Previous Year Outstanding / पूर्व वर्षों का बकाया</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Assessment Year</th>
+          <th class="r">Property Tax</th>
+          <th class="r">Water Tax</th>
+          <th class="r">Drainage Tax</th>
+          <th class="r">Penalty and Interest</th>
+          <th class="r">Rebate/Credits</th>
+          <th class="r">Payments</th>
+          <th class="r">Outstanding</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows || `<tr><td colspan="8">No published year-wise demands on the ledger.</td></tr>`}
+      </tbody>
+    </table>
+    <div class="sum">
+      ${historical}
+      <div class="net"><span>Net outstanding balance / शुद्ध बकाया</span><span>${confirmedMoney(ledger.authoritative, ledger.netOutstanding)}</span></div>
+    </div>
+    ${ledger.warning ? `<div class="warn">${esc(ledger.warning)}</div>` : ""}
+  </div>`
+}
 
 function renderNoticePage(
   vm: PropertyTaxDemandNoticeViewModel,
@@ -557,23 +635,41 @@ function renderNoticePage(
     <div class="sec sec-flush">Tax Demand Summary / कर मांग सारांश</div>
     <div class="tax-grid">
       <div class="tax-box">
-        <div class="tax-lbl">Property Tax (${esc(vm.propertyTaxPct)}%)</div>
+        <div class="tax-lbl">Property Tax (${esc(vm.propertyTaxPct)}%) / संपत्ति कर</div>
         <div class="tax-amt">₹ ${money(vm.propertyTax)}</div>
       </div>
       <div class="tax-box">
-        <div class="tax-lbl">Water Tax (${esc(vm.waterTaxPct)}%)</div>
+        <div class="tax-lbl">Water Tax (${esc(vm.waterTaxPct)}%) / जल कर</div>
         <div class="tax-amt">₹ ${money(vm.waterTax)}</div>
       </div>
       <div class="tax-box">
-        <div class="tax-lbl">Drainage Tax (${esc(vm.drainageTaxPct)}%)</div>
+        <div class="tax-lbl">Drainage Tax (${esc(vm.drainageTaxPct)}%) / नाली कर</div>
         <div class="tax-amt">₹ ${money(vm.drainageTax)}</div>
       </div>
       <div class="tax-box">
+        <div class="tax-lbl">Previous Dues / पूर्व बकाया</div>
+        <div class="tax-amt">${confirmedMoney(vm.ledger.authoritative, vm.ledger.previousArrears)}</div>
+      </div>
+      <div class="tax-box">
+        <div class="tax-lbl">Rebate / छूट</div>
+        <div class="tax-amt">₹ ${money(vm.ledger.rebateAmount)}</div>
+      </div>
+      <div class="tax-box">
+        <div class="tax-lbl">Penalty (${esc(vm.penaltyPct)}%) / शास्ति</div>
+        <div class="tax-amt">₹ ${money(vm.penalty)}</div>
+      </div>
+      <div class="tax-box">
+        <div class="tax-lbl">Interest / ब्याज</div>
+        <div class="tax-amt">₹ ${money(vm.ledger.interest)}</div>
+      </div>
+      <div class="tax-box">
         <div class="tax-lbl">Total Demand / कुल मांग</div>
-        <div class="tax-amt">₹ ${money(vm.totalDemand)}</div>
+        <div class="tax-amt">${confirmedMoney(vm.ledger.authoritative, vm.ledger.totalPayable)}</div>
       </div>
     </div>
   </div>
+
+  ${renderArrears(vm)}
 
   <div class="notice">
     <div class="notice-title">Important Notice / महत्वपूर्ण सूचना</div>

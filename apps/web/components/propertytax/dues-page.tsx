@@ -394,12 +394,32 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                   <AmountRow label="Penalty" amount={dues.data.tax.penalty} />
                   <div className="flex items-center justify-between gap-4 pt-5">
                     <span className="text-base font-black text-slate-900">
-                      Total demand
+                      Current-year demand
                     </span>
                     <span className="text-xl font-black text-emerald-800">
                       {formatRupees(dues.data.tax.totalDemand)}
                     </span>
                   </div>
+                  {dues.data.ledger ? (
+                    <div className="mt-4 space-y-2 text-sm text-slate-700">
+                      <div className="flex justify-between">
+                        <span>Previous-year arrears</span>
+                        <span>{dues.data.ledger.openingArrears}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Rebate {dues.data.ledger.rebateScope !== "NONE" ? `(${dues.data.ledger.rebateScope})` : ""}</span>
+                        <span>{dues.data.ledger.rebateAmount}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-slate-900">
+                        <span>Net outstanding</span>
+                        <span>
+                          {dues.data.ledger.authoritative
+                            ? dues.data.ledger.netOutstanding
+                            : "Not confirmed"}
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -471,7 +491,10 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                         payment.isPending ||
                         process.env.NODE_ENV === "production" ||
                         !dues.data.onlinePaymentEnabled ||
-                        dues.data.tax.totalDemand <= 0
+                        (dues.data.ledger?.publishedDemandId
+                          ? Number(dues.data.ledger.netOutstanding) <= 0 ||
+                            !dues.data.ledger.authoritative
+                          : dues.data.tax.totalDemand <= 0)
                       }
                       className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-amber-600 px-5 text-sm font-black text-white shadow-lg shadow-orange-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -479,7 +502,11 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                       {payment.isPending
                         ? "Connecting to payment gateway…"
                         : dues.data.onlinePaymentEnabled
-                          ? `Pay Online · ${formatRupees(dues.data.tax.totalDemand)}`
+                          ? `Pay Online · ${formatRupees(
+                              dues.data.ledger?.publishedDemandId
+                                ? Number(dues.data.ledger.netOutstanding)
+                                : dues.data.tax.totalDemand
+                            )}`
                           : "Payment gateway not configured"}
                     </button>
                   </form>

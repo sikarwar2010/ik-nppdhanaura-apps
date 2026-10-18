@@ -95,4 +95,26 @@ describe("PermissionGuard", () => {
       ).toThrow(ForbiddenException)
     }
   })
+
+  it("L: rejects users who cannot publish, adjust, or reverse", () => {
+    for (const permission of [
+      "demand:publish",
+      "demand:adjust",
+      "payment:collect",
+      "payment:reverse",
+    ]) {
+      const reflector = {
+        getAllAndOverride: jest.fn().mockReturnValue([permission]),
+      }
+      const guard = new PermissionGuard(reflector as unknown as Reflector)
+      expect(() =>
+        guard.canActivate(
+          contextWithUser({
+            roles: ["OPERATOR"],
+            permissions: ["demand:read", "report:read"],
+          })
+        )
+      ).toThrow(ForbiddenException)
+    }
+  })
 })

@@ -7,12 +7,15 @@ import {
 } from "@nestjs/common"
 import { PaymentStatus, Prisma } from "@prisma/client"
 
+import { DemandsService } from "../demands/demands.service"
+import { moneyToNumber } from "../demands/money"
 import { PaymentsService } from "../payments/payments.service"
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreatePublicPropertyTaxPaymentDto } from "./dto/create-public-payment.dto"
 import type { PublicPropertyTaxSearchQueryDto } from "./dto/public-property-tax.dto"
 import {
   resolveDueStatus,
+  resolveLedgerDueStatus,
   type PublicPropertyTaxDueStatus,
 } from "./due-status.util"
 import {
@@ -47,7 +50,8 @@ export type PublicPropertyTaxResultItem = {
 export class PublicPropertyTaxService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly payments: PaymentsService
+    private readonly payments: PaymentsService,
+    private readonly demands: DemandsService
   ) {}
 
   async listWards() {
@@ -149,10 +153,16 @@ export class PublicPropertyTaxService {
       })
     }
 
-    const paidForAssessmentYear = await this.hasSuccessfulPaymentForYear(
+    const breakdown = await this.demands.outstanding(
       survey.id,
       config.assessmentYear.id
     )
+    const paidForAssessmentYear = breakdown.publishedDemandId
+      ? resolveLedgerDueStatus(breakdown) === "NO_DUE"
+      : await this.hasSuccessfulPaymentForYear(
+          survey.id,
+          config.assessmentYear.id
+        )
     const onlinePaymentEnabled =
       process.env.PAYMENT_PROVIDER?.trim().toLowerCase() === "atom"
 
@@ -160,6 +170,7 @@ export class PublicPropertyTaxService {
       ...computePublicDuesPayload(survey, config),
       paidForAssessmentYear,
       onlinePaymentEnabled,
+      ledger: breakdown,
     }
   }
 
@@ -173,7 +184,16 @@ export class PublicPropertyTaxService {
     }
 
     const dues = await this.getDues(dto.surveyId)
-    const amount = Number(dues.tax.totalDemand)
+    if (dues.ledger.publishedDemandId && !dues.ledger.authoritative) {
+      throw new ConflictException({
+        code: "UNRECONCILED_BALANCE",
+        message:
+          "Outstanding balance cannot be confirmed because earlier assessment years are not reconciled.",
+      })
+    }
+    const amount = dues.ledger.publishedDemandId
+      ? moneyToNumber(dues.ledger.netOutstanding)
+      : Number(dues.tax.totalDemand)
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException({
         code: "DUES_NOT_PAYABLE",
@@ -480,6 +500,29 @@ export class PublicPropertyTaxService {
           paidAssessmentYearIds: paidYearsBySurvey.get(row.id) ?? new Set(),
         })
       )
+    }
+
+    const publishedDemands =
+      yearIds.length === 0
+        ? []
+        : await this.prisma.assessmentDemand.findMany({
+            where: {
+              surveyId: { in: surveyIds },
+              assessmentYearId: { in: yearIds },
+              status: "PUBLISHED",
+            },
+            select: { surveyId: true, assessmentYearId: true },
+          })
+    for (const demand of publishedDemands) {
+      const expectedYear = yearByWardId.get(
+        rows.find((row) => row.id === demand.surveyId)?.wardId ?? ""
+      )
+      if (expectedYear !== demand.assessmentYearId) continue
+      const breakdown = await this.demands.outstanding(
+        demand.surveyId,
+        demand.assessmentYearId
+      )
+      result.set(demand.surveyId, resolveLedgerDueStatus(breakdown))
     }
 
     return result

@@ -81,6 +81,7 @@ export class DemandNoticeController {
     @Query("wardId") wardId: string | undefined,
     @Query("logoUrl") logoUrl: string | undefined,
     @Query("websiteDisplayHost") websiteDisplayHost: string | undefined,
+    @CurrentUser() user: AuthUser,
     @Res() res: Response
   ) {
     const html = await this.demandNotices.previewHtml({
@@ -89,6 +90,7 @@ export class DemandNoticeController {
       wardId,
       logoUrl,
       websiteDisplayHost,
+      actorId: user.id,
     })
     res.type("html").send(html)
   }

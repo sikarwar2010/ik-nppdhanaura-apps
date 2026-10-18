@@ -16,6 +16,7 @@ import {
 } from "../auth/auth.decorators"
 import {
   CopyTaxToWardsDto,
+  CreateTaxConfigDto,
   PublishTaxConfigDto,
   TaxPreviewDto,
   UpdateTaxConfigParamsDto,
@@ -28,13 +29,18 @@ export class TaxConfigsController {
   constructor(private readonly taxConfigsService: TaxConfigsService) {}
 
   @Get()
-  @RequirePermission("settings:update")
-  getOrCreate(
+  @RequirePermission("report:read")
+  get(
     @Query("wardId") wardId: string,
-    @Query("assessmentYearId") assessmentYearId: string,
-    @CurrentUser() user: AuthUser
+    @Query("assessmentYearId") assessmentYearId: string
   ) {
-    return this.taxConfigsService.getOrCreate(wardId, assessmentYearId, user.id)
+    return this.taxConfigsService.get(wardId, assessmentYearId)
+  }
+
+  @Post()
+  @RequirePermission("settings:update")
+  createDraft(@Body() dto: CreateTaxConfigDto, @CurrentUser() user: AuthUser) {
+    return this.taxConfigsService.createDraft(dto, user.id)
   }
 
   @Post("copy-to-wards")

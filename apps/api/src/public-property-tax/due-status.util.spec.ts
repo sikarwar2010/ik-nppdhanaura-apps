@@ -1,4 +1,4 @@
-import { isAlreadyPaidForYear, resolveDueStatus } from "./due-status.util"
+import { isAlreadyPaidForYear, resolveDueStatus, resolveLedgerDueStatus } from "./due-status.util"
 
 describe("resolveDueStatus", () => {
   it("returns NO_DUE when SUCCESS payment matches current assessment year", () => {
@@ -33,6 +33,29 @@ describe("resolveDueStatus", () => {
       resolveDueStatus({
         currentAssessmentYearId: null,
         paidAssessmentYearIds: ["year-2025"],
+      })
+    ).toBe("DUE")
+  })
+})
+
+describe("resolveLedgerDueStatus", () => {
+  it("is NO_DUE only when a reconciled ledger outstanding is zero", () => {
+    expect(
+      resolveLedgerDueStatus({
+        netOutstanding: "0.00",
+        authoritative: true,
+      })
+    ).toBe("NO_DUE")
+    expect(
+      resolveLedgerDueStatus({
+        netOutstanding: "1750.00",
+        authoritative: true,
+      })
+    ).toBe("DUE")
+    expect(
+      resolveLedgerDueStatus({
+        netOutstanding: "0.00",
+        authoritative: false,
       })
     ).toBe("DUE")
   })

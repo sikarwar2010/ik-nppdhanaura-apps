@@ -107,6 +107,14 @@ export class PublishTaxConfigDto {
   effectiveFrom?: string
 }
 
+export class CreateTaxConfigDto {
+  @IsString()
+  wardId!: string
+
+  @IsString()
+  assessmentYearId!: string
+}
+
 export class CopyTaxToWardsDto {
   @IsString()
   sourceWardId!: string

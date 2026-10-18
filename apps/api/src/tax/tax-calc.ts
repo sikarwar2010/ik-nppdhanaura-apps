@@ -1,9 +1,10 @@
 /** Pure tax helpers for ward demand reports and citizen dues. */
 
+import { moneyToNumber } from "../demands/money"
 import { classifyGisUseCode, type GisUseClass } from "./tax-zone-map"
 
 export function roundMoney(amount: number): number {
-  return Math.round(amount * 100) / 100
+  return moneyToNumber(amount)
 }
 
 export type AssessablePctOptions = {

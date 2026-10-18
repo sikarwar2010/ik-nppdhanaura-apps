@@ -32,8 +32,10 @@ import {
 } from "@workspace/ui/components/select"
 import { buildSelectItems } from "@workspace/ui/lib/select-items"
 
+import { useCan } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 import { downloadAuthenticatedExport } from "@/lib/download-blob"
+import { FinancialAdminPanels } from "./financial-panels"
 
 type Ward = { id: string; name: string; number: number }
 
@@ -47,22 +49,107 @@ type RefEntry = {
 type TaxCell = {
   roadWidthEntryId: string
   constructionEntryId: string
-  annualRatePerSqFt: string | number
-  roadWidthEntry: RefEntry
-  constructionEntry: RefEntry
+  annualRatePerSqFt: string | number | null
 }
 
 type TaxConfig = {
+  configured: true
   id: string
+  wardId: string
+  assessmentYearId: string
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
   version: number
-  propertyTaxPct: string | number
-  waterTaxPct: string | number
-  drainageTaxPct: string | number
-  penaltyPct: string | number
-  assessablePct: string | number
-  commercialAssessablePct: string | number
+  propertyTaxPct: string | number | null
+  waterTaxPct: string | number | null
+  drainageTaxPct: string | number | null
+  penaltyPct: string | number | null
+  assessablePct: string | number | null
+  commercialAssessablePct: string | number | null
   cells: TaxCell[]
+}
+
+type TaxConfigResult =
+  | TaxConfig
+  | { configured: false; wardId: string; assessmentYearId: string }
+
+type TaxPreview = {
+  configured: boolean
+  rateMissing: boolean
+  rates: {
+    annualRate: number | null
+    assessablePct: string | null
+    commercialAssessablePct: string | null
+    propertyTaxPct: string | null
+    waterTaxPct: string | null
+    drainageTaxPct: string | null
+    penaltyPct: string | null
+  } | null
+  calculation: {
+    grossAlv: number
+    assessableAlv: number
+    propertyTax: number
+    waterTax: number
+    drainageTax: number
+    penalty: number
+    demand: number
+  } | null
+}
+
+type SurveyHit = {
+  id: string
+  surveyId: string
+  ownerName: string | null
+  propertyNo: string | null
+}
+
+type OutstandingResponse = {
+  propertyTax: string
+  waterTax: string
+  drainageTax: string
+  penalty: string
+  interest: string
+  currentYearDemand: string
+  openingArrears: string
+  grossEligibleDemand?: string
+  rebateAmount?: string
+  rebateScope?: string
+  approvedCredits: string
+  paymentsAllocated: string
+  totalPayable: string
+  netOutstanding: string
+  publishedDemandId: string | null
+  authoritative: boolean
+  historyComplete?: boolean
+  previousPropertyTaxOutstanding?: string
+  previousWaterTaxOutstanding?: string
+  previousDrainageTaxOutstanding?: string
+  previousPenaltyInterestOutstanding?: string
+  previousRebatesCredits?: string
+  previousPayments?: string
+  historicalOpeningArrears?: string
+  approvedDebits?: string
+  years: Array<{
+    assessmentYearId: string
+    assessmentYearName: string
+    originalDemand: string
+    propertyTax?: string
+    waterTax?: string
+    drainageTax?: string
+    balanceKind?: "COMPONENTS" | "CLOSING_ONLY"
+    openingArrears?: string
+    penalty?: string
+    interest?: string
+    payments: string
+    credits: string
+    rebate?: string
+    outstanding: string
+    closingOutstanding?: string
+    verificationStatus?: string
+    publishedDemandId: string | null
+  }>
+  unreconciledYears: Array<{ assessmentYearId: string; name: string; reason: string }>
+  missingHistoryYears?: Array<{ name: string; reason: string }>
+  unassignedPaymentIds: string[]
 }
 
 const GIS_USE_PREVIEW_OPTIONS = [
@@ -72,9 +159,15 @@ const GIS_USE_PREVIEW_OPTIONS = [
   { code: "P", name: "P - Open plot" },
 ] as const
 
-function num(v: string | number | undefined): number {
-  if (v == null) return 0
-  return typeof v === "number" ? v : Number(v)
+function rateNumber(v: string | number | null | undefined): number | null {
+  if (v == null || v === "") return null
+  const parsed = typeof v === "number" ? v : Number(v)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function rateInputValue(v: string | number | null | undefined): string {
+  const parsed = rateNumber(v)
+  return parsed == null ? "" : String(parsed)
 }
 
 function useDebounced<T extends (...args: Parameters<T>) => void>(
@@ -106,12 +199,20 @@ export function ReportsTaxWorkspace({
 }) {
   const qc = useQueryClient()
   const [search, setSearch] = React.useState("")
-  const [assessmentYearId, setAssessmentYearId] = React.useState("")
+  const [assessmentYearOverride, setAssessmentYearOverride] = React.useState("")
   const [exporting, setExporting] = React.useState(false)
   const [previewArea, setPreviewArea] = React.useState("100")
-  const [previewRoadId, setPreviewRoadId] = React.useState("")
-  const [previewConstructionId, setPreviewConstructionId] = React.useState("")
+  const [previewRoadOverride, setPreviewRoadOverride] = React.useState("")
+  const [previewConstructionOverride, setPreviewConstructionOverride] =
+    React.useState("")
   const [previewGisUseCode, setPreviewGisUseCode] = React.useState("R")
+  const [propertyQuery, setPropertyQuery] = React.useState("")
+  const [ledgerSurveyId, setLedgerSurveyId] = React.useState("")
+  const [creditAmount, setCreditAmount] = React.useState("")
+  const [creditReason, setCreditReason] = React.useState("")
+  const canPublishDemand = useCan("demand:publish")
+  const canAdjustDemand = useCan("demand:adjust")
+  const canConfigure = useCan("settings:update")
   const { locale } = useLocale()
   const refLabel = (name: string) => optionLabel(locale, name)
 
@@ -129,6 +230,27 @@ export function ReportsTaxWorkspace({
       return res.data ?? []
     },
   })
+  const assessmentYearId =
+    assessmentYearOverride || yearsQuery.data?.[0]?.id || ""
+
+  const yearProfiles = useQuery({
+    queryKey: ["assessment-year-profiles"],
+    queryFn: async () => {
+      const res = await api.get<
+        Array<{
+          id: string
+          profile: { startsOn: string; endsOn: string; status: string } | null
+        }>
+      >("/api/v1/assessment-years")
+      return res.data ?? []
+    },
+  })
+  const selectedYearProfile = yearProfiles.data?.find(
+    (year) => year.id === assessmentYearId
+  )?.profile
+  const yearLocked =
+    selectedYearProfile?.status === "CLOSED" ||
+    selectedYearProfile?.status === "ARCHIVED"
 
   const zonesQuery = useQuery({
     queryKey: ["ref-tax-zones"],
@@ -151,45 +273,35 @@ export function ReportsTaxWorkspace({
   })
 
   React.useEffect(() => {
-    if (!assessmentYearId && yearsQuery.data?.[0]) {
-      setAssessmentYearId(yearsQuery.data[0].id)
-    }
-  }, [yearsQuery.data, assessmentYearId])
-
-  React.useEffect(() => {
     if (!wardId && wardsQuery.data?.[0]) {
       onWardChange(wardsQuery.data[0].id)
     }
   }, [wardId, wardsQuery.data, onWardChange])
-
-  React.useEffect(() => {
-    const zones = zonesQuery.data
-    const constructions = constructionsQuery.data
-    if (zones?.[0] && !previewRoadId) setPreviewRoadId(zones[0].id)
-    if (constructions?.[0] && !previewConstructionId) {
-      setPreviewConstructionId(constructions[0].id)
-    }
-  }, [
-    zonesQuery.data,
-    constructionsQuery.data,
-    previewRoadId,
-    previewConstructionId,
-  ])
 
   const taxConfigQuery = useQuery({
     queryKey: ["tax-config", wardId, assessmentYearId],
     enabled: Boolean(wardId && assessmentYearId),
     queryFn: async () =>
       (
-        await api.get<TaxConfig>(
+        await api.get<TaxConfigResult>(
           `/api/v1/tax-configs?wardId=${wardId}&assessmentYearId=${assessmentYearId}`
         )
       ).data,
   })
 
-  const config = taxConfigQuery.data
-  const roads = zonesQuery.data ?? []
-  const constructions = constructionsQuery.data ?? []
+  const config =
+    taxConfigQuery.data && taxConfigQuery.data.configured
+      ? taxConfigQuery.data
+      : null
+  const configMissing = taxConfigQuery.data?.configured === false
+  const roads = React.useMemo(() => zonesQuery.data ?? [], [zonesQuery.data])
+  const constructions = React.useMemo(
+    () => constructionsQuery.data ?? [],
+    [constructionsQuery.data]
+  )
+  const previewRoadId = previewRoadOverride || roads[0]?.id || ""
+  const previewConstructionId =
+    previewConstructionOverride || constructions[0]?.id || ""
 
   const assessmentYearItems = React.useMemo(
     () =>
@@ -231,7 +343,18 @@ export function ReportsTaxWorkspace({
     [locale]
   )
 
-  const configIdentity = config ? `${config.id}:${config.version}` : ""
+  const configIdentity = config
+    ? [
+      config.id,
+      config.assessmentYearId,
+      config.assessablePct,
+      config.commercialAssessablePct,
+      config.propertyTaxPct,
+      config.waterTaxPct,
+      config.drainageTaxPct,
+      config.penaltyPct,
+    ].join(":")
+    : ""
 
   const [paramDraft, setParamDraft] = React.useState({
     assessablePct: "",
@@ -241,80 +364,100 @@ export function ReportsTaxWorkspace({
     drainageTaxPct: "",
     penaltyPct: "",
   })
-
-  React.useEffect(() => {
-    if (!config) {
-      setParamDraft({
-        assessablePct: "",
-        commercialAssessablePct: "",
-        propertyTaxPct: "",
-        waterTaxPct: "",
-        drainageTaxPct: "",
-        penaltyPct: "",
-      })
-      return
-    }
+  const [draftSource, setDraftSource] = React.useState("")
+  if (config && configIdentity !== draftSource) {
+    setDraftSource(configIdentity)
     setParamDraft({
-      assessablePct: String(num(config.assessablePct)),
-      commercialAssessablePct: String(num(config.commercialAssessablePct)),
-      propertyTaxPct: String(num(config.propertyTaxPct)),
-      waterTaxPct: String(num(config.waterTaxPct)),
-      drainageTaxPct: String(num(config.drainageTaxPct)),
-      penaltyPct: String(num(config.penaltyPct)),
+      assessablePct: rateInputValue(config.assessablePct),
+      commercialAssessablePct: rateInputValue(config.commercialAssessablePct),
+      propertyTaxPct: rateInputValue(config.propertyTaxPct),
+      waterTaxPct: rateInputValue(config.waterTaxPct),
+      drainageTaxPct: rateInputValue(config.drainageTaxPct),
+      penaltyPct: rateInputValue(config.penaltyPct),
     })
-  }, [configIdentity, config])
+  }
 
   const cellMap = React.useMemo(() => {
     const m = new Map<string, number>()
     for (const c of config?.cells ?? []) {
-      m.set(
-        `${c.roadWidthEntryId}:${c.constructionEntryId}`,
-        num(c.annualRatePerSqFt)
-      )
+      const rate = rateNumber(c.annualRatePerSqFt)
+      if (rate == null) continue
+      m.set(`${c.roadWidthEntryId}:${c.constructionEntryId}`, rate)
     }
     return m
   }, [config?.cells])
 
+  const rememberConfig = (savedWardId: string, savedYearId: string, data: TaxConfig) => {
+    qc.setQueryData(["tax-config", savedWardId, savedYearId], data)
+  }
+
   const saveCells = useMutation({
-    mutationFn: async (
+    mutationFn: async (input: {
+      wardId: string
+      assessmentYearId: string
+      configId: string
       cells: Array<{
         roadWidthEntryId: string
         constructionEntryId: string
         annualRatePerSqFt: number
       }>
-    ) => {
-      if (!config) return
-      await api.put(`/api/v1/tax-configs/${config.id}/cells`, { cells })
+    }) => {
+      const res = await api.put<TaxConfig>(
+        `/api/v1/tax-configs/${input.configId}/cells`,
+        { cells: input.cells }
+      )
+      return res.data
     },
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: ["tax-config", wardId, assessmentYearId],
-      })
+    onSuccess: (data, variables) => {
+      rememberConfig(variables.wardId, variables.assessmentYearId, data)
     },
   })
 
   const saveParams = useMutation({
-    mutationFn: async (body: Record<string, number>) => {
-      if (!config) return
-      await api.patch(`/api/v1/tax-configs/${config.id}`, body)
+    mutationFn: async (input: {
+      wardId: string
+      assessmentYearId: string
+      configId: string
+      body: Record<string, number>
+    }) => {
+      const res = await api.patch<TaxConfig>(
+        `/api/v1/tax-configs/${input.configId}`,
+        input.body
+      )
+      return res.data
     },
-    onSuccess: () => {
-      void qc.invalidateQueries({
-        queryKey: ["tax-config", wardId, assessmentYearId],
-      })
+    onSuccess: (data, variables) => {
+      rememberConfig(variables.wardId, variables.assessmentYearId, data)
     },
   })
 
   const publishMut = useMutation({
-    mutationFn: async () => {
-      if (!config) return
-      await api.post(`/api/v1/tax-configs/${config.id}/publish`, {})
+    mutationFn: async (input: {
+      wardId: string
+      assessmentYearId: string
+      configId: string
+    }) => {
+      const res = await api.post<TaxConfig>(
+        `/api/v1/tax-configs/${input.configId}/publish`,
+        {}
+      )
+      return res.data
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast.success("Tax rates published")
-      void qc.invalidateQueries({
-        queryKey: ["tax-config", wardId, assessmentYearId],
-      })
+      rememberConfig(variables.wardId, variables.assessmentYearId, data)
+    },
+    onError: (e: Error) => toast.error(e.message),
+  })
+
+  const createDraftMut = useMutation({
+    mutationFn: async (input: { wardId: string; assessmentYearId: string }) => {
+      const res = await api.post<TaxConfig>("/api/v1/tax-configs", input)
+      return res.data
+    },
+    onSuccess: (data, variables) => {
+      toast.success("Draft tax configuration created")
+      rememberConfig(variables.wardId, variables.assessmentYearId, data)
     },
     onError: (e: Error) => toast.error(e.message),
   })
@@ -346,19 +489,11 @@ export function ReportsTaxWorkspace({
       previewGisUseCode,
     ],
     enabled: Boolean(
-      wardId && assessmentYearId && previewRoadId && previewConstructionId
+      config && previewRoadId && previewConstructionId
     ),
     queryFn: async () =>
       (
-        await api.post<{
-          calculation: {
-            grossAlv: number
-            assessableAlv: number
-            propertyTax: number
-            demand: number
-          }
-          rates: { annualRate: number }
-        }>("/api/v1/tax-configs/preview", {
+        await api.post<TaxPreview>("/api/v1/tax-configs/preview", {
           wardId,
           assessmentYearId,
           areaSqFt: Number(previewArea) || 0,
@@ -369,20 +504,89 @@ export function ReportsTaxWorkspace({
       ).data,
   })
 
+  const propertySearchQuery = useQuery({
+    queryKey: ["ledger-properties", wardId, propertyQuery],
+    enabled: Boolean(wardId && propertyQuery.trim().length >= 2),
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        wardId,
+        search: propertyQuery.trim(),
+        page: "1",
+        pageSize: "8",
+        status: "ACTIVE",
+      })
+      const res = await api.get<SurveyHit[]>(`/api/v1/surveys?${params}`)
+      return res.data ?? []
+    },
+  })
+
+  const outstandingQuery = useQuery({
+    queryKey: ["demand-outstanding", ledgerSurveyId, assessmentYearId],
+    enabled: Boolean(ledgerSurveyId && assessmentYearId),
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        surveyId: ledgerSurveyId,
+        assessmentYearId,
+      })
+      const res = await api.get<OutstandingResponse>(
+        `/api/v1/demands/outstanding?${params}`
+      )
+      return res.data
+    },
+  })
+
+  const publishDemand = useMutation({
+    mutationFn: async () => {
+      await api.post("/api/v1/demands/publish", {
+        surveyId: ledgerSurveyId,
+        assessmentYearId,
+      })
+    },
+    onSuccess: async () => {
+      toast.success("Assessment-year demand published")
+      await qc.invalidateQueries({ queryKey: ["demand-outstanding"] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Could not publish demand")
+    },
+  })
+
+  const addCredit = useMutation({
+    mutationFn: async () => {
+      const demandId = outstandingQuery.data?.publishedDemandId
+      if (!demandId) throw new Error("Publish the demand before adding a credit")
+      await api.post(`/api/v1/demands/${demandId}/adjustments`, {
+        kind: "CREDIT",
+        amount: creditAmount,
+        reason: creditReason,
+      })
+    },
+    onSuccess: async () => {
+      toast.success("Credit recorded")
+      setCreditAmount("")
+      setCreditReason("")
+      await qc.invalidateQueries({ queryKey: ["demand-outstanding"] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Could not record credit")
+    },
+  })
+
   const debouncedCellSave = useDebounced(
     (roadId: string, constructionId: string, value: number) => {
-      if (!config) return
-      const cells = roads.flatMap((road) =>
-        constructions.map((c) => ({
-          roadWidthEntryId: road.id,
-          constructionEntryId: c.id,
-          annualRatePerSqFt:
-            road.id === roadId && c.id === constructionId
-              ? value
-              : (cellMap.get(`${road.id}:${c.id}`) ?? 0),
-        }))
-      )
-      saveCells.mutate(cells)
+      if (!config || !Number.isFinite(value)) return
+      saveCells.mutate({
+        wardId,
+        assessmentYearId,
+        configId: config.id,
+        cells: [
+          {
+            roadWidthEntryId: roadId,
+            constructionEntryId: constructionId,
+            annualRatePerSqFt: value,
+          },
+        ],
+      })
     },
     600
   )
@@ -451,14 +655,14 @@ export function ReportsTaxWorkspace({
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
+      <div id="tax-rates" className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="space-y-1">
+          <div id="assessment-years" className="space-y-1">
             <Label htmlFor="assessment-year">Assessment year</Label>
             <Select
               value={assessmentYearId || null}
               items={assessmentYearItems}
-              onValueChange={(v) => setAssessmentYearId(v ?? "")}
+              onValueChange={(v) => setAssessmentYearOverride(v ?? "")}
             >
               <SelectTrigger
                 id="assessment-year"
@@ -479,6 +683,17 @@ export function ReportsTaxWorkspace({
                 ))}
               </SelectContent>
             </Select>
+            {selectedYearProfile ? (
+              <p className="text-xs text-muted-foreground">
+                {selectedYearProfile.status} · {selectedYearProfile.startsOn} to{" "}
+                {selectedYearProfile.endsOn}
+                {yearLocked ? " · locked" : ""}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No assessment-year dates configured yet.
+              </p>
+            )}
           </div>
           {config ? (
             <Badge
@@ -501,7 +716,14 @@ export function ReportsTaxWorkspace({
               type="button"
               className="cursor-pointer"
               disabled={!config || publishMut.isPending}
-              onClick={() => publishMut.mutate()}
+              onClick={() => {
+                if (!config) return
+                publishMut.mutate({
+                  wardId,
+                  assessmentYearId,
+                  configId: config.id,
+                })
+              }}
             >
               <Upload className="mr-2 size-4" aria-hidden />
               Publish
@@ -526,53 +748,90 @@ export function ReportsTaxWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-sm">
-              <thead>
-                <tr>
-                  <th className="border p-2 text-left">Road width</th>
-                  {constructions.map((c) => (
-                    <th key={c.id} className="border p-2 text-left">
-                      {refLabel(c.name)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {roads.map((road) => (
-                  <tr key={road.id}>
-                    <td className="border p-2 font-medium">{refLabel(road.name)}</td>
-                    {constructions.map((c) => {
-                      const key = `${road.id}:${c.id}`
-                      const value = cellMap.get(key) ?? 0
-                      return (
-                        <td key={c.id} className="border p-1">
-                          <Input
-                            key={`${configIdentity}-${key}-${value}`}
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            className="h-8 cursor-pointer"
-                            defaultValue={value}
-                            disabled={!config}
-                            onChange={(e) =>
-                              debouncedCellSave(
-                                road.id,
-                                c.id,
-                                Number(e.target.value) || 0
-                              )
-                            }
-                          />
-                        </td>
-                      )
-                    })}
+            {taxConfigQuery.isError ? (
+              <p className="text-sm text-destructive">
+                Tax rates could not be loaded for this ward and assessment year.
+                Missing rates are not shown as zero.
+              </p>
+            ) : wardId && assessmentYearId && taxConfigQuery.isFetching && !taxConfigQuery.data ? (
+              <p className="text-sm text-muted-foreground">Loading saved tax rates…</p>
+            ) : configMissing ? (
+              <div className="space-y-3 text-sm">
+                <p>
+                  No tax configuration is saved for this ward and assessment year.
+                  A missing configuration is not the same as a zero rate.
+                </p>
+                {canConfigure ? (
+                  <Button
+                    type="button"
+                    className="cursor-pointer"
+                    disabled={createDraftMut.isPending}
+                    onClick={() =>
+                      createDraftMut.mutate({ wardId, assessmentYearId })
+                    }
+                  >
+                    Create draft configuration
+                  </Button>
+                ) : (
+                  <p className="text-muted-foreground">
+                    An administrator must create the configuration before rates can be entered.
+                  </p>
+                )}
+              </div>
+            ) : config ? (
+              <table className="w-full min-w-[640px] border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border p-2 text-left">Road width</th>
+                    {constructions.map((c) => (
+                      <th key={c.id} className="border p-2 text-left">
+                        {refLabel(c.name)}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {roads.map((road) => (
+                    <tr key={road.id}>
+                      <td className="border p-2 font-medium">{refLabel(road.name)}</td>
+                      {constructions.map((c) => {
+                        const key = `${road.id}:${c.id}`
+                        const stored = cellMap.get(key)
+                        const value = stored == null ? "" : String(stored)
+                        return (
+                          <td key={c.id} className="border p-1">
+                            <Input
+                              key={`${configIdentity}-${key}-${value}`}
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              className="h-8 cursor-pointer"
+                              defaultValue={value}
+                              placeholder="Not set"
+                              onChange={(e) => {
+                                const raw = e.target.value.trim()
+                                if (raw === "") return
+                                const next = Number(raw)
+                                if (!Number.isFinite(next)) return
+                                debouncedCellSave(road.id, c.id, next)
+                              }}
+                            />
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Select a ward and assessment year to load tax rates.
+              </p>
+            )}
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        {config ? <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Tax percentages</CardTitle>
@@ -603,9 +862,17 @@ export function ReportsTaxWorkspace({
                     }
                     onBlur={() => {
                       if (!config) return
-                      const next = Number(paramDraft[field]) || 0
-                      if (next === num(config[field])) return
-                      saveParams.mutate({ [field]: next })
+                      const raw = paramDraft[field].trim()
+                      if (raw === "") return
+                      const next = Number(raw)
+                      if (!Number.isFinite(next)) return
+                      if (next === rateNumber(config[field])) return
+                      saveParams.mutate({
+                        wardId,
+                        assessmentYearId,
+                        configId: config.id,
+                        body: { [field]: next },
+                      })
                     }}
                   />
                 </div>
@@ -634,7 +901,7 @@ export function ReportsTaxWorkspace({
                   <Select
                     value={previewRoadId || null}
                     items={taxZoneItems}
-                    onValueChange={(v) => setPreviewRoadId(v ?? "")}
+                    onValueChange={(v) => setPreviewRoadOverride(v ?? "")}
                   >
                     <SelectTrigger className="cursor-pointer">
                       <SelectValue placeholder="Zone" />
@@ -683,7 +950,7 @@ export function ReportsTaxWorkspace({
                 <Select
                   value={previewConstructionId || null}
                   items={constructionItems}
-                  onValueChange={(v) => setPreviewConstructionId(v ?? "")}
+                  onValueChange={(v) => setPreviewConstructionOverride(v ?? "")}
                 >
                   <SelectTrigger className="cursor-pointer">
                     <SelectValue placeholder="Construction" />
@@ -702,21 +969,54 @@ export function ReportsTaxWorkspace({
                   </SelectContent>
                 </Select>
               </div>
-              {previewQuery.data ? (
+              {previewQuery.isError ? (
+                <p className="text-destructive">
+                  Live preview could not be loaded. It is not using zero rates.
+                </p>
+              ) : null}
+              {previewQuery.data?.rateMissing ? (
+                <p>
+                  No rate is saved for this zone and construction in the selected
+                  assessment year. A missing rate is not treated as zero.
+                </p>
+              ) : null}
+              {previewQuery.data?.calculation && previewQuery.data.rates ? (
                 <dl className="grid grid-cols-2 gap-2 rounded-md bg-muted/50 p-3">
                   <div>
                     <dt className="text-muted-foreground">Monthly rate</dt>
                     <dd>{previewQuery.data.rates.annualRate}</dd>
                   </div>
                   <div>
-                    <dt className="text-muted-foreground">Gross ALV</dt>
-                    <dd>{previewQuery.data.calculation.grossAlv.toFixed(2)}</dd>
+                    <dt className="text-muted-foreground">Property tax %</dt>
+                    <dd>{rateInputValue(previewQuery.data.rates.propertyTaxPct)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Water tax %</dt>
+                    <dd>{rateInputValue(previewQuery.data.rates.waterTaxPct)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Drainage tax %</dt>
+                    <dd>{rateInputValue(previewQuery.data.rates.drainageTaxPct)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Penalty %</dt>
+                    <dd>{rateInputValue(previewQuery.data.rates.penaltyPct)}</dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Property tax</dt>
-                    <dd>
-                      {previewQuery.data.calculation.propertyTax.toFixed(2)}
-                    </dd>
+                    <dd>{previewQuery.data.calculation.propertyTax.toFixed(2)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Water tax</dt>
+                    <dd>{previewQuery.data.calculation.waterTax.toFixed(2)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Drainage tax</dt>
+                    <dd>{previewQuery.data.calculation.drainageTax.toFixed(2)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Penalty</dt>
+                    <dd>{previewQuery.data.calculation.penalty.toFixed(2)}</dd>
                   </div>
                   <div>
                     <dt className="text-muted-foreground">Total demand</dt>
@@ -728,7 +1028,242 @@ export function ReportsTaxWorkspace({
               ) : null}
             </CardContent>
           </Card>
-        </div>
+        </div> : null}
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              Arrears and outstanding / बकाया एवं देय
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p className="text-muted-foreground">
+              Previous-year arrears are loaded from the property ledger. They
+              are not part of the rate matrix or the ALV preview above.
+            </p>
+            <div className="space-y-1">
+              <Label>Property ID / संपत्ति आईडी</Label>
+              <Input
+                value={propertyQuery}
+                placeholder="Search property ID or owner"
+                onChange={(e) => setPropertyQuery(e.target.value)}
+              />
+            </div>
+            {propertySearchQuery.isFetching ? (
+              <p className="text-muted-foreground">Searching properties…</p>
+            ) : null}
+            {propertySearchQuery.isError ? (
+              <p className="text-destructive">Could not search properties.</p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              {(propertySearchQuery.data ?? []).map((hit) => (
+                <Button
+                  key={hit.id}
+                  type="button"
+                  size="sm"
+                  variant={ledgerSurveyId === hit.id ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setLedgerSurveyId(hit.id)}
+                >
+                  {hit.surveyId}
+                  {hit.ownerName ? ` · ${hit.ownerName}` : ""}
+                </Button>
+              ))}
+            </div>
+            {!ledgerSurveyId ? (
+              <p className="text-muted-foreground">
+                Select a property to load year-wise arrears.
+              </p>
+            ) : outstandingQuery.isLoading ? (
+              <p className="text-muted-foreground">Loading ledger…</p>
+            ) : outstandingQuery.isError ? (
+              <p className="text-destructive">
+                {outstandingQuery.error instanceof Error
+                  ? outstandingQuery.error.message
+                  : "Could not load the outstanding balance."}
+              </p>
+            ) : outstandingQuery.data ? (
+              <div className="space-y-3">
+                {!outstandingQuery.data.authoritative ? (
+                  <p className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-destructive">
+                    Historical balances cannot be confirmed.
+                    {outstandingQuery.data.unreconciledYears.length > 0
+                      ? ` Unreconciled years: ${outstandingQuery.data.unreconciledYears
+                        .map((year) => year.name)
+                        .join(", ")}.`
+                      : ""}
+                    {outstandingQuery.data.unassignedPaymentIds.length > 0
+                      ? " Successful payments without an assessment year are excluded and are not treated as zero."
+                      : " Missing demands are excluded from the total and are not treated as zero."}
+                    {(outstandingQuery.data.missingHistoryYears ?? []).length > 0
+                      ? ` Missing verified years: ${outstandingQuery.data.missingHistoryYears
+                        ?.map((year) => year.name)
+                        .join(", ")}.`
+                      : ""}
+                  </p>
+                ) : null}
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[980px] border-collapse text-sm">
+                    <thead>
+                      <tr>
+                        <th className="border p-2 text-left">Assessment year</th>
+                        <th className="border p-2 text-right">Property tax</th>
+                        <th className="border p-2 text-right">Water tax</th>
+                        <th className="border p-2 text-right">Drainage tax</th>
+                        <th className="border p-2 text-right">Penalty and interest</th>
+                        <th className="border p-2 text-right">Rebate/credits</th>
+                        <th className="border p-2 text-right">Payments</th>
+                        <th className="border p-2 text-right">Outstanding</th>
+                        <th className="border p-2 text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {outstandingQuery.data.years.length === 0 ? (
+                        <tr>
+                          <td className="border p-2" colSpan={9}>
+                            No published year-wise demands on the ledger.
+                          </td>
+                        </tr>
+                      ) : (
+                        outstandingQuery.data.years.map((year) => {
+                          const closingOnly = year.balanceKind === "CLOSING_ONLY"
+                          return (
+                            <tr key={year.assessmentYearId}>
+                              <td className="border p-2">
+                                {year.assessmentYearName}
+                                {closingOnly ? " · Historical opening arrears" : ""}
+                              </td>
+                              <td className="border p-2 text-right">
+                                {closingOnly ? "—" : (year.propertyTax ?? "—")}
+                              </td>
+                              <td className="border p-2 text-right">
+                                {closingOnly ? "—" : (year.waterTax ?? "—")}
+                              </td>
+                              <td className="border p-2 text-right">
+                                {closingOnly ? "—" : (year.drainageTax ?? "—")}
+                              </td>
+                              <td className="border p-2 text-right">
+                                {closingOnly
+                                  ? "—"
+                                  : (
+                                    Number(year.penalty ?? 0) +
+                                    Number(year.interest ?? 0)
+                                  ).toFixed(2)}
+                              </td>
+                              <td className="border p-2 text-right">
+                                {closingOnly
+                                  ? "—"
+                                  : (
+                                    Number(year.credits) + Number(year.rebate ?? 0)
+                                  ).toFixed(2)}
+                              </td>
+                              <td className="border p-2 text-right">
+                                {closingOnly ? "—" : year.payments}
+                              </td>
+                              <td className="border p-2 text-right">{year.outstanding}</td>
+                              <td className="border p-2">
+                                {year.publishedDemandId
+                                  ? year.verificationStatus === "UNVERIFIED"
+                                    ? "Unverified"
+                                    : "Verified"
+                                  : "Preview"}
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                  {(
+                    [
+                      ["Previous-year property tax outstanding", outstandingQuery.data.authoritative ? (outstandingQuery.data.previousPropertyTaxOutstanding ?? "0.00") : "Not confirmed"],
+                      ["Previous-year water tax outstanding", outstandingQuery.data.authoritative ? (outstandingQuery.data.previousWaterTaxOutstanding ?? "0.00") : "Not confirmed"],
+                      ["Previous-year drainage tax outstanding", outstandingQuery.data.authoritative ? (outstandingQuery.data.previousDrainageTaxOutstanding ?? "0.00") : "Not confirmed"],
+                      ["Previous-year penalty and interest", outstandingQuery.data.authoritative ? (outstandingQuery.data.previousPenaltyInterestOutstanding ?? "0.00") : "Not confirmed"],
+                      ["Previous-year rebates/credits", outstandingQuery.data.authoritative ? (outstandingQuery.data.previousRebatesCredits ?? "0.00") : "Not confirmed"],
+                      ["Previous-year payments", outstandingQuery.data.authoritative ? (outstandingQuery.data.previousPayments ?? "0.00") : "Not confirmed"],
+                      ["Total previous-year arrears", outstandingQuery.data.authoritative ? outstandingQuery.data.openingArrears : "Not confirmed"],
+                      ["Current-year property tax", outstandingQuery.data.propertyTax],
+                      ["Current-year water tax", outstandingQuery.data.waterTax],
+                      ["Current-year drainage tax", outstandingQuery.data.drainageTax],
+                      ["Applicable penalty", outstandingQuery.data.penalty],
+                      ["Applicable interest", outstandingQuery.data.interest],
+                      ["Other authorized charges", outstandingQuery.data.approvedDebits ?? "0.00"],
+                      ["Gross eligible demand", outstandingQuery.data.authoritative ? (outstandingQuery.data.grossEligibleDemand ?? outstandingQuery.data.totalPayable) : "Not confirmed"],
+                      ["Department rebate", outstandingQuery.data.rebateAmount ?? "0.00"],
+                      ["Approved credits", outstandingQuery.data.approvedCredits],
+                      ["Payments allocated", outstandingQuery.data.paymentsAllocated],
+                      ["Total payable demand", outstandingQuery.data.authoritative ? outstandingQuery.data.totalPayable : "Not confirmed"],
+                      ["Net outstanding", outstandingQuery.data.authoritative ? outstandingQuery.data.netOutstanding : "Not confirmed"],
+                    ] as const
+                  ).map(([label, value]) => (
+                    <div key={label} className="rounded-md bg-muted/50 p-3">
+                      <dt className="text-muted-foreground">{label}</dt>
+                      <dd className="font-semibold">
+                        {value === "Not confirmed" ? value : `₹ ${value}`}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                {canPublishDemand.allowed ? (
+                  <Button
+                    type="button"
+                    className="cursor-pointer"
+                    disabled={
+                      publishDemand.isPending ||
+                      Boolean(outstandingQuery.data.publishedDemandId) ||
+                      !outstandingQuery.data.authoritative ||
+                      yearLocked
+                    }
+                    onClick={() => publishDemand.mutate()}
+                  >
+                    {outstandingQuery.data.publishedDemandId
+                      ? "Demand already published"
+                      : "Publish property demand"}
+                  </Button>
+                ) : null}
+                {canAdjustDemand.allowed && outstandingQuery.data.publishedDemandId ? (
+                  <div className="grid gap-2 sm:grid-cols-[8rem_1fr_auto]">
+                    <Input
+                      value={creditAmount}
+                      placeholder="0.00"
+                      onChange={(e) => setCreditAmount(e.target.value)}
+                    />
+                    <Input
+                      value={creditReason}
+                      placeholder="Credit reason"
+                      onChange={(e) => setCreditReason(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="cursor-pointer"
+                      disabled={addCredit.isPending}
+                      onClick={() => addCredit.mutate()}
+                    >
+                      Record credit
+                    </Button>
+                  </div>
+                ) : null}
+                <FinancialAdminPanels
+                  assessmentYearId={assessmentYearId}
+                  surveyId={ledgerSurveyId}
+                  canAdjust={canAdjustDemand.allowed}
+                  canConfigure={canConfigure.allowed}
+                  yearLocked={yearLocked}
+                  publishedDemandId={outstandingQuery.data.publishedDemandId}
+                  verificationStatus={
+                    outstandingQuery.data.years.find(
+                      (year) => year.assessmentYearId === assessmentYearId
+                    )?.verificationStatus
+                  }
+                />
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

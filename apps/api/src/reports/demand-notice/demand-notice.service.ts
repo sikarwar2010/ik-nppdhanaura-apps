@@ -16,6 +16,7 @@ import path from "node:path"
 
 import { AuditService } from "../../audit/audit.service"
 import type { AuthUser } from "../../auth/auth.decorators"
+import { DemandsService } from "../../demands/demands.service"
 import { PrismaService } from "../../prisma/prisma.service"
 import {
   computePublicDuesPayload,
@@ -27,7 +28,7 @@ import { TaxConfigsService } from "../../tax-configs/tax-configs.service"
 import { generateDemandNoticeDocumentHtml } from "./demand-notice-html"
 import { renderDemandNoticePdfFromHtml } from "./demand-notice-pdf"
 import { sortDemandNoticeSurveys } from "./demand-notice-sort"
-import { duesPayloadToNoticeViewModel } from "./demand-notice-view-model"
+import { duesPayloadToNoticeViewModel, outstandingToNoticeLedger } from "./demand-notice-view-model"
 import {
   chunkDemandNoticeSurveyIds,
   DEMAND_NOTICE_CHUNK_SIZE,
@@ -111,7 +112,8 @@ export class DemandNoticeService implements OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly taxConfigs: TaxConfigsService,
     private readonly storage: StorageService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly demands: DemandsService
   ) {
     try {
       const connection = new IORedis(
@@ -242,6 +244,7 @@ export class DemandNoticeService implements OnModuleDestroy {
     wardId?: string
     logoUrl?: string
     websiteDisplayHost?: string
+    actorId?: string
   }) {
     const surveyCuid = input.surveyId?.trim()
     const assessmentYearId = input.assessmentYearId?.trim()
@@ -293,9 +296,18 @@ export class DemandNoticeService implements OnModuleDestroy {
       })
     }
 
+    const figures = await this.noticeFigures(survey.id, assessmentYearId)
     const vm = duesPayloadToNoticeViewModel(dues, {
       propertyType: survey.propertyType,
+      ledger: figures.ledger,
+      snapshot: figures.snapshot,
     })
+    if (figures.publishedDemandId && input.actorId) {
+      await this.demands.recordNoticeIssue({
+        assessmentDemandId: figures.publishedDemandId,
+        generatedById: input.actorId,
+      })
+    }
     const logoUrl =
       input.logoUrl?.trim() || (await this.resolveLogoDataUri()) || undefined
     return generateDemandNoticeDocumentHtml([vm], {
@@ -673,6 +685,7 @@ export class DemandNoticeService implements OnModuleDestroy {
 
       const logoUrl = (await this.resolveLogoDataUri()) || undefined
       const viewModels = []
+      const publishedDemandIds: string[] = []
       let processed = 0
       for (const item of validationItems) {
         const cancelled = await this.prisma.exportJob.findUnique({
@@ -681,9 +694,18 @@ export class DemandNoticeService implements OnModuleDestroy {
         })
         if (cancelled?.status === ExportJobStatus.CANCELLED) return
 
+        const figures = await this.noticeFigures(
+          item.dues.id,
+          filters.assessmentYearId
+        )
+        if (figures.publishedDemandId) {
+          publishedDemandIds.push(figures.publishedDemandId)
+        }
         viewModels.push(
           duesPayloadToNoticeViewModel(item.dues, {
             propertyType: item.propertyType,
+            ledger: figures.ledger,
+            snapshot: figures.publishedDemandId ? figures.snapshot : undefined,
           })
         )
         processed += 1
@@ -703,6 +725,13 @@ export class DemandNoticeService implements OnModuleDestroy {
       const fileName = `demand-notices-${filters.wardId.slice(0, 8)}-${Date.now()}.pdf`
       const fileKey = `exports/demand-notices/${jobId}/${fileName}`
       await this.storage.putObject(fileKey, pdf, "application/pdf")
+      for (const demandId of publishedDemandIds) {
+        await this.demands.recordNoticeIssue({
+          assessmentDemandId: demandId,
+          fileKey,
+          generatedById: job.createdById,
+        })
+      }
 
       await this.prisma.exportJob.update({
         where: { id: jobId },
@@ -739,6 +768,15 @@ export class DemandNoticeService implements OnModuleDestroy {
         jobId,
         err instanceof Error ? err.message : "PDF generation failed"
       )
+    }
+  }
+
+  private async noticeFigures(surveyId: string, assessmentYearId: string) {
+    const breakdown = await this.demands.outstanding(surveyId, assessmentYearId)
+    const figures = outstandingToNoticeLedger(breakdown)
+    return {
+      ...figures,
+      publishedDemandId: breakdown.publishedDemandId,
     }
   }
 

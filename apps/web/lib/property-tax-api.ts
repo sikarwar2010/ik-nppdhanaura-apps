@@ -91,6 +91,19 @@ export type PropertyTaxDues = {
   }
   paidForAssessmentYear: boolean
   onlinePaymentEnabled: boolean
+  ledger?: {
+    openingArrears: string
+    currentYearDemand: string
+    rebateAmount: string
+    rebateScope: string
+    penalty: string
+    interest: string
+    totalPayable: string
+    netOutstanding: string
+    authoritative: boolean
+    grossEligibleDemand: string
+    publishedDemandId: string | null
+  }
 }
 
 export type CreatePropertyTaxPayment = {

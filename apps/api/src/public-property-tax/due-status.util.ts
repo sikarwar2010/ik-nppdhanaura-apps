@@ -1,7 +1,10 @@
+import { money } from "../demands/money"
+
 export type PublicPropertyTaxDueStatus = "DUE" | "NO_DUE"
 
 /**
- * NO_DUE when a SUCCESS payment exists for the survey + current assessment year.
+ * Fallback when no published demand exists: NO_DUE when a SUCCESS payment
+ * exists for the survey + current assessment year.
  * INITIATED/PENDING/FAILED or a different year remain DUE.
  */
 export function resolveDueStatus(input: {
@@ -17,6 +20,15 @@ export function resolveDueStatus(input: {
       : new Set(input.paidAssessmentYearIds)
 
   return paid.has(yearId) ? "NO_DUE" : "DUE"
+}
+
+/** Published ledger: NO_DUE only when the net outstanding is zero and reconciled. */
+export function resolveLedgerDueStatus(input: {
+  netOutstanding: string
+  authoritative: boolean
+}): PublicPropertyTaxDueStatus {
+  if (!input.authoritative) return "DUE"
+  return money(input.netOutstanding).lte(0) ? "NO_DUE" : "DUE"
 }
 
 export function isAlreadyPaidForYear(input: {

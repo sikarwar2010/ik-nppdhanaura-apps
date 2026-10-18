@@ -9,6 +9,8 @@ import { RolesGuard } from "./auth/roles.guard"
 import { CsrfController } from "./common/csrf.controller"
 import { CsrfGuard } from "./common/csrf.guard"
 import { DashboardModule } from "./dashboard/dashboard.module"
+import { CollectionsModule } from "./collections/collections.module"
+import { DemandsModule } from "./demands/demands.module"
 import { HealthModule } from "./health/health.module"
 import { ImportsModule } from "./imports/imports.module"
 import { PaymentsModule } from "./payments/payments.module"
@@ -54,6 +56,8 @@ const observeOptions = observeOptionsFromEnv()
     PaymentsModule,
     ReportsModule,
     TaxConfigsModule,
+    DemandsModule,
+    CollectionsModule,
     ReferenceModule,
     PublicPropertyTaxModule,
     ...(observeOptions ? [ObserveModule.forRoot(observeOptions)] : []),

@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common"
+import { Injectable, Logger, NotFoundException } from "@nestjs/common"
 import { PaymentMode, PaymentStatus, Prisma } from "@prisma/client"
 import { randomUUID } from "node:crypto"
 
 import { AuditService } from "../audit/audit.service"
+import { DemandsService } from "../demands/demands.service"
 import { PrismaService } from "../prisma/prisma.service"
 import {
   redactSensitivePaymentPayload,
@@ -81,11 +82,13 @@ function citizenReturnRedirectUrl(merchTxnId: string | undefined) {
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name)
   private provider: PaymentGatewayProvider
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly demands: DemandsService
   ) {
     const mode = process.env.PAYMENT_PROVIDER ?? "sandbox"
     this.provider =
@@ -440,6 +443,13 @@ export class PaymentsService {
     })
 
     if (success && statusChanged) {
+      try {
+        await this.demands.tryAllocateTaggedPayment(payment.id)
+      } catch (err) {
+        this.logger.warn(
+          `Tagged payment ${payment.id} was not allocated: ${String(err)}`
+        )
+      }
       await this.audit.log({
         action: "PAYMENT_SUCCESS",
         entity: "Payment",
@@ -526,7 +536,7 @@ export class PaymentsService {
       },
     })
 
-    return this.prisma.payment.update({
+    const updated = await this.prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: result.success
@@ -543,5 +553,15 @@ export class PaymentsService {
           : {}),
       },
     })
+    if (result.success) {
+      try {
+        await this.demands.tryAllocateTaggedPayment(updated.id)
+      } catch (err) {
+        this.logger.warn(
+          `Tagged payment ${updated.id} was not allocated: ${String(err)}`
+        )
+      }
+    }
+    return updated
   }
 }

@@ -21,16 +21,23 @@ model User {
   updatedAt     DateTime   @updatedAt
   lastLoginAt   DateTime?
 
-  sessions            Session[]
-  passwordResetTokens PasswordResetToken[]
-  userRoles           UserRole[]
-  auditLogs           AuditLog[]           @relation("AuditActor")
-  surveysCreated      Survey[]             @relation("SurveyCreatedBy")
-  surveysUpdated      Survey[]             @relation("SurveyUpdatedBy")
-  importJobs          ImportJob[]
-  exportJobs          ExportJob[]
-  paymentsCollected   Payment[]            @relation("PaymentCollectedBy")
-  attachmentsUploaded SurveyAttachment[]
+  sessions                Session[]
+  passwordResetTokens     PasswordResetToken[]
+  userRoles               UserRole[]
+  auditLogs               AuditLog[]           @relation("AuditActor")
+  surveysCreated          Survey[]             @relation("SurveyCreatedBy")
+  surveysUpdated          Survey[]             @relation("SurveyUpdatedBy")
+  importJobs              ImportJob[]
+  exportJobs              ExportJob[]
+  paymentsCollected       Payment[]            @relation("PaymentCollectedBy")
+  attachmentsUploaded     SurveyAttachment[]
+  demandsPublished        AssessmentDemand[]   @relation("DemandPublishedBy")
+  demandsVerified         AssessmentDemand[]   @relation("DemandVerifiedBy")
+  noticeIssues            DemandNoticeIssue[]  @relation("NoticeGeneratedBy")
+  allocationsCreated      PaymentAllocation[]  @relation("AllocationCreatedBy")
+  adjustmentsCreated      DemandAdjustment[]   @relation("AdjustmentCreatedBy")
+  rebatePoliciesApproved  RebatePolicy[]       @relation("RebatePolicyApprovedBy")
+  penaltyPoliciesApproved PenaltyPolicy[]      @relation("PenaltyPolicyApprovedBy")
 
   @@map("user")
 }
@@ -161,6 +168,7 @@ model Ward {
   surveys    Survey[]
   payments   Payment[]
   taxConfigs TaxConfig[]
+  demands    AssessmentDemand[]
 
   @@map("ward")
 }
@@ -269,6 +277,7 @@ model Survey {
   floors      SurveyFloor[]
   attachments SurveyAttachment[]
   payments    Payment[]
+  demands     AssessmentDemand[]
 
   @@index([wardId])
   @@index([mobile])
@@ -459,10 +468,14 @@ model ReferenceEntry {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
-  taxConfigsAssessmentYear TaxConfig[]   @relation("TaxConfigAssessmentYear")
-  paymentsAssessmentYear   Payment[]     @relation("PaymentAssessmentYear")
-  taxCellsRoad             TaxRateCell[] @relation("CellRoadWidth")
-  taxCellsConstruction     TaxRateCell[] @relation("CellConstruction")
+  taxConfigsAssessmentYear TaxConfig[]            @relation("TaxConfigAssessmentYear")
+  paymentsAssessmentYear   Payment[]              @relation("PaymentAssessmentYear")
+  demandsAssessmentYear    AssessmentDemand[]     @relation("DemandAssessmentYear")
+  taxCellsRoad             TaxRateCell[]          @relation("CellRoadWidth")
+  taxCellsConstruction     TaxRateCell[]          @relation("CellConstruction")
+  yearProfile              AssessmentYearProfile?
+  rebatePolicies           RebatePolicy[]         @relation("RebatePolicyYear")
+  penaltyPolicies          PenaltyPolicy[]        @relation("PenaltyPolicyYear")
 
   @@unique([categoryId, code])
   @@index([categoryId, status])
@@ -492,6 +505,7 @@ model TaxConfig {
 
   cells    TaxRateCell[]
   versions TaxConfigVersion[]
+  demands  AssessmentDemand[]
 
   @@unique([wardId, assessmentYearId])
   @@index([wardId, assessmentYearId])
@@ -551,39 +565,43 @@ enum PaymentStatus {
 }
 
 model Payment {
-  id                String        @id @default(cuid())
-  paymentReference  String        @unique
-  merchTxnId        String?       @unique
-  atomTxnId         String?       @unique
+  id                String          @id @default(cuid())
+  paymentReference  String          @unique
+  merchTxnId        String?         @unique
+  atomTxnId         String?         @unique
   surveyId          String?
-  survey            Survey?       @relation(fields: [surveyId], references: [id])
+  survey            Survey?         @relation(fields: [surveyId], references: [id])
   wardId            String?
-  ward              Ward?         @relation(fields: [wardId], references: [id])
+  ward              Ward?           @relation(fields: [wardId], references: [id])
   assessmentYearId  String?
   assessmentYear    ReferenceEntry? @relation("PaymentAssessmentYear", fields: [assessmentYearId], references: [id])
   payerName         String?
   payerMobile       String?
   payerEmail        String?
-  amount            Decimal       @db.Decimal(14, 2)
-  currency          String        @default("INR")
+  amount            Decimal         @db.Decimal(14, 2)
+  currency          String          @default("INR")
   paymentMode       PaymentMode
-  status            PaymentStatus @default(INITIATED)
+  status            PaymentStatus   @default(INITIATED)
   gateway           String?
   gatewayReference  String?
-  receiptNumber     String?       @unique
+  receiptNumber     String?         @unique
   collectionDate    DateTime?
   chequeDdReference String?
   remarks           String?
   collectedById     String?
-  collectedBy       User?         @relation("PaymentCollectedBy", fields: [collectedById], references: [id])
+  collectedBy       User?           @relation("PaymentCollectedBy", fields: [collectedById], references: [id])
+  counterCode       String?
+  idempotencyKey    String?         @unique
+  receiptSnapshot   Json?
   attachmentKey     String?
-  refundableAmount  Decimal?      @db.Decimal(14, 2)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  refundableAmount  Decimal?        @db.Decimal(14, 2)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   transactions PaymentTransaction[]
   callbacks    PaymentCallback[]
   refunds      PaymentRefund[]
+  allocations  PaymentAllocation[]
 
   @@index([status])
   @@index([createdAt])
@@ -591,7 +609,16 @@ model Payment {
   @@index([wardId])
   @@index([paymentMode])
   @@index([surveyId, status, assessmentYearId])
+  @@index([collectionDate])
   @@map("payment")
+}
+
+/// Per-assessment-year counter for offline receipt numbers. Incremented inside the collection transaction.
+model ReceiptSequence {
+  yearCode  String @id
+  lastValue Int    @default(0)
+
+  @@map("receipt_sequence")
 }
 
 model PaymentTransaction {
@@ -666,6 +693,253 @@ model PaymentSettlement {
   @@index([merchTxnId])
   @@index([settlementDate])
   @@map("payment_settlement")
+}
+
+// ─── Assessment-year demand ledger ─────────────────────────────
+
+enum AssessmentDemandStatus {
+  DRAFT
+  PUBLISHED
+  SUPERSEDED
+}
+
+enum AssessmentDemandSource {
+  CALCULATED
+  OPENING_BALANCE
+}
+
+enum PaymentAllocationStatus {
+  ACTIVE
+  REVERSED
+}
+
+enum DemandAdjustmentKind {
+  CREDIT
+  DEBIT
+}
+
+enum AssessmentYearLifecycle {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVED
+}
+
+enum PolicyStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  ARCHIVED
+}
+
+enum RebateType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PenaltyType {
+  PERCENT_OF_PROPERTY_TAX
+  PERCENT_OF_ELIGIBLE_BASE
+  FIXED_AMOUNT
+}
+
+enum PenaltyTrigger {
+  ON_ASSESSMENT
+  DUE_DATE_PASSED
+}
+
+enum DemandVerificationStatus {
+  UNVERIFIED
+  VERIFIED
+}
+
+enum DemandBalanceKind {
+  COMPONENTS
+  CLOSING_ONLY
+}
+
+/// Dates and lifecycle for an assessment-year catalog row. One database is one municipality.
+model AssessmentYearProfile {
+  id               String                  @id @default(cuid())
+  referenceEntryId String                  @unique
+  referenceEntry   ReferenceEntry          @relation(fields: [referenceEntryId], references: [id])
+  startsOn         DateTime                @db.Date
+  endsOn           DateTime                @db.Date
+  status           AssessmentYearLifecycle @default(DRAFT)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  @@index([status])
+  @@map("assessment_year_profile")
+}
+
+model RebatePolicy {
+  id                 String         @id @default(cuid())
+  name               String
+  assessmentYearId   String
+  assessmentYear     ReferenceEntry @relation("RebatePolicyYear", fields: [assessmentYearId], references: [id])
+  rebateType         RebateType
+  rate               Decimal?       @db.Decimal(8, 4)
+  fixedAmount        Decimal?       @db.Decimal(14, 2)
+  includePropertyTax Boolean        @default(true)
+  includeWaterTax    Boolean        @default(true)
+  includeDrainageTax Boolean        @default(true)
+  includeArrears     Boolean        @default(true)
+  includePenalty     Boolean        @default(false)
+  includeInterest    Boolean        @default(false)
+  maxAmount          Decimal?       @db.Decimal(14, 2)
+  startsOn           DateTime?      @db.Date
+  endsOn             DateTime?      @db.Date
+  paymentDeadline    DateTime?      @db.Date
+  status             PolicyStatus   @default(DRAFT)
+  approvedAt         DateTime?
+  approvedById       String?
+  approvedBy         User?          @relation("RebatePolicyApprovedBy", fields: [approvedById], references: [id])
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  demands AssessmentDemand[]
+
+  @@index([assessmentYearId, status])
+  @@map("rebate_policy")
+}
+
+model PenaltyPolicy {
+  id                 String         @id @default(cuid())
+  name               String
+  assessmentYearId   String
+  assessmentYear     ReferenceEntry @relation("PenaltyPolicyYear", fields: [assessmentYearId], references: [id])
+  penaltyType        PenaltyType
+  rate               Decimal?       @db.Decimal(8, 4)
+  fixedAmount        Decimal?       @db.Decimal(14, 2)
+  trigger            PenaltyTrigger @default(ON_ASSESSMENT)
+  graceDays          Int            @default(0)
+  dueDate            DateTime?      @db.Date
+  includePropertyTax Boolean        @default(true)
+  includeWaterTax    Boolean        @default(false)
+  includeDrainageTax Boolean        @default(false)
+  includeArrears     Boolean        @default(false)
+  /// When true, percentage penalty is calculated on the eligible base after rebate.
+  applyAfterRebate   Boolean        @default(false)
+  maxAmount          Decimal?       @db.Decimal(14, 2)
+  startsOn           DateTime?      @db.Date
+  endsOn             DateTime?      @db.Date
+  status             PolicyStatus   @default(DRAFT)
+  approvedAt         DateTime?
+  approvedById       String?
+  approvedBy         User?          @relation("PenaltyPolicyApprovedBy", fields: [approvedById], references: [id])
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  demands AssessmentDemand[]
+
+  @@index([assessmentYearId, status])
+  @@map("penalty_policy")
+}
+
+/// One published row per property and assessment year is enforced by
+/// partial unique index assessment_demand_one_published (see migration SQL).
+model AssessmentDemand {
+  id                 String                   @id @default(cuid())
+  surveyId           String
+  survey             Survey                   @relation(fields: [surveyId], references: [id])
+  wardId             String
+  ward               Ward                     @relation(fields: [wardId], references: [id])
+  assessmentYearId   String
+  assessmentYear     ReferenceEntry           @relation("DemandAssessmentYear", fields: [assessmentYearId], references: [id])
+  taxConfigId        String?
+  taxConfig          TaxConfig?               @relation(fields: [taxConfigId], references: [id])
+  taxConfigVersion   Int?
+  demandReference    String                   @unique
+  status             AssessmentDemandStatus   @default(PUBLISHED)
+  source             AssessmentDemandSource
+  propertyTax        Decimal                  @db.Decimal(14, 2)
+  waterTax           Decimal                  @db.Decimal(14, 2)
+  drainageTax        Decimal                  @db.Decimal(14, 2)
+  penalty            Decimal                  @default(0) @db.Decimal(14, 2)
+  interest           Decimal                  @default(0) @db.Decimal(14, 2)
+  currentYearDemand  Decimal                  @db.Decimal(14, 2)
+  openingArrears     Decimal                  @default(0) @db.Decimal(14, 2)
+  rebateAmount       Decimal                  @default(0) @db.Decimal(14, 2)
+  historicalPayments Decimal                  @default(0) @db.Decimal(14, 2)
+  rebatePolicyId     String?
+  rebatePolicy       RebatePolicy?            @relation(fields: [rebatePolicyId], references: [id])
+  penaltyPolicyId    String?
+  penaltyPolicy      PenaltyPolicy?           @relation(fields: [penaltyPolicyId], references: [id])
+  verificationStatus DemandVerificationStatus @default(VERIFIED)
+  verifiedById       String?
+  verifiedBy         User?                    @relation("DemandVerifiedBy", fields: [verifiedById], references: [id])
+  verifiedAt         DateTime?
+  sourceReference    String?
+  remarks            String?
+  balanceKind        DemandBalanceKind        @default(COMPONENTS)
+  idempotencyKey     String?                  @unique
+  publishedAt        DateTime?
+  publishedById      String?
+  publishedBy        User?                    @relation("DemandPublishedBy", fields: [publishedById], references: [id])
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  allocations  PaymentAllocation[]
+  adjustments  DemandAdjustment[]
+  noticeIssues DemandNoticeIssue[]
+
+  @@index([surveyId, status])
+  @@index([surveyId, assessmentYearId, status])
+  @@index([wardId, assessmentYearId])
+  @@map("assessment_demand")
+}
+
+model DemandNoticeIssue {
+  id                 String           @id @default(cuid())
+  assessmentDemandId String
+  assessmentDemand   AssessmentDemand @relation(fields: [assessmentDemandId], references: [id])
+  version            Int
+  fileKey            String?
+  generatedAt        DateTime         @default(now())
+  generatedById      String?
+  generatedBy        User?            @relation("NoticeGeneratedBy", fields: [generatedById], references: [id])
+
+  @@unique([assessmentDemandId, version])
+  @@index([assessmentDemandId])
+  @@map("demand_notice_issue")
+}
+
+model PaymentAllocation {
+  id                 String                  @id @default(cuid())
+  paymentId          String
+  payment            Payment                 @relation(fields: [paymentId], references: [id])
+  assessmentDemandId String
+  assessmentDemand   AssessmentDemand        @relation(fields: [assessmentDemandId], references: [id])
+  amount             Decimal                 @db.Decimal(14, 2)
+  status             PaymentAllocationStatus @default(ACTIVE)
+  createdById        String?
+  createdBy          User?                   @relation("AllocationCreatedBy", fields: [createdById], references: [id])
+  createdAt          DateTime                @default(now())
+  reversedAt         DateTime?
+
+  @@unique([paymentId, assessmentDemandId])
+  @@index([assessmentDemandId, status])
+  @@index([paymentId, status])
+  @@map("payment_allocation")
+}
+
+model DemandAdjustment {
+  id                   String               @id @default(cuid())
+  assessmentDemandId   String
+  assessmentDemand     AssessmentDemand     @relation(fields: [assessmentDemandId], references: [id])
+  kind                 DemandAdjustmentKind
+  amount               Decimal              @db.Decimal(14, 2)
+  reason               String
+  createdById          String?
+  createdBy            User?                @relation("AdjustmentCreatedBy", fields: [createdById], references: [id])
+  reversesAdjustmentId String?
+  reversesAdjustment   DemandAdjustment?    @relation("AdjustmentReversal", fields: [reversesAdjustmentId], references: [id])
+  reversedBy           DemandAdjustment[]   @relation("AdjustmentReversal")
+  createdAt            DateTime             @default(now())
+
+  @@index([assessmentDemandId])
+  @@map("demand_adjustment")
 }
 
 // ─── Audit ─────────────────────────────────────────────────────

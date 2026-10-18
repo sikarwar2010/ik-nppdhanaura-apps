@@ -8,14 +8,20 @@ import type { Prisma } from "@prisma/client"
 
 import { AuditService } from "../audit/audit.service"
 import { PrismaService } from "../prisma/prisma.service"
-import { computeGisPreviewDemand } from "../tax/tax-calc"
 import type {
   CopyTaxToWardsDto,
+  CreateTaxConfigDto,
   PublishTaxConfigDto,
   TaxPreviewDto,
   UpdateTaxConfigParamsDto,
   UpsertTaxCellDto,
 } from "./dto/tax-config.dto"
+import {
+  buildTaxPreview,
+  decimalToString,
+  missingTaxConfig,
+  serializeTaxConfig,
+} from "./tax-config-read"
 
 function toNumber(value: { toString(): string } | number | string): number {
   return typeof value === "number" ? value : Number(value)
@@ -39,16 +45,19 @@ export class TaxConfigsService {
     ward: true,
   } as const
 
-  async getOrCreate(
-    wardId: string,
-    assessmentYearId: string,
-    actorId?: string
-  ) {
-    const existing = await this.prisma.taxConfig.findUnique({
-      where: { wardId_assessmentYearId: { wardId, assessmentYearId } },
-      include: this.include,
-    })
-    if (existing) return existing
+  async get(wardId: string, assessmentYearId: string) {
+    this.assertIds(wardId, assessmentYearId)
+    const existing = await this.findConfig(wardId, assessmentYearId)
+    if (!existing) return missingTaxConfig(wardId, assessmentYearId)
+    return serializeTaxConfig(existing)
+  }
+
+  async createDraft(dto: CreateTaxConfigDto, actorId?: string) {
+    const wardId = dto.wardId.trim()
+    const assessmentYearId = dto.assessmentYearId.trim()
+    this.assertIds(wardId, assessmentYearId)
+    const existing = await this.findConfig(wardId, assessmentYearId)
+    if (existing) return serializeTaxConfig(existing)
 
     const ward = await this.prisma.ward.findUnique({ where: { id: wardId } })
     if (!ward) throw new NotFoundException("Ward not found")
@@ -67,22 +76,15 @@ export class TaxConfigsService {
       include: this.include,
     })
 
-    await this.ensureMatrixCells(created.id)
-
-    const full = await this.prisma.taxConfig.findUniqueOrThrow({
-      where: { id: created.id },
-      include: this.include,
-    })
-
     await this.audit.log({
       action: "CREATE",
       entity: "TaxConfig",
-      entityId: full.id,
+      entityId: created.id,
       newValue: { wardId, assessmentYearId },
       actorId,
     })
 
-    return full
+    return serializeTaxConfig(created)
   }
 
   async getPublishedForWard(wardId: string, assessmentYearId: string) {
@@ -98,40 +100,6 @@ export class TaxConfigsService {
     return config
   }
 
-  private async ensureMatrixCells(taxConfigId: string) {
-    const [roads, constructions] = await Promise.all([
-      this.prisma.referenceEntry.findMany({
-        where: { category: { code: "TAX_RATE_ZONE" }, status: "ACTIVE" },
-        orderBy: { sortOrder: "asc" },
-      }),
-      this.prisma.referenceEntry.findMany({
-        where: { category: { code: "CONSTRUCTION_TYPE" }, status: "ACTIVE" },
-        orderBy: { sortOrder: "asc" },
-      }),
-    ])
-
-    for (const road of roads) {
-      for (const construction of constructions) {
-        await this.prisma.taxRateCell.upsert({
-          where: {
-            taxConfigId_roadWidthEntryId_constructionEntryId: {
-              taxConfigId,
-              roadWidthEntryId: road.id,
-              constructionEntryId: construction.id,
-            },
-          },
-          create: {
-            taxConfigId,
-            roadWidthEntryId: road.id,
-            constructionEntryId: construction.id,
-            annualRatePerSqFt: 0,
-          },
-          update: {},
-        })
-      }
-    }
-  }
-
   async updateParams(
     id: string,
     dto: UpdateTaxConfigParamsDto,
@@ -142,6 +110,7 @@ export class TaxConfigsService {
     if (existing.status === "ARCHIVED") {
       throw new BadRequestException("Cannot edit archived tax config")
     }
+    await this.assertAssessmentYearOpen(existing.assessmentYearId)
 
     const updated = await this.prisma.taxConfig.update({
       where: { id },
@@ -167,12 +136,13 @@ export class TaxConfigsService {
       actorId,
     })
 
-    return updated
+    return serializeTaxConfig(updated)
   }
 
   async upsertCells(id: string, cells: UpsertTaxCellDto[], actorId?: string) {
     const existing = await this.prisma.taxConfig.findUnique({ where: { id } })
     if (!existing) throw new NotFoundException("Tax config not found")
+    await this.assertAssessmentYearOpen(existing.assessmentYearId)
 
     for (const cell of cells) {
       await this.prisma.taxRateCell.upsert({
@@ -208,23 +178,34 @@ export class TaxConfigsService {
       actorId,
     })
 
-    return this.prisma.taxConfig.findUniqueOrThrow({
+    const saved = await this.prisma.taxConfig.findUniqueOrThrow({
       where: { id },
       include: this.include,
     })
+    return serializeTaxConfig(saved)
   }
 
   async copyToAllWards(dto: CopyTaxToWardsDto, actorId?: string) {
-    const source = await this.getOrCreate(
+    const source = await this.findConfig(
       dto.sourceWardId,
-      dto.assessmentYearId,
-      actorId
+      dto.assessmentYearId
     )
-    const cells: UpsertTaxCellDto[] = source.cells.map((c) => ({
-      roadWidthEntryId: c.roadWidthEntryId,
-      constructionEntryId: c.constructionEntryId,
-      annualRatePerSqFt: toNumber(c.annualRatePerSqFt),
-    }))
+    if (!source) {
+      throw new NotFoundException(
+        "No tax configuration exists for the source ward and assessment year"
+      )
+    }
+    const cells: UpsertTaxCellDto[] = source.cells.flatMap((cell) => {
+      const rate = decimalToString(cell.annualRatePerSqFt)
+      if (rate == null) return []
+      return [
+        {
+          roadWidthEntryId: cell.roadWidthEntryId,
+          constructionEntryId: cell.constructionEntryId,
+          annualRatePerSqFt: Number(rate),
+        },
+      ]
+    })
 
     const wards = await this.prisma.ward.findMany({
       where: { isActive: true },
@@ -234,9 +215,8 @@ export class TaxConfigsService {
     let updated = 0
     for (const ward of wards) {
       if (ward.id === dto.sourceWardId) continue
-      const config = await this.getOrCreate(
-        ward.id,
-        dto.assessmentYearId,
+      const config = await this.createDraft(
+        { wardId: ward.id, assessmentYearId: dto.assessmentYearId },
         actorId
       )
       await this.upsertCells(config.id, cells, actorId)
@@ -259,53 +239,9 @@ export class TaxConfigsService {
   }
 
   async preview(dto: TaxPreviewDto) {
-    const config = await this.getOrCreate(dto.wardId, dto.assessmentYearId)
-    const cell = config.cells.find(
-      (c) =>
-        c.roadWidthEntryId === dto.roadWidthEntryId &&
-        c.constructionEntryId === dto.constructionEntryId
-    )
-    const baseMonthlyRate = cell ? toNumber(cell.annualRatePerSqFt) : 0
-    const assessablePct = toNumber(config.assessablePct)
-    const commercialAssessablePct = toNumber(config.commercialAssessablePct)
-    const propertyTaxPct = toNumber(config.propertyTaxPct)
-    const waterTaxPct = toNumber(config.waterTaxPct)
-    const drainageTaxPct = toNumber(config.drainageTaxPct)
-    const penaltyPct = toNumber(config.penaltyPct)
-
-    const preview = computeGisPreviewDemand({
-      areaSqFt: dto.areaSqFt,
-      baseMonthlyRate,
-      gisUseCode: dto.gisUseCode ?? "R",
-      assessablePct,
-      commercialAssessablePct,
-      propertyTaxPct,
-      waterTaxPct,
-      drainageTaxPct,
-      penaltyPct,
-    })
-
-    return {
-      inputs: dto,
-      rates: {
-        annualRate: preview.effectiveMonthlyRate,
-        assessablePct: preview.assessablePct,
-        commercialAssessablePct,
-        propertyTaxPct,
-        waterTaxPct,
-        drainageTaxPct,
-        penaltyPct,
-      },
-      calculation: {
-        grossAlv: preview.grossAlv,
-        assessableAlv: preview.assessableAlv,
-        propertyTax: preview.propertyTax,
-        waterTax: preview.waterTax,
-        drainageTax: preview.drainageTax,
-        penalty: preview.penalty,
-        demand: preview.demand,
-      },
-    }
+    this.assertIds(dto.wardId, dto.assessmentYearId)
+    const config = await this.findConfig(dto.wardId, dto.assessmentYearId)
+    return buildTaxPreview(config, dto)
   }
 
   async listVersions(taxConfigId: string) {
@@ -321,6 +257,7 @@ export class TaxConfigsService {
       include: this.include,
     })
     if (!config) throw new NotFoundException("Tax config not found")
+    await this.assertAssessmentYearOpen(config.assessmentYearId)
 
     const nextVersion = config.version + (config.status === "PUBLISHED" ? 1 : 0)
     const snapshot = {
@@ -373,6 +310,35 @@ export class TaxConfigsService {
       actorId,
     })
 
-    return published
+    return serializeTaxConfig(published)
+  }
+
+  private assertIds(wardId: string, assessmentYearId: string) {
+    if (!wardId?.trim() || !assessmentYearId?.trim()) {
+      throw new BadRequestException(
+        "Ward and assessment year are required"
+      )
+    }
+  }
+
+  private findConfig(wardId: string, assessmentYearId: string) {
+    return this.prisma.taxConfig.findUnique({
+      where: { wardId_assessmentYearId: { wardId, assessmentYearId } },
+      include: this.include,
+    })
+  }
+
+  private async assertAssessmentYearOpen(assessmentYearId: string) {
+    const profile = await this.prisma.assessmentYearProfile.findUnique({
+      where: { referenceEntryId: assessmentYearId },
+    })
+    if (!profile) return
+    if (profile.status === "CLOSED" || profile.status === "ARCHIVED") {
+      throw new ConflictException({
+        code: "ASSESSMENT_YEAR_LOCKED",
+        message:
+          "This assessment year is closed or archived. Tax rates cannot be changed.",
+      })
+    }
   }
 }
