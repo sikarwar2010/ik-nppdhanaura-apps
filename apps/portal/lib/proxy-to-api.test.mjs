@@ -45,6 +45,16 @@ describe("portal proxyToApi cookie forwarding", () => {
     assert.match(src, /Cannot reach API at/)
   })
 
+  it("returns HTTP 502 API_UNAVAILABLE from the connect-failure catch instead of throwing", () => {
+    assert.match(src, /code: "API_UNAVAILABLE"/)
+    assert.match(src, /status: 502/)
+    assert.match(
+      src,
+      /return proxyFailureResponse\(err, apiHost, uploadRequest\)/
+    )
+    assert.doesNotMatch(src, /throw err/)
+  })
+
   it("does not warn about missing session cookies on login or logout", () => {
     assert.match(src, /\/api\/v1\/auth\/login/)
     assert.match(src, /\/api\/v1\/auth\/logout/)

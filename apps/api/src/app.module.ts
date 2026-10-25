@@ -8,6 +8,7 @@ import { PermissionGuard } from "./auth/permission.guard"
 import { RolesGuard } from "./auth/roles.guard"
 import { CsrfController } from "./common/csrf.controller"
 import { CsrfGuard } from "./common/csrf.guard"
+import { RedisShutdown } from "./common/redis.client"
 import { DashboardModule } from "./dashboard/dashboard.module"
 import { CollectionsModule } from "./collections/collections.module"
 import { DemandsModule } from "./demands/demands.module"
@@ -64,6 +65,7 @@ const observeOptions = observeOptionsFromEnv()
   ],
   controllers: [CsrfController],
   providers: [
+    RedisShutdown,
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: CsrfGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },

@@ -63,6 +63,32 @@ describe("assertRequiredEnv", () => {
     ).toThrow(/REDIS_URL/)
   })
 
+  it("accepts redis://127.0.0.1:6380", () => {
+    expect(() =>
+      assertRequiredEnv({
+        env: {
+          NODE_ENV: "development",
+          DATABASE_URL: "postgresql://u:p@127.0.0.1:5433/chhata",
+          SESSION_SECRET: "x".repeat(32),
+          REDIS_URL: "redis://127.0.0.1:6380",
+        },
+      })
+    ).not.toThrow()
+  })
+
+  it("rejects a malformed REDIS_URL", () => {
+    expect(() =>
+      assertRequiredEnv({
+        env: {
+          NODE_ENV: "development",
+          DATABASE_URL: "postgresql://u:p@127.0.0.1:5433/chhata",
+          SESSION_SECRET: "x".repeat(32),
+          REDIS_URL: "localhost:6380",
+        },
+      })
+    ).toThrow(/REDIS_URL is malformed/)
+  })
+
   it("includes seed admin errors when requested", () => {
     expect(() =>
       assertRequiredEnv({

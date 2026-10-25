@@ -8,13 +8,16 @@ import {
 } from "@nestjs/common"
 import { ExportJobStatus, type Prisma } from "@prisma/client"
 import { Queue } from "bullmq"
-import IORedis from "ioredis"
 import { createHash, createHmac } from "node:crypto"
 import { existsSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 
 import { AuditService } from "../../audit/audit.service"
+import {
+  closeRedisConnection,
+  createBullMqConnection,
+} from "../../common/redis.client"
 import type { AuthUser } from "../../auth/auth.decorators"
 import { DemandsService } from "../../demands/demands.service"
 import { PrismaService } from "../../prisma/prisma.service"
@@ -107,6 +110,7 @@ export type DemandNoticeFiltersJson = {
 export class DemandNoticeService implements OnModuleDestroy {
   private readonly logger = new Logger(DemandNoticeService.name)
   private queue: Queue | null = null
+  private connection: ReturnType<typeof createBullMqConnection> | null = null
 
   constructor(
     private readonly prisma: PrismaService,
@@ -116,18 +120,23 @@ export class DemandNoticeService implements OnModuleDestroy {
     private readonly demands: DemandsService
   ) {
     try {
-      const connection = new IORedis(
-        process.env.REDIS_URL ?? "redis://localhost:6379",
-        { maxRetriesPerRequest: null }
-      )
-      this.queue = new Queue(DEMAND_NOTICE_QUEUE, { connection })
+      this.connection = createBullMqConnection()
+      this.queue = new Queue(DEMAND_NOTICE_QUEUE, { connection: this.connection })
     } catch (err) {
-      this.logger.warn(`Demand notice queue unavailable: ${String(err)}`)
+      this.logger.warn(
+        `Demand notice queue unavailable: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      )
     }
   }
 
   async onModuleDestroy() {
-    await this.queue?.close()
+    await this.queue?.close().catch(() => undefined)
+    if (!this.connection) return
+    const current = this.connection
+    this.connection = null
+    await closeRedisConnection(current)
   }
 
   async listCandidates(input: {

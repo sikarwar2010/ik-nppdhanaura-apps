@@ -10,6 +10,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
+const requireInfra = process.argv.includes("--require-infra")
 
 const ENV_TARGETS = [
   { env: ".env", example: ".env.example" },
@@ -68,18 +69,27 @@ if (created === 0) {
 const missingInfra = []
 for (const { port, label } of INFRA) {
   if (!(await canConnect(port))) {
-    missingInfra.push(`  ${label} on localhost:${port}`)
+    missingInfra.push(`  ${label} on 127.0.0.1:${port}`)
   }
 }
 
 if (missingInfra.length > 0) {
-  console.warn("")
-  console.warn("Local infra ports are not reachable:")
-  console.warn(missingInfra.join("\n"))
-  console.warn("")
-  console.warn("Start infra only (Postgres 5433, Redis 6380):")
-  console.warn("  pnpm docker:up")
-  console.warn("  # or: docker compose up -d")
-  console.warn("")
-  console.warn("Continuing — Nest will fail later if DATABASE_URL / REDIS_URL cannot connect.")
+  const report = requireInfra ? console.error : console.warn
+  report("")
+  report("Local infra ports are not reachable:")
+  report(missingInfra.join("\n"))
+  report("")
+  report("Start infra only (Postgres 127.0.0.1:5433, Redis 127.0.0.1:6380):")
+  report("  pnpm docker:up")
+  report("  # or: docker compose up -d")
+  report("Docker Desktop must be running. Confirm Redis with:")
+  report("  Test-NetConnection 127.0.0.1 -Port 6380")
+  report("")
+  if (requireInfra) {
+    report(
+      "Refusing to start because Postgres (127.0.0.1:5433) or Redis (127.0.0.1:6380) is not reachable."
+    )
+    process.exit(1)
+  }
+  report("Continuing — Nest will fail later if DATABASE_URL / REDIS_URL cannot connect.")
 }

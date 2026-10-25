@@ -1,7 +1,10 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common"
 import { Worker } from "bullmq"
-import IORedis from "ioredis"
 
+import {
+  closeRedisConnection,
+  createBullMqConnection,
+} from "../../common/redis.client"
 import { DEMAND_NOTICE_QUEUE } from "./demand-notice.constants"
 import { DemandNoticeService } from "./demand-notice.service"
 
@@ -9,15 +12,13 @@ import { DemandNoticeService } from "./demand-notice.service"
 export class DemandNoticeWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DemandNoticeWorker.name)
   private worker: Worker | null = null
+  private connection: ReturnType<typeof createBullMqConnection> | null = null
 
   constructor(private readonly demandNotices: DemandNoticeService) {}
 
   onModuleInit() {
     try {
-      const connection = new IORedis(
-        process.env.REDIS_URL ?? "redis://localhost:6379",
-        { maxRetriesPerRequest: null }
-      )
+      this.connection = createBullMqConnection()
       this.worker = new Worker(
         DEMAND_NOTICE_QUEUE,
         async (job) => {
@@ -25,7 +26,7 @@ export class DemandNoticeWorker implements OnModuleInit, OnModuleDestroy {
           this.logger.log(`Processing demand notice export ${jobId}`)
           await this.demandNotices.processJob(jobId)
         },
-        { connection }
+        { connection: this.connection }
       )
       this.worker.on("failed", (job, err) => {
         this.logger.error(
@@ -33,11 +34,19 @@ export class DemandNoticeWorker implements OnModuleInit, OnModuleDestroy {
         )
       })
     } catch (err) {
-      this.logger.warn(`Demand notice worker not started: ${String(err)}`)
+      this.logger.warn(
+        `Demand notice worker not started: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      )
     }
   }
 
   async onModuleDestroy() {
-    await this.worker?.close()
+    await this.worker?.close().catch(() => undefined)
+    if (!this.connection) return
+    const current = this.connection
+    this.connection = null
+    await closeRedisConnection(current)
   }
 }

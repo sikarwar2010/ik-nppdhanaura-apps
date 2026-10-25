@@ -1,3 +1,4 @@
+import { describeRedisEndpoint } from "../common/redis.client"
 import { resolveSeedAdminConfig } from "../db/seed-admin-config"
 
 export type ValidateEnvOptions = {
@@ -62,10 +63,19 @@ export function assertRequiredEnv(options: ValidateEnvOptions = {}): void {
     )
   }
 
-  if (!env.REDIS_URL?.trim()) {
+  const redisUrl = env.REDIS_URL?.trim()
+  if (!redisUrl) {
     errors.push(
-      "REDIS_URL is required (local: redis://localhost:6380; production: compose derives it from REDIS_PASSWORD)"
+      "REDIS_URL is required (local: redis://127.0.0.1:6380; production: compose derives it from REDIS_PASSWORD)"
     )
+  } else {
+    try {
+      describeRedisEndpoint(redisUrl)
+    } catch (error) {
+      errors.push(
+        error instanceof Error ? error.message : "REDIS_URL is malformed"
+      )
+    }
   }
 
   if (!env.SESSION_SECRET?.trim() && !env.BETTER_AUTH_SECRET?.trim()) {

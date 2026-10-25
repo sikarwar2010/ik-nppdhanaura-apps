@@ -1,0 +1,185 @@
+{
+  "entries": {
+    "cmd-1792869482595": {
+      "key": "cmd-1792869482595",
+      "value": "{\"command\":\"pnpm exec jest src/common/redis.client.spec.ts src/config/validate-env.spec.ts src/config/dev-toolchain.spec.ts src/health/health-readiness.spec.ts --no-coverage\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:18:02.595Z",
+      "lastAccessed": "2026-10-24T19:18:02.595Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:18:02.595Z"
+    },
+    "cmd-1792869491093": {
+      "key": "cmd-1792869491093",
+      "value": "{\"command\":\"node --test lib/proxy-to-api.test.mjs\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:18:11.093Z",
+      "lastAccessed": "2026-10-24T19:18:11.093Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:18:11.093Z"
+    },
+    "cmd-1792869522784": {
+      "key": "cmd-1792869522784",
+      "value": "{\"command\":\"pnpm exec eslint src/common/redis.client.ts src/common/redis.client.spec.ts src/config/validate-env.ts src/config/validate-env.spec.ts src/config/dev-toolchain.spec.ts src/health/health-readiness.spec.ts src/main.ts src/app.module.ts src/imports/imports.service.ts src/imports/import.worker.ts src/reports/demand-notice/demand-notice.service.ts src/reports/demand-notice/demand-notice.worker.ts --max-warnings 0\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:18:42.784Z",
+      "lastAccessed": "2026-10-24T19:18:42.784Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:18:42.784Z"
+    },
+    "cmd-1792869570670": {
+      "key": "cmd-1792869570670",
+      "value": "{\"command\":\"docker compose ps --format \\\"{{.Name}} {{.Status}} {{.Ports}}\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:19:30.670Z",
+      "lastAccessed": "2026-10-24T19:19:30.670Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:19:30.670Z"
+    },
+    "cmd-1792869587385": {
+      "key": "cmd-1792869587385",
+      "value": "{\"command\":\"docker port nppdhanaura-redis; docker port nppdhanaura-postgres\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:19:47.385Z",
+      "lastAccessed": "2026-10-24T19:19:47.385Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:19:47.385Z"
+    },
+    "cmd-1792869610320": {
+      "key": "cmd-1792869610320",
+      "value": "{\"command\":\"docker inspect nppdhanaura-redis --format \\\"{{json .HostConfig.PortBindings}}\\\"; docker inspect nppdhanaura-postgres --format \\\"{{json .HostConfig.PortBindings}}\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:20:10.320Z",
+      "lastAccessed": "2026-10-24T19:20:10.320Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:20:10.320Z"
+    },
+    "cmd-1792869616829": {
+      "key": "cmd-1792869616829",
+      "value": "{\"command\":\"node -e \\\"const net=require('net'); function probe(host){return new Promise((resolve)=>{const s=net.connect({port:6380,host}); const done=(r)=>{s.destroy(); resolve(host+' '+r)}; s.setTimeout(1000); s.once('connect',()=>done('open')); s.once('timeout',()=>done('timeout')); s.once('error',(e)=>done(e.code||e.message))});} Promise.all([probe('127.0.0.1'), probe('localhost'), probe('::1')]).then((rows)=>console.log(rows.join('\\\\n')))\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:20:16.829Z",
+      "lastAccessed": "2026-10-24T19:20:16.829Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:20:16.829Z"
+    },
+    "cmd-1792869636224": {
+      "key": "cmd-1792869636224",
+      "value": "{\"command\":\"node -e \\\"const net=require('net'); const s=net.connect({port:5433,host:'127.0.0.1'}); s.setTimeout(1000); s.once('connect',()=>{console.log('5433 open'); s.end()}); s.once('timeout',()=>{console.log('5433 timeout'); s.destroy()}); s.once('error',(e)=>console.log('5433', e.code))\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:20:36.224Z",
+      "lastAccessed": "2026-10-24T19:20:36.224Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:20:36.224Z"
+    },
+    "cmd-1792869643165": {
+      "key": "cmd-1792869643165",
+      "value": "{\"command\":\"docker compose up -d --force-recreate postgres redis\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:20:43.165Z",
+      "lastAccessed": "2026-10-24T19:20:43.165Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:20:43.165Z"
+    },
+    "cmd-1792869648895": {
+      "key": "cmd-1792869648895",
+      "value": "{\"command\":\"pnpm exec tsc --noEmit -p tsconfig.build.json --pretty false --pretty false\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:20:48.895Z",
+      "lastAccessed": "2026-10-24T19:20:48.895Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:20:48.895Z"
+    },
+    "cmd-1792869656232": {
+      "key": "cmd-1792869656232",
+      "value": "{\"command\":\"node -e \\\"const net=require('net'); function probe(port,host){return new Promise((resolve)=>{const s=net.connect({port,host}); const done=(r)=>{s.destroy(); resolve(host+':'+port+' '+r)}; s.setTimeout(2000); s.once('connect',()=>done('open')); s.once('timeout',()=>done('timeout')); s.once('error',(e)=>done(e.code||e.message))});} Promise.all([probe(6380,'127.0.0.1'), probe(6380,'localhost'), probe(5433,'127.0.0.1')]).then((rows)=>console.log(rows.join('\\\\n')))\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:20:56.232Z",
+      "lastAccessed": "2026-10-24T19:20:56.232Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:20:56.232Z"
+    },
+    "cmd-1792869670738": {
+      "key": "cmd-1792869670738",
+      "value": "{\"command\":\"pnpm exec turbo run build && pnpm exec turbo run typecheck && pnpm exec turbo run test\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:21:10.738Z",
+      "lastAccessed": "2026-10-24T19:21:10.738Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:21:10.738Z"
+    },
+    "cmd-1792869683304": {
+      "key": "cmd-1792869683304",
+      "value": "{\"command\":\"pnpm exec turbo run build; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; pnpm exec turbo run typecheck; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; pnpm exec turbo run test; exit $LASTEXITCODE\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:21:23.304Z",
+      "lastAccessed": "2026-10-24T19:21:23.304Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:21:23.304Z"
+    },
+    "cmd-1792869889848": {
+      "key": "cmd-1792869889848",
+      "value": "{\"command\":\"pnpm exec turbo run test\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:24:49.848Z",
+      "lastAccessed": "2026-10-24T19:24:49.848Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:24:49.848Z"
+    },
+    "cmd-1792869928045": {
+      "key": "cmd-1792869928045",
+      "value": "{\"command\":\"docker compose stop redis; node scripts/ensure-local-env.mjs --require-infra; Write-Host \\\"EXIT:$LASTEXITCODE\\\"; docker compose start redis\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:25:28.045Z",
+      "lastAccessed": "2026-10-24T19:25:28.045Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:25:28.045Z"
+    },
+    "cmd-1792869934862": {
+      "key": "cmd-1792869934862",
+      "value": "{\"command\":\"node -e \\\"const net=require('net'); function wait(){return new Promise((resolve)=>{const start=Date.now(); const tick=()=>{const s=net.connect({port:6380,host:'127.0.0.1'}); s.once('connect',()=>{s.end(); resolve('redis open')}); s.once('error',()=>{s.destroy(); if(Date.now()-start>15000) resolve('redis still closed'); else setTimeout(tick,300)})}; tick()})} wait().then(console.log)\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:25:34.862Z",
+      "lastAccessed": "2026-10-24T19:25:34.862Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:25:34.862Z"
+    },
+    "cmd-1792869942679": {
+      "key": "cmd-1792869942679",
+      "value": "{\"command\":\"node -e \\\"const net=require('net'); async function used(port){const bind=await new Promise((resolve)=>{const s=net.createServer(); s.once('error',()=>resolve(true)); s.once('listening',()=>s.close(()=>resolve(false))); s.listen(port,'0.0.0.0')}); const conn=await new Promise((resolve)=>{const s=net.connect({port,host:'127.0.0.1'}); s.setTimeout(400); s.once('connect',()=>{s.destroy(); resolve(true)}); s.once('timeout',()=>{s.destroy(); resolve(false)}); s.once('error',()=>{s.destroy(); resolve(false)})}); console.log(port, bind||conn?'busy':'free')} Promise.all([3000,3001,4000].map(used))\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:25:42.679Z",
+      "lastAccessed": "2026-10-24T19:25:42.679Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:25:42.679Z"
+    },
+    "cmd-1792869952886": {
+      "key": "cmd-1792869952886",
+      "value": "{\"command\":\"pnpm dev\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:25:52.886Z",
+      "lastAccessed": "2026-10-24T19:25:52.886Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:25:52.886Z"
+    },
+    "cmd-1792869983746": {
+      "key": "cmd-1792869983746",
+      "value": "{\"command\":\"node -e \\\"async function get(url){const res=await fetch(url); const text=await res.text(); console.log(res.status, url, text.slice(0,240).replace(/\\\\s+/g,' '))} Promise.all([get('http://127.0.0.1:4000/api/v1/health'), get('http://127.0.0.1:4000/api/v1/health/live'), get('http://127.0.0.1:4000/api/v1/health/ready'), get('http://127.0.0.1:3000/api/v1/health'), get('http://127.0.0.1:3001/')]).catch((e)=>{console.error(e); process.exit(1)})\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:26:23.746Z",
+      "lastAccessed": "2026-10-24T19:26:23.746Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:26:23.746Z"
+    },
+    "cmd-1792870480515": {
+      "key": "cmd-1792870480515",
+      "value": "{\"command\":\"node -e \\\"const net=require('net'); async function used(port){const conn=await new Promise((resolve)=>{const s=net.connect({port,host:'127.0.0.1'}); s.setTimeout(400); s.once('connect',()=>{s.destroy(); resolve(true)}); s.once('timeout',()=>{s.destroy(); resolve(false)}); s.once('error',()=>{s.destroy(); resolve(false)})}); console.log(port, conn?'listening':'closed')} Promise.all([3000,3001,4000].map(used))\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-24T19:34:40.515Z",
+      "lastAccessed": "2026-10-24T19:34:40.515Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-23T19:34:40.515Z"
+    }
+  },
+  "version": "3.0.0"
+}

@@ -3,14 +3,18 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleDestroy,
 } from "@nestjs/common"
 import { DuplicateStrategy, ImportJobStatus, Prisma } from "@prisma/client"
 import { resolveImportSurveyId } from "@workspace/types"
 import { Queue } from "bullmq"
 import ExcelJS from "exceljs"
-import IORedis from "ioredis"
 
 import { AuditService } from "../audit/audit.service"
+import {
+  closeRedisConnection,
+  createBullMqConnection,
+} from "../common/redis.client"
 import type { AuthUser } from "../auth/auth.decorators"
 import { PrismaService } from "../prisma/prisma.service"
 import { StorageService } from "../storage/storage.service"
@@ -61,9 +65,10 @@ import {
 } from "./survey-excel-export"
 
 @Injectable()
-export class ImportsService {
+export class ImportsService implements OnModuleDestroy {
   private readonly logger = new Logger(ImportsService.name)
   private queue: Queue | null = null
+  private connection: ReturnType<typeof createBullMqConnection> | null = null
 
   constructor(
     private readonly prisma: PrismaService,
@@ -71,16 +76,23 @@ export class ImportsService {
     private readonly audit: AuditService
   ) {
     try {
-      const connection = new IORedis(
-        process.env.REDIS_URL ?? "redis://localhost:6379",
-        {
-          maxRetriesPerRequest: null,
-        }
-      )
-      this.queue = new Queue("survey-import", { connection })
+      this.connection = createBullMqConnection()
+      this.queue = new Queue("survey-import", { connection: this.connection })
     } catch (err) {
-      this.logger.warn(`BullMQ queue unavailable: ${String(err)}`)
+      this.logger.warn(
+        `BullMQ queue unavailable: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      )
     }
+  }
+
+  async onModuleDestroy() {
+    await this.queue?.close().catch(() => undefined)
+    if (!this.connection) return
+    const current = this.connection
+    this.connection = null
+    await closeRedisConnection(current)
   }
 
   async createUpload(

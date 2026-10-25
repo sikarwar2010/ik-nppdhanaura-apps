@@ -13,8 +13,10 @@ Municipal survey, property-data, reporting, RBAC, and payment platform for **Nag
 ## Quick start
 
 ```bash
-# 1. Infra
-docker compose up -d
+# 1. Infra (Docker Desktop must be running on Windows)
+pnpm docker:up
+# Redis listens on 127.0.0.1:6380 (Compose maps host 6380 to container 6379).
+# PowerShell: Test-NetConnection 127.0.0.1 -Port 6380
 
 # 2. Env
 cp .env.example .env
@@ -39,7 +41,9 @@ docker compose --profile app stop
 docker compose up -d
 ```
 
-On Windows, stopping `pnpm`/`turbo` with Ctrl+C may show `Terminate batch job (Y/N)?` and exit code `1`. That is shell shutdown noise after a successful session — confirm health with `curl http://localhost:4000/api/v1/health` while the stack is running, not the stop exit code.
+`pnpm dev` and `pnpm dev:api` exit before Turbo if Postgres (`127.0.0.1:5433`) or Redis (`127.0.0.1:6380`) is down. Set `REDIS_URL=redis://127.0.0.1:6380` in `apps/api/.env`. A `localhost` host is forced to IPv4 so Windows Docker's IPv4 port publish is used. `pnpm dev:portal` and `pnpm dev:web` still start; the portal returns `API_UNAVAILABLE` (HTTP 502) until the API is listening on `127.0.0.1:4000`.
+
+On Windows, stopping `pnpm`/`turbo` with Ctrl+C may show `Terminate batch job (Y/N)?` and exit code `1`. That prompt comes from cmd.exe when it stops the `.cmd` shims Turbo launched. It is not a TypeScript compile failure. `packages/types` and `packages/api-client` `dev` scripts are long-running `tsc --watch` tasks. Confirm health with `curl http://localhost:4000/api/v1/health` while the stack is running, not the stop exit code.
 
 Local Docker ports (avoids clashes with other stacks like `api-survey-local`):
 
@@ -64,7 +68,7 @@ Dokploy owns Traefik, TLS, and the Environment tab. Use `docker-compose.prod.yml
 | `web`    | `3001` | citizen site (`PUBLIC_WEB_URL`)    |
 | `portal` | `3000` | admin portal (`PUBLIC_PORTAL_URL`) |
 
-5. Internal API URL is `http://goverdhan-api:4000` (Compose alias on the `api` service). Do not use `http://api:4000`: Dokploy Traefik attaches a shared network, and Docker merges A records for the short name `api` with any other stack that also has a service named `api`.
+5. Internal API URL is `http://nppdhanaura-api:4000` (Compose alias on the `api` service). Do not use `http://api:4000`: Dokploy Traefik attaches a shared network, and Docker merges A records for the short name `api` with any other stack that also has a service named `api`.
 6. Staff auth: portal BFF proxies `/api/v1/auth/*` to Nest; session cookie `goverdhan_session` (HttpOnly, SameSite=Lax, Secure on HTTPS). Active sessions live in Redis; PostgreSQL stores durable session metadata.
 7. Do not map domains to Postgres or Redis. Do not set `container_name` in production Compose.
 

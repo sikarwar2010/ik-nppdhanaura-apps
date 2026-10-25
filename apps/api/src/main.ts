@@ -13,7 +13,11 @@ import { AppModule, ObserveInstrument } from "./app.module"
 import { AllExceptionsFilter } from "./common/all-exceptions.filter"
 import { OriginValidationMiddleware } from "./common/origin-validation.middleware"
 import { RateLimitMiddleware } from "./common/rate-limit.middleware"
-import { pingRedis } from "./common/redis.client"
+import {
+  closeRedisClient,
+  formatRedisUnreachableError,
+  pingRedis,
+} from "./common/redis.client"
 import { RequestLoggingInterceptor } from "./common/request-logging.interceptor"
 import { assertRequiredEnv } from "./config/validate-env"
 import {
@@ -23,6 +27,8 @@ import {
 } from "./health/api-runtime-info"
 import { markRoutesVerified } from "./health/route-verification-state"
 import { verifyCriticalRoutes } from "./health/verify-critical-routes"
+
+let nestApp: { close: () => Promise<unknown> } | undefined
 
 async function bootstrap() {
   assertRequiredEnv()
@@ -34,6 +40,7 @@ async function bootstrap() {
     bodyParser: false,
     instrument: ObserveInstrument,
   })
+  nestApp = app
 
   const runtime = getApiRuntimeInfo()
   const bootstrapLogger = new Logger("Bootstrap")
@@ -103,7 +110,7 @@ async function bootstrap() {
 
   const redisOk = await pingRedis()
   if (!redisOk) {
-    throw new Error("Redis is required and is not reachable (REDIS_URL)")
+    throw new Error(formatRedisUnreachableError())
   }
 
   const verifiedRoutes = await verifyCriticalRoutes(app)
@@ -133,8 +140,12 @@ async function bootstrap() {
   )
 }
 
-bootstrap().catch((error: unknown) => {
+bootstrap().catch(async (error: unknown) => {
   const message = error instanceof Error ? error.message : String(error)
   Logger.error(message, undefined, "Bootstrap")
+  if (nestApp) {
+    await nestApp.close().catch(() => undefined)
+  }
+  await closeRedisClient()
   process.exit(1)
 })

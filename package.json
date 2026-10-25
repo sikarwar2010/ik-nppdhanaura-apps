@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "dev": "node scripts/ensure-local-env.mjs && node scripts/ensure-local-ports.mjs && turbo run dev --ui=stream",
-    "dev:api": "node scripts/ensure-local-env.mjs && node scripts/ensure-local-ports.mjs && turbo run dev --filter=api --ui=stream",
+    "dev": "node scripts/ensure-local-env.mjs --require-infra && node scripts/ensure-local-ports.mjs && turbo run dev --ui=stream",
+    "dev:api": "node scripts/ensure-local-env.mjs --require-infra && node scripts/ensure-local-ports.mjs && turbo run dev --filter=api --ui=stream",
     "dev:web": "node scripts/ensure-local-env.mjs && node scripts/ensure-local-ports.mjs && turbo run dev --filter=web --ui=stream",
     "dev:portal": "node scripts/ensure-local-env.mjs && node scripts/ensure-local-ports.mjs && turbo run dev --filter=portal --ui=stream",
     "dev:check-ports": "node scripts/ensure-local-ports.mjs",

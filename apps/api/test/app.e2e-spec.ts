@@ -101,3 +101,55 @@ describe("Health (e2e)", () => {
       })
   })
 })
+
+describe("Health when Redis is unavailable (e2e)", () => {
+  let app: INestApplication<App>
+
+  beforeEach(async () => {
+    resetRoutesVerifiedStateForTests()
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [HealthModule],
+    })
+      .overrideProvider(PrismaService)
+      .useValue({
+        $queryRaw: jest.fn(async () => [{ "?column?": 1 }]),
+        $connect: jest.fn(),
+        $disconnect: jest.fn(),
+      })
+      .overrideProvider(HealthService)
+      .useValue({
+        checkDependencies: async () => ({
+          postgres: true,
+          redis: false,
+          routesRegistered: true,
+        }),
+      })
+      .compile()
+
+    app = moduleFixture.createNestApplication()
+    await app.init()
+  })
+
+  afterEach(async () => {
+    await app.close()
+    resetRoutesVerifiedStateForTests()
+  })
+
+  it("/api/v1/health/live stays 200", () => {
+    return request(app.getHttpServer())
+      .get("/api/v1/health/live")
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.data.status).toBe("live")
+      })
+  })
+
+  it("/api/v1/health/ready is 503", () => {
+    return request(app.getHttpServer())
+      .get("/api/v1/health/ready")
+      .expect(503)
+      .expect((res) => {
+        expect(res.body.success).not.toBe(true)
+      })
+  })
+})
