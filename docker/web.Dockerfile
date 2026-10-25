@@ -11,6 +11,9 @@ RUN turbo prune web --docker
 FROM base AS installer
 ARG API_INTERNAL_URL=http://goverdhan-api:4000
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
+# Public origin for canonical URLs, sitemap.xml and robots.txt (generated at build).
+ARG SITE_URL=https://nppdhanaura.com
+ENV SITE_URL=$SITE_URL
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile

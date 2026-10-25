@@ -1,0 +1,241 @@
+{
+  "checkedAt": "2026-10-25T09:12:54.408Z",
+  "results": [
+    {
+      "url": "http://uppwd.gov.in/",
+      "code": null,
+      "ok": false,
+      "status": "error TypeError: Connect Timeout Error (attempted address: uppwd.gov.in:80, timeout: 10000ms)",
+      "usedBy": [
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://crsorgi.gov.in/",
+      "code": null,
+      "ok": false,
+      "status": "error TypeError: Response does not match the HTTP/1.1 protocol (Missing expected CR after header value)",
+      "usedBy": [
+        "service:birth-death-certificate",
+        "department:civil-registration",
+        "important-links",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://etender.up.nic.in/nicgep/app",
+      "code": 500,
+      "ok": false,
+      "status": "http 500",
+      "usedBy": [
+        "important-links",
+        "tenders",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://india.gov.in/",
+      "code": 403,
+      "ok": false,
+      "status": "http 403",
+      "finalUrl": "https://www.india.gov.in/",
+      "usedBy": [
+        "important-links",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://niveshmitra.up.nic.in/Documents/User_Process_Flow/UPS_107.pdf",
+      "code": null,
+      "ok": false,
+      "status": "error TypeError: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+      "usedBy": [
+        "service:trade-license",
+        "document:trade-license-process-guideline",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://pmaymis.gov.in/",
+      "code": 404,
+      "ok": false,
+      "status": "http 404",
+      "usedBy": [
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://pmsvanidhi.mohua.gov.in/",
+      "code": 404,
+      "ok": false,
+      "status": "http 404",
+      "usedBy": [
+        "scheme:pm-svanidhi",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://swachhbharaturban.gov.in/",
+      "code": null,
+      "ok": false,
+      "status": "error TypeError: Connect Timeout Error (attempted address: swachhbharaturban.gov.in:443, timeout: 10000ms)",
+      "usedBy": [
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://uppwd.gov.in/",
+      "code": null,
+      "ok": false,
+      "status": "error TypeError: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca",
+      "usedBy": [
+        "department:public-works"
+      ]
+    },
+    {
+      "url": "https://amrut.mohua.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "scheme:amrut",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://e-nagarsewaup.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "service:property-water-tax",
+        "department:revenue-tax",
+        "important-links",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://eeslindia.org/en/slnp/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "finalUrl": "https://eeslindia.org/wp-content/uploads/2020/10/slnp.png",
+      "usedBy": [
+        "department:street-lighting",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://jaljeevanmission.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "department:water-supply",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://localbodies.up.nic.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "important-links",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://nulm.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "scheme:nulm",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://pgportal.gov.in/Registration",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "finalUrl": "https://pgportal.gov.in/Error/NotFound",
+      "usedBy": [
+        "service:grievance-registration",
+        "important-links",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://pmay-urban.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "scheme:pmay-urban",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://pmayg.dord.gov.in/netiayHome/Home.aspx",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "scheme:pmay-gramin",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://rti.dopt.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "service:rti-citizen-charter",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://sbm.gov.in/sbm_dbt/secure/Login.aspx",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://sbmurban.org/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "service:sanitation-waste-management",
+        "scheme:swachh-bharat-mission-urban",
+        "important-links"
+      ]
+    },
+    {
+      "url": "https://swachhbharatmission.ddws.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "department:public-health-sanitation",
+        "source-site"
+      ]
+    },
+    {
+      "url": "https://up.gov.in/",
+      "code": 200,
+      "ok": true,
+      "status": "ok 200",
+      "usedBy": [
+        "important-links",
+        "source-site"
+      ]
+    }
+  ]
+}

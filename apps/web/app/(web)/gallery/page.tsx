@@ -1,16 +1,28 @@
-import Gallery from "@/components/gallery/page"
-import type { Metadata } from "next"
+import { AlbumCard } from "@/components/site/cards"
+import { PageHeader } from "@/components/site/page-header"
+import { EmptyState, Section } from "@/components/site/primitives"
+import { galleryAlbums } from "@/content"
+import { getI18n } from "@/lib/i18n"
+import { pageMetadata } from "@/lib/seo"
 
-export const metadata: Metadata = {
-  title: "Gallery",
-  description:
-    "Explore the photo and video gallery of Nagar Panchayat,Goverdhan , Mathura, Uttar Pradesh, India. View images and videos showcasing our community events, initiatives, and the vibrant life of our town.",
-}
+export const generateMetadata = () => pageMetadata("/gallery", "gallery.title", "gallery.lead")
 
-export default function () {
+export default async function GalleryPage() {
+  const { locale, t } = await getI18n()
   return (
-    <div>
-      <Gallery />
-    </div>
+    <>
+      <PageHeader title={t("gallery.title")} lead={t("gallery.lead")} crumbs={[{ label: t("nav.gallery") }]} />
+      <Section>
+        {galleryAlbums.length ? (
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {galleryAlbums.map((a) => (
+              <li key={a.slug}><AlbumCard album={a} locale={locale} headingLevel={2} /></li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState title={t("empty.generic")} />
+        )}
+      </Section>
+    </>
   )
 }

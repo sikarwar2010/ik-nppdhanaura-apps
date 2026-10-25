@@ -9,7 +9,11 @@
     "start": "next start --port 3001",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test lib/search-core.test.ts content/content.test.ts",
+    "e2e": "playwright test",
+    "migrate:content": "tsx scripts/migrate-content.ts",
+    "check:links": "tsx scripts/check-links.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.102.8",
@@ -18,15 +22,15 @@
     "@workspace/types": "workspace:*",
     "@workspace/ui": "workspace:*",
     "clsx": "^2.1.1",
-    "framer-motion": "^13.1.1",
     "lucide-react": "^1.38.0",
     "next": "catalog:",
-    "next-themes": "^0.4.6",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "catalog:",
@@ -35,6 +39,7 @@
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
     "eslint": "catalog:",
+    "tsx": "^4.23.13",
     "typescript": "catalog:"
   }
 }

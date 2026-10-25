@@ -150,6 +150,7 @@ services:
       dockerfile: docker/web.Dockerfile
       args:
         API_INTERNAL_URL: http://nppdhanaura-api:4000
+        SITE_URL: ${PUBLIC_WEB_URL:-https://nppdhanaura.com}
     restart: unless-stopped
     env_file: .env
     environment:

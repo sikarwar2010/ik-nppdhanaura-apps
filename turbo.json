@@ -56,7 +56,9 @@
     "ULB_CODE",
     "IMPORT_MAX_FILE_SIZE_MB",
     "CI",
-    "PLAYWRIGHT_BASE_URL"
+    "PLAYWRIGHT_BASE_URL",
+    "E2E_PORT",
+    "SITE_URL"
   ],
   "tasks": {
     "build": {

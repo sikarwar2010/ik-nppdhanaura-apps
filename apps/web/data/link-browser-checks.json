@@ -1,0 +1,42 @@
+{
+  "note": "Links that failed the automated checker were opened in a normal browser. Record the result here so the report distinguishes bot-blocking from real breakage.",
+  "checkedOn": "2026-10-25",
+  "results": {
+    "https://india.gov.in/": {
+      "ok": true,
+      "note": "Loads in a browser (redirects to www.india.gov.in); returns 403 to scripts."
+    },
+    "https://etender.up.nic.in/nicgep/app": {
+      "ok": true,
+      "note": "Loads in a browser ('eProcurement System Government of Uttar Pradesh'); returns 500 to scripts."
+    },
+    "https://pmaymis.gov.in/": {
+      "ok": true,
+      "note": "Loads in a browser ('PMAY-HFA(Urban)'); returns 404 to scripts. Linked only from the source site."
+    },
+    "https://pmsvanidhi.mohua.gov.in/": {
+      "ok": true,
+      "note": "Loads in a browser ('PM SVANidhi'); returns 404 to scripts."
+    },
+    "http://uppwd.gov.in/": {
+      "ok": false,
+      "note": "http:// does not connect; https://uppwd.gov.in/ loads. Site now links the https URL."
+    },
+    "https://swachhbharaturban.gov.in/": {
+      "ok": false,
+      "note": "Times out in a browser too (ERR_CONNECTION_TIMED_OUT). Replaced with https://sbmurban.org/."
+    },
+    "https://crsorgi.gov.in/": {
+      "ok": null,
+      "note": "Server sends a malformed HTTP header to scripts; the browser check could not be completed here. Confirm manually."
+    },
+    "https://niveshmitra.up.nic.in/Documents/User_Process_Flow/UPS_107.pdf": {
+      "ok": null,
+      "note": "Server's TLS certificate chain is incomplete for Node.js; browsers usually complete it. Confirm the PDF opens manually."
+    },
+    "https://uppwd.gov.in/": {
+      "ok": true,
+      "note": "Loads in a browser (Official website of Public Works Department, Uttar Pradesh); Node.js rejects its incomplete TLS chain."
+    }
+  }
+}

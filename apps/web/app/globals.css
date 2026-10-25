@@ -4,82 +4,64 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Dhanaura design tokens — "Modern Indian Civic Heritage".
+ * Contrast (WCAG 2.2, normal text):
+ *   ink #263238 on ivory  ........ 12.9:1
+ *   ink-muted #55646B on ivory ...  5.8:1
+ *   teal-ink #07737F on ivory ....  5.3:1 (links, small text)
+ *   white on navy-800 ............ 12.6:1
+ *   navy-800 on saffron .......... 6.0:1 (saffron is never used for text)
+ */
 @theme {
-  --color-gov-blue-dark: #0A2540;
-  --color-gov-blue-medium: #134074;
-  --color-gov-blue-light: #EEF4F8;
-  --color-gov-saffron: #FF9933;
-  --color-gov-saffron-dark: #E07A1D;
-  --color-gov-orange-light: #FFF5EC;
-  --color-gov-red: #D62828;
-  --color-gov-green: #2E7D32;
+  --color-navy-950: #0b1a2a;
+  --color-navy-900: #10263b;
+  --color-navy-800: #17324d;
+  --color-navy-700: #22476b;
+  --color-navy-100: #dde7f0;
+  --color-navy-50: #eef3f8;
 
-  --animate-marquee: marquee 40s linear infinite;
+  --color-teal-600: #087f8c;
+  --color-teal-ink: #07737f;
+  --color-teal-100: #cfe9eb;
+  --color-teal-50: #e8f5f6;
 
-  @keyframes marquee {
-    0% {
-      transform: translate3d(0, 0, 0);
-    }
+  --color-saffron-500: #e9a23b;
+  --color-saffron-100: #fbe8c8;
+  --color-saffron-50: #fdf6ea;
+  --color-saffron-ink: #8a5a12;
 
-    100% {
-      transform: translate3d(-100%, 0, 0);
-    }
-  }
-}
+  --color-ivory: #faf8f2;
+  --color-ivory-200: #f3efe4;
+  --color-ink: #263238;
+  --color-ink-muted: #55646b;
+  --color-line: #dce3e8;
+  --color-line-strong: #c3ced6;
 
-body {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-}
+  --color-success: #2e7d4f;
+  --color-danger: #b42318;
 
-/* Custom helper classes */
-.gov-gradient-blue {
-  background: linear-gradient(135deg, #0A2540 0%, #134074 100%);
-}
+  /* next/font exposes --font-inter-sans and --font-noto-deva on <html>. */
+  --font-sans: var(--font-inter-sans), var(--font-noto-deva), ui-sans-serif, system-ui, sans-serif;
+  --font-deva: var(--font-noto-deva), var(--font-inter-sans), ui-sans-serif, system-ui, sans-serif;
 
-.gov-gradient-saffron {
-  background: linear-gradient(135deg, #FF9933 0%, #E07A1D 100%);
-}
+  /* Type scale (rem) — tuned for Devanagari, which needs extra leading. */
+  --text-display: 2.75rem;
+  --text-display--line-height: 1.2;
+  --text-title: 2rem;
+  --text-title--line-height: 1.25;
 
-.gov-gradient-flag {
-  background: linear-gradient(to right, rgba(255, 153, 51, 0.1) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(46, 125, 50, 0.1) 100%);
-}
+  --container-site: 76rem;
+  --container-prose: 44rem;
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
+  --shadow-card: 0 1px 2px rgb(16 38 59 / 0.06), 0 1px 1px rgb(16 38 59 / 0.04);
+  --shadow-raised: 0 10px 30px -12px rgb(16 38 59 / 0.22);
 
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f8fafc;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Highlight style */
-::selection {
-  background-color: #FF9933;
-  color: white;
+  --ease-civic: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -120,85 +102,190 @@ body {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* shadcn tokens used by @workspace/ui components (property-tax module). */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #ffffff;
+  --foreground: #263238;
+  --card: #ffffff;
+  --card-foreground: #263238;
+  --popover: #ffffff;
+  --popover-foreground: #263238;
+  --primary: #17324d;
+  --primary-foreground: #ffffff;
+  --secondary: #eef3f8;
+  --secondary-foreground: #17324d;
+  --muted: #f3efe4;
+  --muted-foreground: #55646b;
+  --accent: #e8f5f6;
+  --accent-foreground: #17324d;
+  --destructive: #b42318;
+  --border: #dce3e8;
+  --input: #c3ced6;
+  --ring: #087f8c;
+  --chart-1: #17324d;
+  --chart-2: #087f8c;
+  --chart-3: #e9a23b;
+  --chart-4: #22476b;
+  --chart-5: #55646b;
+  --radius: 0.5rem;
+  --sidebar: #faf8f2;
+  --sidebar-foreground: #263238;
+  --sidebar-primary: #17324d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef3f8;
+  --sidebar-accent-foreground: #17324d;
+  --sidebar-border: #dce3e8;
+  --sidebar-ring: #087f8c;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
+    @apply border-border;
   }
 
   html {
-    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 6rem;
+  }
+
+  /* Text-size control in the utility bar (persisted per visitor). */
+  html[data-text-size="lg"] {
+    font-size: 112.5%;
+  }
+  html[data-text-size="xl"] {
+    font-size: 125%;
+  }
+
+  body {
+    @apply bg-ivory font-sans text-ink antialiased;
+    overflow-x: clip;
+  }
+
+  :lang(hi) {
+    font-family: var(--font-deva);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-navy-900;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-teal-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: var(--color-saffron-100);
+    color: var(--color-navy-900);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}
+
+/* Component utilities (usable with @apply and variants). */
+@utility container-site {
+  @apply mx-auto w-full max-w-(--container-site) px-4 sm:px-6 lg:px-8;
+}
+
+/* Buttons — primary (navy), secondary (outline), accent (saffron, sparing). */
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-5 py-2.5 text-[0.95rem] font-semibold transition-colors duration-200 disabled:pointer-events-none disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-navy-800 text-white hover:bg-navy-700 active:bg-navy-900;
+}
+@utility btn-secondary {
+  @apply btn border border-line-strong bg-white text-navy-800 hover:border-navy-800 hover:bg-navy-50;
+}
+@utility btn-accent {
+  @apply btn bg-saffron-500 text-navy-900 hover:bg-[#dc9228];
+}
+@utility btn-ghost-light {
+  @apply btn border border-white/40 text-white hover:bg-white/10;
+}
+
+@utility link {
+  @apply font-medium text-teal-ink underline decoration-teal-600/40 decoration-1 transition-colors hover:text-navy-800 hover:decoration-navy-800;
+}
+
+@utility card {
+  @apply rounded-lg border border-line bg-white shadow-(--shadow-card);
+}
+@utility card-interactive {
+  @apply card transition duration-200 ease-(--ease-civic) hover:-translate-y-0.5 hover:border-line-strong hover:shadow-(--shadow-raised) motion-reduce:hover:translate-y-0;
+}
+
+@utility badge {
+  @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold;
+}
+@utility badge-navy {
+  @apply badge border-navy-100 bg-navy-50 text-navy-800;
+}
+@utility badge-teal {
+  @apply badge border-teal-100 bg-teal-50 text-teal-ink;
+}
+@utility badge-saffron {
+  @apply badge border-saffron-100 bg-saffron-50 text-saffron-ink;
+}
+@utility badge-muted {
+  @apply badge border-line bg-ivory-200 text-ink-muted;
+}
+
+@utility eyebrow {
+  @apply text-xs font-semibold tracking-[0.14em] text-teal-ink uppercase;
+}
+
+@utility prose-civic {
+  @apply max-w-(--container-prose) text-[1.0625rem] leading-[1.8] text-ink;
+  & p + p {
+    @apply mt-4;
+  }
+}
+
+/* Heritage lattice (jaali) motif, used at very low opacity. */
+@utility jaali {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1'%3E%3Cpath d='M24 4 L44 24 L24 44 L4 24 Z'/%3E%3Ccircle cx='24' cy='24' r='6'/%3E%3Cpath d='M0 0 L8 8 M48 0 L40 8 M0 48 L8 40 M48 48 L40 40'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+}
+@utility jaali-ink {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%2317324d' stroke-width='1'%3E%3Cpath d='M24 4 L44 24 L24 44 L4 24 Z'/%3E%3Ccircle cx='24' cy='24' r='6'/%3E%3Cpath d='M0 0 L8 8 M48 0 L40 8 M0 48 L8 40 M48 48 L40 40'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 48px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  header[data-site-header],
+  footer[data-site-footer],
+  [data-no-print] {
+    display: none !important;
+  }
+  body {
+    background: white;
   }
 }

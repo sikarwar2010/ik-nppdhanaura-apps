@@ -10,6 +10,16 @@ Municipal survey, property-data, reporting, RBAC, and payment platform for **Nag
 - `packages/ui` — shared shadcn/Base UI components
 - `packages/types` / `packages/api-client` — shared types and fetch client
 
+## Citizen website (Nagar Palika Parishad Dhanaura)
+
+`apps/web` is the public bilingual (Hindi/English) website of Nagar Palika Parishad Dhanaura, District Amroha. Its content is migrated from nppdhanaura.com with provenance tracking. See [apps/web/README.md](apps/web/README.md) for setup, content editing, migration, tests and deployment, and [apps/web/docs/DELIVERY-REPORT.md](apps/web/docs/DELIVERY-REPORT.md) for what was delivered and what still needs office input.
+
+```bash
+pnpm dev:web                                         # http://localhost:3001
+pnpm --filter web test                               # content + search unit tests
+pnpm --filter web build && pnpm --filter web e2e     # Playwright + axe
+```
+
 ## Quick start
 
 ```bash

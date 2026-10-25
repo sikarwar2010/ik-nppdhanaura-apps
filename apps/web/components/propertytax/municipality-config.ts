@@ -6,9 +6,9 @@ function configuredValue(value: string | undefined): string | undefined {
 export const propertyTaxMunicipality = {
   name:
     configuredValue(process.env.NEXT_PUBLIC_MUNICIPALITY_NAME) ??
-    "Nagar Panchayat Goverdhan",
+    "Nagar Palika Parishad Dhanaura",
   city:
-    configuredValue(process.env.NEXT_PUBLIC_MUNICIPALITY_CITY) ?? "Mathura",
+    configuredValue(process.env.NEXT_PUBLIC_MUNICIPALITY_CITY) ?? "Amroha",
   state:
     configuredValue(process.env.NEXT_PUBLIC_MUNICIPALITY_STATE) ??
     "Uttar Pradesh",

@@ -1,26 +1,14 @@
-import Navbar from "@/components/navigation/Navbar"
-import Footer from "@/components/navigation/Footer"
-// import TopUtilityBar from "@/components/navigation/TopUtilityBar"
-import Header from "@/components/navigation/Header"
-import { MotionProvider } from "@/components/providers/motion-providers"
-import { TooltipProvider } from "@workspace/ui/components/tooltip"
+import { SiteFooter } from "@/components/site/footer"
+import { SiteHeader } from "@/components/site/header"
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function WebLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <>
-      {/* <TopUtilityBar /> */}
-      <Header />
-      <Navbar />
-      <main id="main-content" className="flex-1 focus:outline-none">
-        <MotionProvider>
-          <TooltipProvider>{children}</TooltipProvider>
-        </MotionProvider>
+      <SiteHeader />
+      <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
+        {children}
       </main>
-      <Footer />
+      <SiteFooter />
     </>
   )
 }

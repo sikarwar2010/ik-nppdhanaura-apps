@@ -1,0 +1,1135 @@
+{
+  "generatedAt": "2026-10-25T09:25:46.915Z",
+  "source": "https://nppdhanaura.com/public/",
+  "snapshotRetrievedAt": "2026-10-25T08:31:54.442Z",
+  "snapshotFile": "data/source-snapshot/crawl-2026-10-25.json",
+  "method": "Browser session snapshot (scripts/source-snapshot.browser.js); site uses a JavaScript challenge, which was not bypassed.",
+  "pages": [
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/index.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 1716,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/",
+      "note": "Hero slides, leadership messages, service shortcuts, notices, schemes and links re-used on the new homepage."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/about.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 1129,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/about",
+      "note": "Introduction, vision and heritage text migrated verbatim in Hindi and English."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/departments.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 2190,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/departments",
+      "note": "Six departments with their portal links."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/services.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 1228,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/services",
+      "note": "Service cards, emergency numbers and scheme links migrated. Anchors #tax, #trade, #downloads do not exist on the source page."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/notices.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 74,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/notices",
+      "note": "One notice on the source; it is now archived because its event date has passed."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/gallery.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 454,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/gallery",
+      "note": "Four dated albums migrated as gallery albums and event reports."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/contact.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 264,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/contact",
+      "note": "Address, phone, email and office hours migrated. Map is address-based (no coordinates published)."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/schemes.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 845,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/schemes",
+      "note": "Four schemes with descriptions; PM SVANidhi and PMAY-G links from services.php added without new descriptions."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/notice.php?id=1&lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 434,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/notices/dhanaura-cricket-tournament-2026",
+      "note": "Notice detail migrated with publication and event dates."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/directory.php?lang=hi",
+      "contentType": "page",
+      "language": "hi",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 155,
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetRoute": null,
+      "note": "Source directory page states 'No contacts available'. Officer directory left for administrator input."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/index.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 1766,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/",
+      "note": "Hero slides, leadership messages, service shortcuts, notices, schemes and links re-used on the new homepage."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/about.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 1152,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/about",
+      "note": "Introduction, vision and heritage text migrated verbatim in Hindi and English."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/departments.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 2387,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/departments",
+      "note": "Six departments with their portal links."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/services.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 1269,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/services",
+      "note": "Service cards, emergency numbers and scheme links migrated. Anchors #tax, #trade, #downloads do not exist on the source page."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/notices.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 71,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/notices",
+      "note": "One notice on the source; it is now archived because its event date has passed."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/gallery.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 486,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/gallery",
+      "note": "Four dated albums migrated as gallery albums and event reports."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/contact.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 260,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/contact",
+      "note": "Address, phone, email and office hours migrated. Map is address-based (no coordinates published)."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/schemes.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 859,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/schemes",
+      "note": "Four schemes with descriptions; PM SVANidhi and PMAY-G links from services.php added without new descriptions."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/notice.php?id=1&lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 440,
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetRoute": "/notices/dhanaura-cricket-tournament-2026",
+      "note": "Notice detail migrated with publication and event dates."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/directory.php?lang=en",
+      "contentType": "page",
+      "language": "en",
+      "title": "Nagar Palika Parishad, Dhanaura | Official Portal",
+      "retrievalStatus": "http 200",
+      "characters": 145,
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetRoute": null,
+      "note": "Source directory page states 'No contacts available'. Officer directory left for administrator input."
+    }
+  ],
+  "images": [
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/logo.png",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/up-government-emblem.png",
+      "sha256": "7cbff726fdc9b7686e3141427513ccf12d6eec6fefc782b83192c82caca916ff",
+      "bytes": 143018,
+      "note": "Kept for reference only; not used as a municipal logo"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/swachh_bharat.png",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetPath": null,
+      "sha256": "3d00e674a0a46fa40e0d7f9de652a9805e97ba237732c60b0c525f746ca12464",
+      "bytes": 62377,
+      "note": "Third-party campaign logo; not migrated."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/digital_india.png",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetPath": null,
+      "sha256": "19c8e875bd23c38e42f7628cfe55a8f53ccf2992d4d155e04277df0261b7deb2",
+      "bytes": 62741,
+      "note": "Third-party campaign logo; not migrated."
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/slider4.jpg.jpeg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/dhanaura-park-recycled-tyre-art.jpg",
+      "sha256": "954c6c8db1b3c475d3b994d83bfdacefa254949d0c631ed826705afb523ad15e",
+      "bytes": 338307,
+      "note": "About page / gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/slider3.jpg.jpeg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/palika-office-hall.jpg",
+      "sha256": "fb5982f2ef1722f9009c755d3eb2c14bb79f612d5530bdd42a84d09898666c64",
+      "bytes": 75591,
+      "note": "About page"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/slider2.jpg.jpeg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/dhanaura-park-walkway.jpg",
+      "sha256": "99df87a7266da648e27d35afad91fbf95c4e6296978533b0aead6f58e9a60d9b",
+      "bytes": 458024,
+      "note": "Homepage hero"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/b64f209f2db367098910b9c2459e10da_cm.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/leader-chief-minister-up.jpg",
+      "sha256": "072284786236bc8d708310e75b3313950bf3927ab47650b4fc657bedc52eceab",
+      "bytes": 30711,
+      "note": "Leadership: Chief Minister"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/4c356d77e69847ae8d7c264135f1f590_minister.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/leader-nagar-vikas-minister.jpg",
+      "sha256": "f06f9e9010334519d47395961a6979f7bc9c780f9da52265921bbce2866bedc5",
+      "bytes": 22829,
+      "note": "Leadership: Nagar Vikas Minister"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/032f9210179677d877a9761b0de58928_chairman.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/leader-chairman.jpg",
+      "sha256": "01568330a42c07f9e6d02120a76fb1c0d1e7e3506321f05c48e2cd85365ee33d",
+      "bytes": 58177,
+      "note": "Leadership: Chairman"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/eo.png",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/leader-executive-officer.png",
+      "sha256": "7743796c1619d64337e978106761aca7717744ad459ee117d563ab9813c6f316",
+      "bytes": 797532,
+      "note": "Leadership: Executive Officer"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/7d3f0c382129132a948e488eb869d93b.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/yoga-day-news-clipping.jpg",
+      "sha256": "952715853a6dc2354ed89ed708598655852c1ad2307c2fe3c27f99009da9f272",
+      "bytes": 227908,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/7a5be1948d851b9bbcc4a83b47b220d0.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/independence-day-2026-felicitation.jpg",
+      "sha256": "afa403bb36d09932e31316bb2ac26602fbc8641526fddc9e1f759ea955704a0d",
+      "bytes": 296682,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/4abeceb1fc18963c73346403cf26b230.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/women-group-felicitation.jpg",
+      "sha256": "695888bca536be5c3b2244a3f60c36cb672ae74edd3240d0becaa77e32b61560",
+      "bytes": 345421,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/3d55de711670c816be4b96c91a9acb11.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/independence-day-2026-tiranga-rally.jpg",
+      "sha256": "21cadbf3782386f85fd9063044844ef192fd581c853567b81b5a49048297d44b",
+      "bytes": 362846,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/About-1.jpeg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/naari-leads-swachhata-felicitation.jpg",
+      "sha256": "a296d4a445c950be567ebf659bf83399c7ec4da37c95e00c8cf4b9f0abd1e8b9",
+      "bytes": 248636,
+      "note": "About page"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/assets/images/About-2.jpeg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/sanitation-kit-handover.jpg",
+      "sha256": "50aeac6f6c4a917aa02debe4f43f164b7d42ff3d61c03daea784c68fc7854d93",
+      "bytes": 177650,
+      "note": "About page"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/053251878cb7ff437cf577e529b7f798.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/swachhata-hi-seva-2026-meeting-1.jpg",
+      "sha256": "efa94e9df4a9e9cbf1e7883c894effe2e803713912ac65e40bec5d9ffcb06323",
+      "bytes": 290841,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/012977bf3eebc8c2e9852c82cc457371.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/swachhata-hi-seva-2026-meeting-2.jpg",
+      "sha256": "6b228585aabbe14336ba7d4a9be466cb3c1fe37bc600bd17081cc21d5e2f43e4",
+      "bytes": 282618,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/59c131525df59f50a3b73dc3ad80f723.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/swachhata-hi-seva-2026-meeting-3.jpg",
+      "sha256": "751316d95f57f307aa126a7f4c7f34130f36a78c8b937db312094a52b2304e68",
+      "bytes": 295337,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/5ed0aad0e192dde2d4b5eed1b2c5388a.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/swm-2026-workshop-certificate.jpg",
+      "sha256": "23277be6bb65342c1db6c55256981edbbb0596212c59bb42551073a5a49a25d3",
+      "bytes": 279421,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/9ac1b73fcc8eedc4c44edec5c338f26b.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/swm-2026-workshop-session.jpg",
+      "sha256": "2c5681bd83c0603fce738ab9fd5fd41fb5cc8a0b3b89ee14d064acc3a6bcd90d",
+      "bytes": 318595,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/9e6191c5e40fda4ae6111b8d066ae9ae.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/independence-day-2026-students-rally.jpg",
+      "sha256": "0b7a574b5babb0e11f894d4064d61c9c5aeb857a9c132bf719c97a69798bac97",
+      "bytes": 357501,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/116ada61b9af231e357b6c9b13c6797c.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/independence-day-2026-flags.jpg",
+      "sha256": "70b02eb3d8fe9ee82625568be8fb51251965f1ba23245000463e5913871360e0",
+      "bytes": 338216,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/a285dcda6aacef1e123a901a8d3f7399.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/independence-day-2026-floral-tribute.jpg",
+      "sha256": "29a7987a237943917c9e4603cc2ba5e763ea877707676db1067761d00de4b181",
+      "bytes": 295502,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/53af0dda38b16f69eecaf4c73efac5a6.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/independence-day-2026-flag-hoisting.jpg",
+      "sha256": "45ed46d25ecf0355c00ab1a501ff51e6837a3e126ef1ee4d5cdcf95b86f72cf9",
+      "bytes": 295469,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/1346ada8d6c34c03289db61351fd0498.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/sanitation-workers-safety-kits.jpg",
+      "sha256": "17c4e53d568375c39a000493dc0a0a1e88093e0a1e7dabb3b7b9feed7a7d194e",
+      "bytes": 244327,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/af2136bcc948e699d7e6140e21e08d61.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetPath": null,
+      "sha256": "50aeac6f6c4a917aa02debe4f43f164b7d42ff3d61c03daea784c68fc7854d93",
+      "bytes": 177650,
+      "note": "Duplicate of assets/images/About-2.jpeg"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/70a6293b97c5a4a9b3f5f64ddc4e1eb9.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetPath": null,
+      "sha256": "a296d4a445c950be567ebf659bf83399c7ec4da37c95e00c8cf4b9f0abd1e8b9",
+      "bytes": 248636,
+      "note": "Duplicate of assets/images/About-1.jpeg"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/uploads/gallery/d984fa47f7ef6aa91299b92a2d25ccb6.jpg",
+      "contentType": "image",
+      "retrievalStatus": "ok",
+      "migrationStatus": "migrated",
+      "verificationStatus": "source-published",
+      "targetPath": "/media/source/world-environment-day-meeting.jpg",
+      "sha256": "228d02133d3790b75c3f86ddd72e70b0d0ff39c3b0b4adfcf822cc83a891c065",
+      "bytes": 233092,
+      "note": "Gallery"
+    },
+    {
+      "sourceUrl": "https://nppdhanaura.com/public/null",
+      "contentType": "image",
+      "retrievalStatus": "broken: src is the string 'null'",
+      "migrationStatus": "excluded",
+      "verificationStatus": "not-applicable",
+      "targetPath": null,
+      "sha256": null,
+      "bytes": 0,
+      "note": "Broken <img src=\"null\"> on the source site."
+    }
+  ],
+  "galleryAlbums": {
+    "en": [
+      {
+        "title": "\"Grand Launch of Swachhata Hi Seva and Nationwide Service Pledge Campaign 2026\"",
+        "date": "15 Sep 2026",
+        "imgs": [
+          "/public/uploads/gallery/053251878cb7ff437cf577e529b7f798.jpg",
+          "/public/uploads/gallery/012977bf3eebc8c2e9852c82cc457371.jpg",
+          "/public/uploads/gallery/59c131525df59f50a3b73dc3ad80f723.jpg"
+        ]
+      },
+      {
+        "title": "Under the Swachh Bharat Mission Urban, a one-day Master Trainer Workshop / Capacity Building Program on the topic 'SWM 2026 - Door to Door Source Segregation' was organized today at the Nagar Palika Dhanaura.",
+        "date": "10 Sep 2026",
+        "imgs": [
+          "/public/uploads/gallery/5ed0aad0e192dde2d4b5eed1b2c5388a.jpg",
+          "/public/uploads/gallery/9ac1b73fcc8eedc4c44edec5c338f26b.jpg"
+        ]
+      },
+      {
+        "title": "Independence day",
+        "date": "15 Aug 2026",
+        "imgs": [
+          "/public/uploads/gallery/7a5be1948d851b9bbcc4a83b47b220d0.jpg",
+          "/public/uploads/gallery/3d55de711670c816be4b96c91a9acb11.jpg",
+          "/public/uploads/gallery/9e6191c5e40fda4ae6111b8d066ae9ae.jpg",
+          "/public/uploads/gallery/116ada61b9af231e357b6c9b13c6797c.jpg",
+          "/public/uploads/gallery/a285dcda6aacef1e123a901a8d3f7399.jpg",
+          "/public/uploads/gallery/53af0dda38b16f69eecaf4c73efac5a6.jpg"
+        ]
+      },
+      {
+        "title": "Dhanaura Nagar Palika",
+        "date": "17 Jul 2026",
+        "imgs": [
+          "/public/uploads/gallery/7d3f0c382129132a948e488eb869d93b.jpg",
+          "/public/uploads/gallery/4abeceb1fc18963c73346403cf26b230.jpg",
+          "/public/uploads/gallery/1346ada8d6c34c03289db61351fd0498.jpg",
+          "/public/uploads/gallery/af2136bcc948e699d7e6140e21e08d61.jpg",
+          "/public/uploads/gallery/70a6293b97c5a4a9b3f5f64ddc4e1eb9.jpg",
+          "/public/uploads/gallery/d984fa47f7ef6aa91299b92a2d25ccb6.jpg"
+        ]
+      }
+    ],
+    "hi": [
+      {
+        "title": "’’स्वच्छता ही सेवा एवं राष्ट्रव्यापी सेवा संकल्प अभियान 2026 का भव्य शुभारंभ’’",
+        "date": "15 Sep 2026",
+        "imgs": [
+          "/public/uploads/gallery/053251878cb7ff437cf577e529b7f798.jpg",
+          "/public/uploads/gallery/012977bf3eebc8c2e9852c82cc457371.jpg",
+          "/public/uploads/gallery/59c131525df59f50a3b73dc3ad80f723.jpg"
+        ]
+      },
+      {
+        "title": "स्वच्छ भारत मिशन नगरीय के अंतर्गत आज नगर पालिका परिषद धनौरा में *SWM 2026 - डोर टू डोर स्रोत पृथक्करण* विषय पर एक दिवसीय मास्टर ट्रेनर कार्यशाला / क्षमता निर्माण कार्यक्रम का आयोजन किया गया।",
+        "date": "10 Sep 2026",
+        "imgs": [
+          "/public/uploads/gallery/5ed0aad0e192dde2d4b5eed1b2c5388a.jpg",
+          "/public/uploads/gallery/9ac1b73fcc8eedc4c44edec5c338f26b.jpg"
+        ]
+      },
+      {
+        "title": "स्वतंत्रता दिवस",
+        "date": "15 Aug 2026",
+        "imgs": [
+          "/public/uploads/gallery/7a5be1948d851b9bbcc4a83b47b220d0.jpg",
+          "/public/uploads/gallery/3d55de711670c816be4b96c91a9acb11.jpg",
+          "/public/uploads/gallery/9e6191c5e40fda4ae6111b8d066ae9ae.jpg",
+          "/public/uploads/gallery/116ada61b9af231e357b6c9b13c6797c.jpg",
+          "/public/uploads/gallery/a285dcda6aacef1e123a901a8d3f7399.jpg",
+          "/public/uploads/gallery/53af0dda38b16f69eecaf4c73efac5a6.jpg"
+        ]
+      },
+      {
+        "title": "धनौरा नगर पालिका",
+        "date": "17 Jul 2026",
+        "imgs": [
+          "/public/uploads/gallery/7d3f0c382129132a948e488eb869d93b.jpg",
+          "/public/uploads/gallery/4abeceb1fc18963c73346403cf26b230.jpg",
+          "/public/uploads/gallery/1346ada8d6c34c03289db61351fd0498.jpg",
+          "/public/uploads/gallery/af2136bcc948e699d7e6140e21e08d61.jpg",
+          "/public/uploads/gallery/70a6293b97c5a4a9b3f5f64ddc4e1eb9.jpg",
+          "/public/uploads/gallery/d984fa47f7ef6aa91299b92a2d25ccb6.jpg"
+        ]
+      }
+    ]
+  },
+  "links": [
+    {
+      "url": "https://nppdhanaura.com/public/?lang=en",
+      "kind": "internal",
+      "labels": [
+        "English"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/?lang=hi",
+      "kind": "internal",
+      "labels": [
+        "हिंदी"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/index.php",
+      "kind": "internal",
+      "labels": [
+        "मुख्य पृष्ठ",
+        "Home"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/about.php",
+      "kind": "internal",
+      "labels": [
+        "हमारे बारे में",
+        "About"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/departments.php",
+      "kind": "internal",
+      "labels": [
+        "विभाग",
+        "« विभागों में वापस जाएं",
+        "Departments",
+        "« Back to Departments"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/services.php",
+      "kind": "internal",
+      "labels": [
+        "नागरिक सेवाएँ",
+        "Citizen Services"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/notices.php",
+      "kind": "internal",
+      "labels": [
+        "सूचनाएँ",
+        "सभी सूचनाएं देखें »",
+        "Notices",
+        "View All Notices »"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://etender.up.nic.in/nicgep/app",
+      "kind": "external",
+      "labels": [
+        "निविदाएं",
+        "ई-टेंडर पोर्टल पर जाएं »",
+        "Tenders",
+        "Access e-Tender Portal »"
+      ],
+      "lastCheck": "http 500"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/gallery.php",
+      "kind": "internal",
+      "labels": [
+        "गैलरी",
+        "सभी तस्वीरें देखें »",
+        "Gallery",
+        "View All Photos »"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/contact.php",
+      "kind": "internal",
+      "labels": [
+        "संपर्क करें",
+        "Contact Us"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/#",
+      "kind": "internal",
+      "labels": [
+        "धनौरा तहसील में बैठक नया",
+        "Meeting in Dhanaura Tehsil NEW"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://crsorgi.gov.in/",
+      "kind": "external",
+      "labels": [
+        "जन्म/मृत्यु प्रमाण पत्र राज्य पोर्टल लिंक",
+        "जन्म/मृत्यु प्रमाण पत्र",
+        "CRS आधिकारिक पोर्टल »",
+        "CRS पोर्टल पर जाएं »",
+        "Birth/Death Certificate State Portal Link",
+        "Birth/Death Certificate",
+        "CRS Official Portal »",
+        "Proceed to CRS Portal »"
+      ],
+      "lastCheck": "error TypeError: Response does not match the HTTP/1.1 protocol (Missing expected CR after header value)"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/services.php#tax",
+      "kind": "internal",
+      "labels": [
+        "संपत्ति/जल कर जानकारी और भुगतान",
+        "Property/Water Tax Information & Payment"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/services.php#trade",
+      "kind": "internal",
+      "labels": [
+        "व्यापार लाइसेंस दिशानिर्देश",
+        "Trade License Guidelines"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/services.php#downloads",
+      "kind": "internal",
+      "labels": [
+        "प्रपत्र डाउनलोड ऑफ़लाइन आवेदन",
+        "Download Forms Offline Applications"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/notice.php?id=1",
+      "kind": "internal",
+      "labels": [
+        "अधिक पढ़ें",
+        "Read More"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/schemes.php#pmay",
+      "kind": "internal",
+      "labels": [
+        "► प्रधानमंत्री आवास योजना (शहरी)",
+        "► Pradhan Mantri Awas Yojana (Urban)"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/schemes.php#sbm",
+      "kind": "internal",
+      "labels": [
+        "► स्वच्छ भारत मिशन (शहरी)",
+        "► Swachh Bharat Mission (Urban)"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/schemes.php#amrut",
+      "kind": "internal",
+      "labels": [
+        "► अमृत योजना (AMRUT)",
+        "► AMRUT Scheme"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/schemes.php#nulm",
+      "kind": "internal",
+      "labels": [
+        "► राष्ट्रीय शहरी आजीविका मिशन (NULM)",
+        "► National Urban Livelihoods Mission"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/schemes.php",
+      "kind": "internal",
+      "labels": [
+        "सभी योजनाएं देखें »",
+        "View All Schemes »"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://up.gov.in/",
+      "kind": "external",
+      "labels": [
+        "► उत्तर प्रदेश सरकार पोर्टल",
+        "► Uttar Pradesh Government Portal"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://localbodies.up.nic.in/",
+      "kind": "external",
+      "labels": [
+        "► स्थानीय निकाय निदेशालय",
+        "राज्य पोर्टल",
+        "► Directorate of Local Bodies",
+        "State Portal"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://india.gov.in/",
+      "kind": "external",
+      "labels": [
+        "► भारत का राष्ट्रीय पोर्टल",
+        "► National Portal of India"
+      ],
+      "lastCheck": "http 403"
+    },
+    {
+      "url": "https://swachhbharaturban.gov.in/",
+      "kind": "external",
+      "labels": [
+        "► स्वच्छ भारत मिशन (शहरी) पोर्टल",
+        "► SBM Urban Portal"
+      ],
+      "lastCheck": "error TypeError: Connect Timeout Error (attempted address: swachhbharaturban.gov.in:443, timeout: 10000ms)"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/directory.php",
+      "kind": "internal",
+      "labels": [
+        "आधिकारिक निर्देशिका देखें »",
+        "View Official Directory »"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://swachhbharatmission.ddws.gov.in/",
+      "kind": "external",
+      "labels": [
+        "स्वच्छ भारत मिशन पोर्टल »",
+        "स्वच्छ भारत मिशन",
+        "Swachh Bharat Mission Portal »",
+        "Swachh Bharat Mission"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "http://uppwd.gov.in/",
+      "kind": "external",
+      "labels": [
+        "UP PWD आधिकारिक पोर्टल »",
+        "UP PWD Official Portal »"
+      ],
+      "lastCheck": "error TypeError: Connect Timeout Error (attempted address: uppwd.gov.in:80, timeout: 10000ms)"
+    },
+    {
+      "url": "https://e-nagarsewaup.gov.in/",
+      "kind": "external",
+      "labels": [
+        "ई-नगरसेवा यूपी पोर्टल »",
+        "कर विवरण देखें",
+        "e-NagarSewa UP Portal »",
+        "View Tax Details"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://jaljeevanmission.gov.in/",
+      "kind": "external",
+      "labels": [
+        "जल जीवन मिशन पोर्टल »",
+        "Jal Jeevan Mission Portal »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://eeslindia.org/en/slnp/",
+      "kind": "external",
+      "labels": [
+        "स्ट्रीट लाइट नेशनल प्रोग्राम »",
+        "Street Light National Programme »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://niveshmitra.up.nic.in/Documents/User_Process_Flow/UPS_107.pdf",
+      "kind": "external",
+      "labels": [
+        "दिशानिर्देश और शुल्क",
+        "Guidelines & Fees"
+      ],
+      "lastCheck": "error TypeError: unable to verify the first certificate; if the root CA is installed locally, try running Node.js with --use-system-ca"
+    },
+    {
+      "url": "https://pgportal.gov.in/Registration",
+      "kind": "external",
+      "labels": [
+        "शिकायत दर्ज करें »",
+        "Register Grievance »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://rti.dopt.gov.in/",
+      "kind": "external",
+      "labels": [
+        "RTI विवरण देखें",
+        "View RTI Details"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "javascript:void(0)",
+      "kind": "script",
+      "labels": [
+        "प्रधानमंत्री आवास योजना (PMAY)",
+        "Pradhan Mantri Awas Yojana (PMAY)"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://pmaymis.gov.in/",
+      "kind": "external",
+      "labels": [
+        "PMAY शहरी",
+        "PMAY Urban"
+      ],
+      "lastCheck": "http 404"
+    },
+    {
+      "url": "https://pmayg.dord.gov.in/netiayHome/Home.aspx",
+      "kind": "external",
+      "labels": [
+        "PMAY ग्रामीण",
+        "PMAY Rural"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://pmsvanidhi.mohua.gov.in/",
+      "kind": "external",
+      "labels": [
+        "पीएम स्वनिधि योजना",
+        "PM SVANidhi Scheme"
+      ],
+      "lastCheck": "http 404"
+    },
+    {
+      "url": "https://pmay-urban.gov.in/",
+      "kind": "external",
+      "labels": [
+        "अधिक जानें »",
+        "Know More »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://sbm.gov.in/sbm_dbt/secure/Login.aspx",
+      "kind": "external",
+      "labels": [
+        "अधिक जानें »",
+        "Know More »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://amrut.mohua.gov.in/",
+      "kind": "external",
+      "labels": [
+        "अधिक जानें »",
+        "Know More »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://nulm.gov.in/",
+      "kind": "external",
+      "labels": [
+        "अधिक जानें »",
+        "Know More »"
+      ],
+      "lastCheck": "ok 200"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/?id=1&lang=en",
+      "kind": "internal",
+      "labels": [
+        "English"
+      ],
+      "lastCheck": "not checked"
+    },
+    {
+      "url": "https://nppdhanaura.com/public/?id=1&lang=hi",
+      "kind": "internal",
+      "labels": [
+        "हिंदी"
+      ],
+      "lastCheck": "not checked"
+    }
+  ],
+  "sourceIssues": [
+    {
+      "url": "https://nppdhanaura.com/public/#",
+      "issue": "Homepage 'Important Notice' ticker item 'Meeting in Dhanaura Tehsil (NEW)' links to '#' and has no date or details.",
+      "action": "Not published. Needs date, details or document before it can be shown."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/services.php#tax",
+      "issue": "Homepage service links point at anchors (#tax, #trade, #downloads) that do not exist on services.php.",
+      "action": "New site links each service to its own detail page."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/services.php#downloads",
+      "issue": "'Download Forms / Offline Applications' has no downloadable forms behind it.",
+      "action": "Documents page lists only verified documents; forms needed from the office."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/directory.php",
+      "issue": "Official contact directory is empty ('No contacts available').",
+      "action": "Officer directory left empty pending administrator input."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/index.php",
+      "issue": "Chief Minister and Nagar Vikas Minister 'messages' are placeholder text ('Chief Minister of Uttar Pradesh').",
+      "action": "Names and photographs shown without invented messages."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/robots.txt",
+      "issue": "robots.txt is not served (host redirects to an error page).",
+      "action": "No crawl restrictions published; crawl was limited to public pages at one request per ~0.7 s."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/",
+      "issue": "Site sits behind a JavaScript challenge (InfinityFree), so automated HTTP clients cannot read it.",
+      "action": "Snapshot taken from a normal browser session (scripts/source-snapshot.browser.js)."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/uploads/gallery/af2136bcc948e699d7e6140e21e08d61.jpg",
+      "issue": "Duplicate of assets/images/About-2.jpeg (same bytes).",
+      "action": "Stored once."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/uploads/gallery/70a6293b97c5a4a9b3f5f64ddc4e1eb9.jpg",
+      "issue": "Duplicate of assets/images/About-1.jpeg (same bytes).",
+      "action": "Stored once."
+    },
+    {
+      "url": "https://nppdhanaura.com/public/assets/images/logo.png",
+      "issue": "Site logo is the Uttar Pradesh Government emblem, not a municipal logo.",
+      "action": "New site uses a typographic identity until an approved municipal logo is supplied."
+    }
+  ]
+}
