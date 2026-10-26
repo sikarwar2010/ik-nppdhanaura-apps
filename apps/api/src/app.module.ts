@@ -17,6 +17,7 @@ import { ImportsModule } from "./imports/imports.module"
 import { PaymentsModule } from "./payments/payments.module"
 import { PrismaModule } from "./prisma/prisma.module"
 import { PublicPropertyTaxModule } from "./public-property-tax/public-property-tax.module"
+import { PublicWardStatsModule } from "./public-ward-stats/public-ward-stats.module"
 import { RbacModule } from "./rbac/rbac.module"
 import { ReferenceModule } from "./reference/reference.module"
 import { ReportsModule } from "./reports/reports.module"
@@ -61,6 +62,7 @@ const observeOptions = observeOptionsFromEnv()
     CollectionsModule,
     ReferenceModule,
     PublicPropertyTaxModule,
+    PublicWardStatsModule,
     ...(observeOptions ? [ObserveModule.forRoot(observeOptions)] : []),
   ],
   controllers: [CsrfController],

@@ -11,6 +11,7 @@ export const staticRoutes: { group: MessageKey; items: { href: string; key: Mess
       { href: "/about", key: "nav.about" },
       { href: "/administration", key: "nav.leadership" },
       { href: "/departments", key: "nav.departments" },
+      { href: "/gis", key: "nav.gis" },
     ],
   },
   {

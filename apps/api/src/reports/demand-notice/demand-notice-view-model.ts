@@ -1,4 +1,5 @@
 import type { computePublicDuesPayload } from "../../public-property-tax/dues.util"
+import { MUNICIPALITY } from "../../common/municipality"
 import {
   DemandArithmeticError,
   reconcileComponentTotal,
@@ -107,7 +108,7 @@ function buildAddress(dues: DuesPayload): string {
     dues.streetName,
     dues.locality,
     dues.colony,
-    dues.city ?? "Nagar Panchayat Chhata",
+    dues.city ?? MUNICIPALITY.town,
     dues.pincode,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(", ") : "—"

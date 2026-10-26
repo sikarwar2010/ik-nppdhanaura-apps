@@ -17,10 +17,20 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : {
-        command: `npx next start -p ${port}`,
-        url: baseURL,
-        reuseExistingServer: true,
-        timeout: 60_000,
-      },
+    : [
+        {
+          // Test-only stand-in for the municipal API (ward statistics fixture).
+          command: "node e2e/mock-api.mjs",
+          url: "http://127.0.0.1:4199/health",
+          reuseExistingServer: true,
+          timeout: 20_000,
+        },
+        {
+          command: `npx next start -p ${port}`,
+          url: baseURL,
+          reuseExistingServer: true,
+          timeout: 60_000,
+          env: { API_INTERNAL_URL: "http://127.0.0.1:4199" },
+        },
+      ],
 })

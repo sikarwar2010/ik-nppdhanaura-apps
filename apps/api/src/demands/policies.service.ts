@@ -9,11 +9,13 @@ import { Prisma } from "@prisma/client"
 import { AuditService } from "../audit/audit.service"
 import { PrismaService } from "../prisma/prisma.service"
 import type {
+  CreateAssessmentYearDto,
   PenaltyPolicyDto,
   RebatePolicyDto,
   UpdateAssessmentYearDto,
   UpsertAssessmentYearDto,
 } from "./dto/policies.dto"
+import { policyAmountProblems } from "./charge-preview"
 import { findOverlappingYear } from "./year-overlap"
 
 function day(value: string): Date {
@@ -44,20 +46,178 @@ export class PoliciesService {
       orderBy: [{ sortOrder: "asc" }, { code: "asc" }],
       include: { yearProfile: true },
     })
-    return entries.map((entry) => ({
-      id: entry.id,
-      code: entry.code,
-      name: entry.name,
-      catalogStatus: entry.status,
-      profile: entry.yearProfile
-        ? {
-            id: entry.yearProfile.id,
-            startsOn: dayString(entry.yearProfile.startsOn),
-            endsOn: dayString(entry.yearProfile.endsOn),
-            status: entry.yearProfile.status,
-          }
-        : null,
-    }))
+    const ids = entries.map((entry) => entry.id)
+    const profileIds = entries.flatMap((entry) => (entry.yearProfile ? [entry.yearProfile.id] : []))
+    const [demands, payments, configs, rebates, penalties, audits] = await Promise.all([
+      this.prisma.assessmentDemand.groupBy({
+        by: ["assessmentYearId"],
+        where: { assessmentYearId: { in: ids }, status: "PUBLISHED" },
+        _count: { _all: true },
+      }),
+      this.prisma.payment.groupBy({
+        by: ["assessmentYearId"],
+        where: { assessmentYearId: { in: ids }, status: "SUCCESS" },
+        _count: { _all: true },
+      }),
+      this.prisma.taxConfig.groupBy({
+        by: ["assessmentYearId", "status"],
+        where: { assessmentYearId: { in: ids } },
+        _count: { _all: true },
+      }),
+      this.prisma.rebatePolicy.groupBy({
+        by: ["assessmentYearId", "taxCategory"],
+        where: { assessmentYearId: { in: ids }, status: "ACTIVE" },
+        _count: { _all: true },
+      }),
+      this.prisma.penaltyPolicy.groupBy({
+        by: ["assessmentYearId", "taxCategory"],
+        where: { assessmentYearId: { in: ids }, status: "ACTIVE" },
+        _count: { _all: true },
+      }),
+      profileIds.length
+        ? this.prisma.auditLog.findMany({
+            where: { entity: "AssessmentYearProfile", entityId: { in: profileIds } },
+            orderBy: { createdAt: "desc" },
+            include: { actor: { select: { name: true } } },
+          })
+        : Promise.resolve([]),
+    ])
+    const count = <T extends { assessmentYearId: string | null; _count: { _all: number } }>(
+      rows: T[],
+      id: string,
+      filter: (row: T) => boolean = () => true
+    ) => rows.filter((row) => row.assessmentYearId === id && filter(row)).reduce((n, row) => n + row._count._all, 0)
+    return entries.map((entry) => {
+      const lastAudit = entry.yearProfile
+        ? audits.find((row) => row.entityId === entry.yearProfile!.id)
+        : undefined
+      const publishedDemands = count(demands, entry.id)
+      const successfulPayments = count(payments, entry.id)
+      return {
+        id: entry.id,
+        code: entry.code,
+        name: entry.name,
+        catalogStatus: entry.status,
+        profile: entry.yearProfile
+          ? {
+              id: entry.yearProfile.id,
+              startsOn: dayString(entry.yearProfile.startsOn),
+              endsOn: dayString(entry.yearProfile.endsOn),
+              status: entry.yearProfile.status,
+              createdAt: entry.yearProfile.createdAt.toISOString(),
+              updatedAt: entry.yearProfile.updatedAt.toISOString(),
+            }
+          : null,
+        usage: {
+          publishedDemands,
+          successfulPayments,
+          taxConfigsPublished: count(configs, entry.id, (row) => row.status === "PUBLISHED"),
+          taxConfigsDraft: count(configs, entry.id, (row) => row.status === "DRAFT"),
+          activeRebateRules: rebates
+            .filter((row) => row.assessmentYearId === entry.id)
+            .map((row) => row.taxCategory),
+          activePenaltyRules: penalties
+            .filter((row) => row.assessmentYearId === entry.id)
+            .map((row) => row.taxCategory),
+          /** Dates and DRAFT status are locked once financial records exist. */
+          locked: publishedDemands > 0 || successfulPayments > 0,
+        },
+        lastChange: lastAudit
+          ? {
+              action: lastAudit.action,
+              at: lastAudit.createdAt.toISOString(),
+              by: lastAudit.actor?.name ?? null,
+            }
+          : null,
+      }
+    })
+  }
+
+  /** Create the catalog entry and its dates in one transaction. */
+  async createYear(dto: CreateAssessmentYearDto, actorId: string) {
+    const label = dto.label.trim()
+    const [first, second] = label.split("-").map(Number) as [number, number]
+    if (second !== first + 1) {
+      throw new BadRequestException({
+        code: "ASSESSMENT_YEAR_LABEL_INVALID",
+        message: "The second year must follow the first, for example 2027-2028.",
+      })
+    }
+    const code = `AY_${first}_${second}`
+    const category = await this.prisma.referenceCategory.findUnique({
+      where: { code: "ASSESSMENT_YEAR" },
+    })
+    if (!category) {
+      throw new NotFoundException({
+        code: "ASSESSMENT_YEAR_CATALOG_MISSING",
+        message: "The assessment-year catalog is not set up. Run the database seed.",
+      })
+    }
+    const duplicate = await this.prisma.referenceEntry.findFirst({
+      where: { categoryId: category.id, OR: [{ code }, { name: label }] },
+    })
+    if (duplicate) {
+      throw new ConflictException({
+        code: "ASSESSMENT_YEAR_DUPLICATE",
+        message: `Assessment year ${label} already exists.`,
+      })
+    }
+    await this.assertRange("", dto.startsOn, dto.endsOn, dto.status)
+    const last = await this.prisma.referenceEntry.aggregate({
+      where: { categoryId: category.id },
+      _max: { sortOrder: true },
+    })
+    const created = await this.prisma.$transaction(async (tx) => {
+      const entry = await tx.referenceEntry.create({
+        data: {
+          categoryId: category.id,
+          code,
+          name: label,
+          sortOrder: (last._max.sortOrder ?? 0) + 1,
+          status: "ACTIVE",
+        },
+      })
+      const profile = await tx.assessmentYearProfile.create({
+        data: {
+          referenceEntryId: entry.id,
+          startsOn: day(dto.startsOn),
+          endsOn: day(dto.endsOn),
+          status: dto.status,
+        },
+      })
+      return { entry, profile }
+    })
+    await this.audit.log({
+      action: "ASSESSMENT_YEAR_CREATED",
+      entity: "AssessmentYearProfile",
+      entityId: created.profile.id,
+      actorId,
+      newValue: { code, label, startsOn: dto.startsOn, endsOn: dto.endsOn, status: dto.status },
+    })
+    return {
+      id: created.entry.id,
+      code,
+      name: label,
+      profile: {
+        id: created.profile.id,
+        startsOn: dto.startsOn,
+        endsOn: dto.endsOn,
+        status: created.profile.status,
+      },
+    }
+  }
+
+  /** Financial records that make a year's dates and DRAFT status unchangeable. */
+  private async yearInUse(referenceEntryId: string) {
+    const [demands, payments] = await Promise.all([
+      this.prisma.assessmentDemand.count({
+        where: { assessmentYearId: referenceEntryId, status: "PUBLISHED" },
+      }),
+      this.prisma.payment.count({
+        where: { assessmentYearId: referenceEntryId, status: "SUCCESS" },
+      }),
+    ])
+    return { demands, payments, inUse: demands > 0 || payments > 0 }
   }
 
   async upsertYear(dto: UpsertAssessmentYearDto, actorId: string) {
@@ -65,8 +225,19 @@ export class PoliciesService {
     const current = await this.prisma.assessmentYearProfile.findUnique({
       where: { referenceEntryId: dto.referenceEntryId },
     })
+    if (current) {
+      // Existing dates are changed through updateYear, which enforces the locks.
+      return this.updateYear(dto.referenceEntryId, dto, actorId)
+    }
+    if (dto.status === "DRAFT" && (await this.yearInUse(dto.referenceEntryId)).inUse) {
+      throw new ConflictException({
+        code: "ASSESSMENT_YEAR_IN_USE",
+        message:
+          "This year already has demands or payments, so it cannot be a draft. Choose Active or Closed.",
+      })
+    }
     await this.assertRange(
-      current?.id ?? "",
+      "",
       dto.startsOn,
       dto.endsOn,
       dto.status
@@ -118,6 +289,33 @@ export class PoliciesService {
     const startsOn = dto.startsOn ?? dayString(existing.startsOn) ?? ""
     const endsOn = dto.endsOn ?? dayString(existing.endsOn) ?? ""
     const status = dto.status ?? existing.status
+    if (
+      (status === "CLOSED" || status === "ARCHIVED") &&
+      status !== existing.status &&
+      (dto.reason?.trim().length ?? 0) < 5
+    ) {
+      throw new BadRequestException({
+        code: "ASSESSMENT_YEAR_REASON_REQUIRED",
+        message: "Give a reason for closing or archiving this assessment year.",
+      })
+    }
+    const usage = await this.yearInUse(referenceEntryId)
+    if (usage.inUse) {
+      const datesChanged =
+        startsOn !== dayString(existing.startsOn) || endsOn !== dayString(existing.endsOn)
+      if (datesChanged) {
+        throw new ConflictException({
+          code: "ASSESSMENT_YEAR_IN_USE",
+          message: `This year already has ${usage.demands} published demand(s) and ${usage.payments} payment(s), so its dates cannot change. Close or archive it instead.`,
+        })
+      }
+      if (status === "DRAFT" && existing.status !== "DRAFT") {
+        throw new ConflictException({
+          code: "ASSESSMENT_YEAR_IN_USE",
+          message: "A year with demands or payments cannot go back to draft.",
+        })
+      }
+    }
     await this.assertRange(existing.id, startsOn, endsOn, status)
     const profile = await this.prisma.assessmentYearProfile.update({
       where: { id: existing.id },
@@ -132,8 +330,13 @@ export class PoliciesService {
       entity: "AssessmentYearProfile",
       entityId: profile.id,
       actorId,
-      oldValue: { status: existing.status },
-      newValue: auditValue(dto),
+      oldValue: {
+        status: existing.status,
+        startsOn: dayString(existing.startsOn),
+        endsOn: dayString(existing.endsOn),
+      },
+      newValue: auditValue({ startsOn, endsOn, status }),
+      metadata: dto.reason?.trim() ? { reason: dto.reason.trim() } : undefined,
     })
     return {
       id: profile.id,
@@ -156,8 +359,9 @@ export class PoliciesService {
   async createRebate(dto: RebatePolicyDto, actorId: string) {
     this.assertRebateAmounts(dto)
     await this.requireAssessmentYear(dto.assessmentYearId)
+    await this.assertYearConfigured(dto.assessmentYearId)
     const row = await this.prisma.rebatePolicy.create({
-      data: this.rebateData(dto),
+      data: { ...this.rebateData(dto), createdById: actorId },
       include: { assessmentYear: { select: { code: true, name: true } } },
     })
     await this.audit.log({
@@ -188,7 +392,8 @@ export class PoliciesService {
     this.assertRebateAmounts(dto)
     const row = await this.prisma.rebatePolicy.update({
       where: { id },
-      data: this.rebateData(dto),
+      // A draft keeps the tax it was created for.
+      data: this.rebateData({ ...dto, taxCategory: existing.taxCategory }),
       include: { assessmentYear: { select: { code: true, name: true } } },
     })
     await this.audit.log({
@@ -201,7 +406,7 @@ export class PoliciesService {
     return this.rebateDto(row)
   }
 
-  async activateRebate(id: string, actorId: string) {
+  async activateRebate(id: string, actorId: string, reason?: string) {
     const existing = await this.prisma.rebatePolicy.findUnique({ where: { id } })
     if (!existing) {
       throw new NotFoundException({
@@ -215,12 +420,16 @@ export class PoliciesService {
         message: "An archived rebate policy cannot be activated",
       })
     }
+    await this.assertYearConfigured(existing.assessmentYearId)
     await this.prisma.$transaction(async (tx) => {
+      // Replace only the active rule for the same tax. A combined rule and
+      // tax-specific rules never stay active together (no double counting).
       await tx.rebatePolicy.updateMany({
         where: {
           assessmentYearId: existing.assessmentYearId,
           status: "ACTIVE",
           id: { not: id },
+          ...supersededCategories(existing.taxCategory),
         },
         data: { status: "ARCHIVED" },
       })
@@ -238,8 +447,46 @@ export class PoliciesService {
       entity: "RebatePolicy",
       entityId: id,
       actorId,
+      oldValue: { status: existing.status },
+      newValue: { status: "ACTIVE" },
+      metadata: reason?.trim() ? { reason: reason.trim() } : undefined,
     })
     return { id, status: "ACTIVE" as const }
+  }
+
+  /** Withdraw a rule. Published demands keep the rebate or penalty they were issued with. */
+  async archivePolicy(
+    kind: "rebate" | "penalty",
+    id: string,
+    actorId: string,
+    reason?: string
+  ) {
+    const existing =
+      kind === "rebate"
+        ? await this.prisma.rebatePolicy.findUnique({ where: { id } })
+        : await this.prisma.penaltyPolicy.findUnique({ where: { id } })
+    if (!existing) {
+      throw new NotFoundException({
+        code: kind === "rebate" ? "REBATE_POLICY_NOT_FOUND" : "PENALTY_POLICY_NOT_FOUND",
+        message: `${kind === "rebate" ? "Rebate" : "Penalty"} policy was not found`,
+      })
+    }
+    if (existing.status === "ARCHIVED") return { id, status: "ARCHIVED" as const }
+    if (kind === "rebate") {
+      await this.prisma.rebatePolicy.update({ where: { id }, data: { status: "ARCHIVED" } })
+    } else {
+      await this.prisma.penaltyPolicy.update({ where: { id }, data: { status: "ARCHIVED" } })
+    }
+    await this.audit.log({
+      action: kind === "rebate" ? "REBATE_POLICY_ARCHIVED" : "PENALTY_POLICY_ARCHIVED",
+      entity: kind === "rebate" ? "RebatePolicy" : "PenaltyPolicy",
+      entityId: id,
+      actorId,
+      oldValue: { status: existing.status },
+      newValue: { status: "ARCHIVED" },
+      metadata: reason?.trim() ? { reason: reason.trim() } : undefined,
+    })
+    return { id, status: "ARCHIVED" as const }
   }
 
   async listPenalties(assessmentYearId?: string) {
@@ -254,8 +501,9 @@ export class PoliciesService {
   async createPenalty(dto: PenaltyPolicyDto, actorId: string) {
     this.assertPenaltyAmounts(dto)
     await this.requireAssessmentYear(dto.assessmentYearId)
+    await this.assertYearConfigured(dto.assessmentYearId)
     const row = await this.prisma.penaltyPolicy.create({
-      data: this.penaltyData(dto),
+      data: { ...this.penaltyData(dto), createdById: actorId },
       include: { assessmentYear: { select: { code: true, name: true } } },
     })
     await this.audit.log({
@@ -286,7 +534,7 @@ export class PoliciesService {
     this.assertPenaltyAmounts(dto)
     const row = await this.prisma.penaltyPolicy.update({
       where: { id },
-      data: this.penaltyData(dto),
+      data: this.penaltyData({ ...dto, taxCategory: existing.taxCategory }),
       include: { assessmentYear: { select: { code: true, name: true } } },
     })
     await this.audit.log({
@@ -299,7 +547,7 @@ export class PoliciesService {
     return this.penaltyDto(row)
   }
 
-  async activatePenalty(id: string, actorId: string) {
+  async activatePenalty(id: string, actorId: string, reason?: string) {
     const existing = await this.prisma.penaltyPolicy.findUnique({ where: { id } })
     if (!existing) {
       throw new NotFoundException({
@@ -313,12 +561,16 @@ export class PoliciesService {
         message: "An archived penalty policy cannot be activated",
       })
     }
+    await this.assertYearConfigured(existing.assessmentYearId)
     await this.prisma.$transaction(async (tx) => {
+      // Replace only the active rule for the same tax. A combined rule and
+      // tax-specific rules never stay active together (no double counting).
       await tx.penaltyPolicy.updateMany({
         where: {
           assessmentYearId: existing.assessmentYearId,
           status: "ACTIVE",
           id: { not: id },
+          ...supersededCategories(existing.taxCategory),
         },
         data: { status: "ARCHIVED" },
       })
@@ -336,6 +588,9 @@ export class PoliciesService {
       entity: "PenaltyPolicy",
       entityId: id,
       actorId,
+      oldValue: { status: existing.status },
+      newValue: { status: "ACTIVE" },
+      metadata: reason?.trim() ? { reason: reason.trim() } : undefined,
     })
     return { id, status: "ACTIVE" as const }
   }
@@ -402,6 +657,25 @@ export class PoliciesService {
         message: "Rebate rate cannot exceed 100 percent",
       })
     }
+    this.assertAmountProblems({
+      type: dto.rebateType,
+      rate: dto.rate,
+      fixedAmount: dto.fixedAmount,
+      maxAmount: dto.maxAmount,
+      startsOn: dto.startsOn,
+      endsOn: dto.endsOn,
+    })
+  }
+
+  private assertAmountProblems(input: Parameters<typeof policyAmountProblems>[0]) {
+    const problems = policyAmountProblems(input)
+    if (problems.length) {
+      throw new BadRequestException({
+        code: "POLICY_AMOUNT_INVALID",
+        message: problems.map((p) => p.message).join(" "),
+        details: { fields: problems },
+      })
+    }
   }
 
   private assertPenaltyAmounts(dto: PenaltyPolicyDto) {
@@ -430,21 +704,53 @@ export class PoliciesService {
         message: "A due-date penalty needs a due date. No date is assumed.",
       })
     }
+    this.assertAmountProblems({
+      type: dto.penaltyType === "FIXED_AMOUNT" ? "FIXED_AMOUNT" : "PERCENTAGE",
+      rate: dto.rate,
+      fixedAmount: dto.fixedAmount,
+      maxAmount: dto.maxAmount,
+      startsOn: dto.startsOn,
+      endsOn: dto.endsOn,
+    })
+  }
+
+  /**
+   * Rules can only be created or activated for an assessment year whose dates
+   * are configured and which is not closed or archived.
+   */
+  private async assertYearConfigured(assessmentYearId: string) {
+    const profile = await this.prisma.assessmentYearProfile.findUnique({
+      where: { referenceEntryId: assessmentYearId },
+    })
+    if (!profile) {
+      throw new ConflictException({
+        code: "ASSESSMENT_YEAR_NOT_CONFIGURED",
+        message:
+          "Set this assessment year's start and end dates on the Assessment Years page before adding rules to it.",
+      })
+    }
+    if (profile.status === "CLOSED" || profile.status === "ARCHIVED") {
+      throw new ConflictException({
+        code: "ASSESSMENT_YEAR_LOCKED",
+        message: "This assessment year is closed or archived. Its rules cannot be changed.",
+      })
+    }
   }
 
   private rebateData(dto: RebatePolicyDto): Prisma.RebatePolicyCreateInput {
+    const taxCategory = dto.taxCategory ?? "COMBINED"
     return {
       name: dto.name.trim(),
       assessmentYear: { connect: { id: dto.assessmentYearId } },
+      taxCategory,
       rebateType: dto.rebateType,
       rate: dto.rate ?? null,
       fixedAmount: dto.fixedAmount ?? null,
-      includePropertyTax: dto.includePropertyTax,
-      includeWaterTax: dto.includeWaterTax,
-      includeDrainageTax: dto.includeDrainageTax,
+      ...componentFlags(taxCategory, dto),
       includeArrears: dto.includeArrears,
       includePenalty: dto.includePenalty,
-      includeInterest: dto.includeInterest,
+      // Interest is not split by tax, so only a combined rule can include it.
+      includeInterest: taxCategory === "COMBINED" ? dto.includeInterest : false,
       maxAmount: dto.maxAmount ?? null,
       startsOn: dto.startsOn ? day(dto.startsOn) : null,
       endsOn: dto.endsOn ? day(dto.endsOn) : null,
@@ -453,18 +759,18 @@ export class PoliciesService {
   }
 
   private penaltyData(dto: PenaltyPolicyDto): Prisma.PenaltyPolicyCreateInput {
+    const taxCategory = dto.taxCategory ?? "COMBINED"
     return {
       name: dto.name.trim(),
       assessmentYear: { connect: { id: dto.assessmentYearId } },
+      taxCategory,
       penaltyType: dto.penaltyType,
       rate: dto.rate ?? null,
       fixedAmount: dto.fixedAmount ?? null,
       trigger: dto.trigger,
       graceDays: dto.graceDays ?? 0,
       dueDate: dto.dueDate ? day(dto.dueDate) : null,
-      includePropertyTax: dto.includePropertyTax,
-      includeWaterTax: dto.includeWaterTax,
-      includeDrainageTax: dto.includeDrainageTax,
+      ...componentFlags(taxCategory, dto),
       includeArrears: dto.includeArrears,
       applyAfterRebate: dto.applyAfterRebate === true,
       maxAmount: dto.maxAmount ?? null,
@@ -491,11 +797,15 @@ export class PoliciesService {
     endsOn: Date | null
     paymentDeadline: Date | null
     status: string
+    taxCategory: string
+    approvedAt: Date | null
     assessmentYear?: { code: string; name: string }
   }) {
     return {
       id: row.id,
       name: row.name,
+      taxCategory: row.taxCategory,
+      approvedAt: row.approvedAt?.toISOString() ?? null,
       assessmentYearId: row.assessmentYearId,
       assessmentYearName: row.assessmentYear?.name ?? null,
       rebateType: row.rebateType,
@@ -534,11 +844,15 @@ export class PoliciesService {
     startsOn: Date | null
     endsOn: Date | null
     status: string
+    taxCategory: string
+    approvedAt: Date | null
     assessmentYear?: { code: string; name: string }
   }) {
     return {
       id: row.id,
       name: row.name,
+      taxCategory: row.taxCategory,
+      approvedAt: row.approvedAt?.toISOString() ?? null,
       assessmentYearId: row.assessmentYearId,
       assessmentYearName: row.assessmentYear?.name ?? null,
       penaltyType: row.penaltyType,
@@ -558,4 +872,35 @@ export class PoliciesService {
       status: row.status,
     }
   }
+}
+
+type PolicyCategory = "COMBINED" | "PROPERTY_TAX" | "WATER_TAX" | "DRAINAGE_TAX"
+
+/** A tax-specific rule covers exactly its own component. */
+export function componentFlags(
+  category: PolicyCategory,
+  dto: { includePropertyTax: boolean; includeWaterTax: boolean; includeDrainageTax: boolean }
+) {
+  if (category === "COMBINED") {
+    return {
+      includePropertyTax: dto.includePropertyTax,
+      includeWaterTax: dto.includeWaterTax,
+      includeDrainageTax: dto.includeDrainageTax,
+    }
+  }
+  return {
+    includePropertyTax: category === "PROPERTY_TAX",
+    includeWaterTax: category === "WATER_TAX",
+    includeDrainageTax: category === "DRAINAGE_TAX",
+  }
+}
+
+/** Active rules that a newly activated rule of this category replaces. */
+export function supersededCategories(category: PolicyCategory): {
+  taxCategory?: { in: PolicyCategory[] }
+} {
+  // A combined rule replaces every active rule of the year.
+  if (category === "COMBINED") return {}
+  // A tax-specific rule replaces the same tax and any combined rule.
+  return { taxCategory: { in: [category, "COMBINED"] } }
 }

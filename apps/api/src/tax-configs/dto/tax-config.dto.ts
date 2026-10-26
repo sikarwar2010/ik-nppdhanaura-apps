@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Matches,
+  Max,
   Min,
   ValidateNested,
 } from "class-validator"
@@ -14,36 +15,42 @@ export class UpdateTaxConfigParamsDto {
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @Max(100)
   propertyTaxPct?: number
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @Max(100)
   waterTaxPct?: number
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @Max(100)
   drainageTaxPct?: number
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @Max(100)
   penaltyPct?: number
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @Max(100)
   assessablePct?: number
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
+  @Max(100)
   commercialAssessablePct?: number
 
   @IsOptional()

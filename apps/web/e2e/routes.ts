@@ -4,6 +4,7 @@ export const routes = [
   "/about",
   "/administration",
   "/departments",
+  "/gis",
   "/services",
   "/services/birth-death-certificate",
   "/services/property-water-tax",
@@ -44,5 +45,6 @@ export const keyRoutes = [
   "/documents",
   "/gallery/independence-day-2026",
   "/contact",
+  "/gis",
   "/search?q=प्रमाण",
 ]

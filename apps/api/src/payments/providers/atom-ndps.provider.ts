@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { gatewayFallbackEmail } from "../../common/municipality"
 
 import { isAtomRefundSuccess } from "../payments.safety"
 import { atomAesDecrypt, atomAesEncrypt } from "./atom-aes"
@@ -231,11 +232,7 @@ export class AtomNdpsProvider implements PaymentGatewayProvider {
   }
 
   async createPayment(input: CreatePaymentInput): Promise<CreatePaymentResult> {
-    const email =
-      input.customerEmail?.trim() ||
-      (input.customerMobile
-        ? `${input.customerMobile}@citizen.chhata.in`
-        : "citizen@nagar-panchayat-chhata.in")
+    const email = input.customerEmail?.trim() || gatewayFallbackEmail()
     const mobile = input.customerMobile?.trim() || ""
 
     const payInstrument = {

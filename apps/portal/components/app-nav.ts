@@ -51,15 +51,16 @@ export const NAV_ITEMS: NavItem[] = [
     icon: BarChart3,
     permission: "report:read",
     children: [
-      { title: "Report Builder", href: "/reports", permission: "report:read" },
-      {
-        title: "Tax Rates",
-        href: "/reports/tax-rates",
-        permission: "report:read",
-      },
+      { title: "Report Builder", href: "/reports", permission: "report:read", exact: true },
       {
         title: "Demand Notice",
         href: "/reports/notice",
+        permission: "report:read",
+      },
+      {
+        // Property ledger, demand publishing and historical balances.
+        title: "Demand Ledger",
+        href: "/reports/tax-rates",
         permission: "report:read",
       },
     ],
@@ -71,22 +72,33 @@ export const NAV_ITEMS: NavItem[] = [
     children: [
       {
         title: "Assessment Years",
-        href: "/reports/tax-rates#assessment-years",
+        href: "/tax-admin/assessment-years",
         permission: "report:read",
       },
       {
+        // Property, water and drainage rates are one ward-wise rate table.
         title: "Tax Rates",
-        href: "/reports/tax-rates#tax-rates",
+        href: "/tax-admin/tax-rates",
         permission: "report:read",
       },
       {
-        title: "Rebate Settings",
-        href: "/reports/tax-rates#rebate",
+        title: "Property Tax Rebates",
+        href: "/tax-admin/rebates/property",
         permission: "report:read",
       },
       {
-        title: "Penalty Settings",
-        href: "/reports/tax-rates#penalty",
+        title: "Water Tax Rebates",
+        href: "/tax-admin/rebates/water",
+        permission: "report:read",
+      },
+      {
+        title: "Property Tax Penalties",
+        href: "/tax-admin/penalties/property",
+        permission: "report:read",
+      },
+      {
+        title: "Water Tax Penalties",
+        href: "/tax-admin/penalties/water",
         permission: "report:read",
       },
     ],
@@ -189,10 +201,15 @@ const NAV_TITLE_KEYS: Record<string, MessageKey> = {
   "Report Builder": "nav.reportBuilder",
   "Tax Rates": "nav.taxRates",
   "Demand Notice": "nav.demandNotice",
+  "Demand Ledger": "nav.demandLedger",
   "Tax Administration": "nav.taxAdministration",
   "Assessment Years": "nav.assessmentYears",
   "Rebate Settings": "nav.rebateSettings",
   "Penalty Settings": "nav.penaltySettings",
+  "Property Tax Rebates": "nav.propertyTaxRebates",
+  "Water Tax Rebates": "nav.waterTaxRebates",
+  "Property Tax Penalties": "nav.propertyTaxPenalties",
+  "Water Tax Penalties": "nav.waterTaxPenalties",
   "Tax Collection": "nav.taxCollection",
   "Offline Tax Collection": "nav.offlineCollection",
   "Payment Receipts": "nav.paymentReceipts",
@@ -229,6 +246,7 @@ export function getBreadcrumbLabel(pathname: string): string {
   if (pathname.startsWith("/dashboard")) return "Dashboard"
   if (isSurveyNavActive(pathname)) return "Survey"
   if (pathname.startsWith("/collections")) return "Tax Collection"
+  if (pathname.startsWith("/tax-admin")) return "Tax Administration"
   if (pathname.startsWith("/reports")) return "Reports"
   if (pathname.startsWith("/settings") || pathname.startsWith("/audit-logs")) {
     return "Settings"

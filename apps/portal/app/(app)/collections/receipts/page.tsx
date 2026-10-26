@@ -5,7 +5,16 @@ import * as React from "react"
 import { toast } from "sonner"
 
 import { Button } from "@workspace/ui/components/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog"
 import { Input } from "@workspace/ui/components/input"
+import { Textarea } from "@workspace/ui/components/textarea"
 
 import { api } from "@/lib/api"
 import { usePermission } from "@/hooks/use-permission"
@@ -23,6 +32,8 @@ type ReceiptRow = {
   assessmentYear: string | null
   cashierName: string | null
   remarks: string | null
+  reversedAt?: string | null
+  reversalReason?: string | null
 }
 
 async function printReceipt(id: string) {
@@ -50,6 +61,7 @@ export default function ReceiptsPage() {
   const [dateTo, setDateTo] = React.useState("")
   const [page, setPage] = React.useState(1)
   const [reason, setReason] = React.useState("")
+  const [reversing, setReversing] = React.useState<ReceiptRow | null>(null)
 
   const params = new URLSearchParams({ page: String(page), pageSize: "20" })
   if (search.trim()) params.set("search", search.trim())
@@ -80,10 +92,13 @@ export default function ReceiptsPage() {
   })
   const reverse = useMutation({
     mutationFn: (id: string) =>
-      api.post(`/api/v1/payments/${id}/reversals`, { reason }),
+      api.post(`/api/v1/payments/${id}/reversals`, { reason: reason.trim() }),
     onSuccess: () => {
-      toast.success("Payment reversed. The outstanding balance is restored.")
+      toast.success(
+        "Payment reversed. The original receipt is kept and now prints with a REVERSED stamp; the outstanding balance is restored."
+      )
       setReason("")
+      setReversing(null)
       void queryClient.invalidateQueries({ queryKey: ["collection-receipts"] })
     },
     onError: (error: Error) => toast.error(error.message),
@@ -110,12 +125,6 @@ export default function ReceiptsPage() {
         <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
         <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
       </div>
-      {hasPermission("payment:reverse") ? (
-        <label className="block max-w-md space-y-1 text-sm">
-          <span>Reversal reason</span>
-          <Input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Required to reverse a settled receipt" />
-        </label>
-      ) : null}
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
@@ -142,7 +151,12 @@ export default function ReceiptsPage() {
                 <td className="p-2 text-right tabular-nums">{inr(row.amount)}</td>
                 <td className="p-2">{row.paymentMode}</td>
                 <td className="p-2">{row.cashierName ?? "—"}</td>
-                <td className="p-2"><StatusBadge status={row.status} /></td>
+                <td className="p-2">
+                  <StatusBadge status={row.status} />
+                  {row.reversalReason ? (
+                    <p className="mt-1 max-w-48 text-xs text-muted-foreground">Reason: {row.reversalReason}</p>
+                  ) : null}
+                </td>
                 <td className="p-2 space-x-2">
                   {row.receiptNumber ? (
                     <Button type="button" size="sm" variant="outline" className="cursor-pointer" onClick={() => void printReceipt(row.id).catch((error: Error) => toast.error(error.message))}>
@@ -155,8 +169,17 @@ export default function ReceiptsPage() {
                     </Button>
                   ) : null}
                   {row.status === "SUCCESS" && hasPermission("payment:reverse") ? (
-                    <Button type="button" size="sm" variant="outline" className="cursor-pointer" disabled={reason.trim().length < 3 || reverse.isPending} onClick={() => reverse.mutate(row.id)}>
-                      Reverse
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setReason("")
+                        setReversing(row)
+                      }}
+                    >
+                      Reverse…
                     </Button>
                   ) : null}
                 </td>
@@ -165,6 +188,47 @@ export default function ReceiptsPage() {
           </tbody>
         </table>
       </div>
+      <Dialog
+        open={Boolean(reversing)}
+        onOpenChange={(open) => {
+          if (!open && !reverse.isPending) setReversing(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reverse receipt {reversing?.receiptNumber ?? ""}?</DialogTitle>
+            <DialogDescription>
+              The payment of {reversing ? inr(reversing.amount) : ""} for property{" "}
+              {reversing?.propertyId ?? "—"} will stop counting towards the ledger. The receipt is not
+              deleted: it stays on record and reprints with a REVERSED stamp, the reason, your name and
+              the time. This cannot be undone from this screen.
+            </DialogDescription>
+          </DialogHeader>
+          <label className="space-y-1 text-sm">
+            <span className="font-medium">Reason (required)</span>
+            <Textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="e.g. Cheque dishonoured by bank on 25 Oct 2026"
+              rows={3}
+            />
+          </label>
+          <DialogFooter>
+            <Button type="button" variant="outline" className="cursor-pointer" disabled={reverse.isPending} onClick={() => setReversing(null)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="cursor-pointer"
+              disabled={!reversing || reason.trim().length < 3 || reverse.isPending}
+              onClick={() => reversing && reverse.mutate(reversing.id)}
+            >
+              {reverse.isPending ? "Reversing…" : "Reverse payment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex gap-2 text-sm">
         <Button type="button" variant="outline" className="cursor-pointer" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</Button>
         <span>Page {receipts.data?.meta.page ?? page} of {receipts.data?.meta.totalPages ?? 1}</span>

@@ -238,6 +238,41 @@ export class TaxConfigsService {
     return { updated }
   }
 
+  /** Rate status of every active ward for one assessment year. */
+  async overview(assessmentYearId: string) {
+    if (!assessmentYearId?.trim()) {
+      throw new BadRequestException("Assessment year is required")
+    }
+    const [wards, configs] = await Promise.all([
+      this.prisma.ward.findMany({
+        where: { isActive: true },
+        select: { id: true, number: true, name: true },
+        orderBy: { number: "asc" },
+      }),
+      this.prisma.taxConfig.findMany({
+        where: { assessmentYearId },
+        include: { _count: { select: { cells: true } } },
+      }),
+    ])
+    return wards.map((ward) => {
+      const config = configs.find((row) => row.wardId === ward.id)
+      return {
+        wardId: ward.id,
+        wardNumber: ward.number,
+        wardName: ward.name,
+        configId: config?.id ?? null,
+        status: config?.status ?? null,
+        version: config?.version ?? null,
+        publishedAt: config?.publishedAt?.toISOString() ?? null,
+        changeReason: config?.changeReason ?? null,
+        propertyTaxPct: config ? config.propertyTaxPct.toString() : null,
+        waterTaxPct: config ? config.waterTaxPct.toString() : null,
+        drainageTaxPct: config ? config.drainageTaxPct.toString() : null,
+        rateCells: config?._count.cells ?? 0,
+      }
+    })
+  }
+
   async preview(dto: TaxPreviewDto) {
     this.assertIds(dto.wardId, dto.assessmentYearId)
     const config = await this.findConfig(dto.wardId, dto.assessmentYearId)
@@ -258,6 +293,18 @@ export class TaxConfigsService {
     })
     if (!config) throw new NotFoundException("Tax config not found")
     await this.assertAssessmentYearOpen(config.assessmentYearId)
+    // Replacing rates that were already published affects every demand
+    // calculated from now on: record why. Old demands keep their figures.
+    const previousVersions = await this.prisma.taxConfigVersion.count({
+      where: { taxConfigId: id },
+    })
+    if (previousVersions > 0 && (dto.reason?.trim().length ?? 0) < 5) {
+      throw new BadRequestException({
+        code: "TAX_RATE_CHANGE_REASON_REQUIRED",
+        message:
+          "These rates were published before. Enter the reason for the change (for example the board resolution number) before publishing again.",
+      })
+    }
 
     const nextVersion = config.version + (config.status === "PUBLISHED" ? 1 : 0)
     const snapshot = {

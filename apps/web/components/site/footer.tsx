@@ -17,6 +17,7 @@ export async function SiteFooter() {
     { href: "/about", label: t("nav.about") },
     { href: "/administration", label: t("nav.leadership") },
     { href: "/departments", label: t("nav.departments") },
+    { href: "/gis", label: t("nav.gis") },
     { href: "/notices", label: t("nav.allNotices") },
     { href: "/tenders", label: t("nav.tenders") },
     { href: "/documents", label: t("nav.documents") },
@@ -44,7 +45,9 @@ export async function SiteFooter() {
       <div className="container-site relative grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.3fr]">
         <div>
           <div className="flex items-center gap-3">
-            <BrandMark className="size-12" />
+            <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-white p-1">
+              <BrandMark className="size-12" />
+            </span>
             <div>
               <p className="text-lg font-bold" lang="hi">{site.name.hi}</p>
               <p className="text-sm text-white/80" lang="en">{site.name.en}</p>

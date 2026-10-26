@@ -28,6 +28,7 @@ export function getRateLimitMax(path: string): number {
     return 20
   }
   if (path.includes("/public/property-tax")) return 30
+  if (path.includes("/public/ward-stats")) return 60
   if (path.includes("/payments/gateway/")) return 120
   return 300
 }

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { site } from "@/content"
 import { getI18n, tx, type Locale } from "@/lib/i18n"
 import { mainNav } from "@/lib/navigation"
+import { cn } from "@/lib/utils"
 
 import { LanguageSwitcher, TextSizeControl } from "./client-controls"
 import { DesktopNav, MobileNav, type ResolvedNavItem } from "./navigation"
@@ -15,7 +16,17 @@ import { DesktopNav, MobileNav, type ResolvedNavItem } from "./navigation"
  */
 export function BrandMark({ className }: { className?: string }) {
   if (site.logo) {
-    return <Image src={site.logo.src} width={site.logo.width} height={site.logo.height} alt="" className={className} />
+    return (
+      <Image
+        src={site.logo.src}
+        width={site.logo.width}
+        height={site.logo.height}
+        alt={site.logo.alt}
+        sizes="64px"
+        preload
+        className={cn("object-contain", className)}
+      />
+    )
   }
   return (
     <svg viewBox="0 0 56 56" aria-hidden className={className}>

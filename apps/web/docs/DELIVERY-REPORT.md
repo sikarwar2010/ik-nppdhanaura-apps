@@ -40,7 +40,7 @@ The homepage has these sections: utility bar (phone, email, hours, text size, la
 
 1. **Leadership names and photos.** The Chairman (Praveen Kumar Agarwal) and Executive Officer (Awadesh Kumar Verma), with their messages and photos, are shown **because the existing official site publishes them**. A news clipping in the source gallery also names both. They are flagged with `reviewNote` in `content/people.ts`; set `published: false` to hide either one.
 2. **The two supplied portraits.** Their files were not in the repository or the conversation, so the configurable team section stays hidden (`teamPortraits`, `published: false`). The source's Chairman photo matches the description of "Portrait 1" (light-yellow shirt, light background). That match was **not** used to assign a role. The README explains how to add the files and confirmed names.
-3. **Logo.** The source site uses the Uttar Pradesh Government emblem as its logo. The new site uses an original typographic "ध" mark instead of imitating a seal. Set `site.logo` in `content/site.ts` once an approved municipal logo is supplied.
+3. **Logo.** Updated 26 Oct 2026: the client supplied the Uttar Pradesh Government emblem, which is now shown in the header and footer (`site.logo`). The typographic "ध" mark remains as the fallback.
 4. **CM / Nagar Vikas Minister.** Shown with name, designation and photo only. The source's "messages" for them were placeholder text and were dropped.
 5. **Replaced links.** swachhbharaturban.gov.in timed out in a browser, so it was replaced by sbmurban.org (MoHUA). The SBM "Know More" link pointed to a login page and now points to sbmurban.org. `http://uppwd.gov.in` was changed to https.
 

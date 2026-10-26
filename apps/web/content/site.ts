@@ -50,8 +50,14 @@ export const site = {
     { label: { hi: "एंबुलेंस", en: "Ambulance" }, numbers: ["108", "102"] },
   ] satisfies { label: Text; numbers: string[] }[],
   /**
-   * Set to a file in public/media/ once the office supplies an approved
-   * municipal logo. Until then the header uses a typographic mark.
+   * Emblem shown beside the municipal name (header, footer). Supplied with the
+   * project: the Uttar Pradesh Government emblem. Set to null to fall back to
+   * the typographic mark.
    */
-  logo: null as null | { src: string; width: number; height: number },
+  logo: {
+    src: "/media/brand/up-government-emblem.png",
+    width: 512,
+    height: 512,
+    alt: "Uttar Pradesh Government emblem / उत्तर प्रदेश सरकार का प्रतीक चिह्न",
+  } as null | { src: string; width: number; height: number; alt: string },
 } as const

@@ -1,36 +1,16 @@
 "use client"
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import Link from "next/link"
 import * as React from "react"
 import { toast } from "sonner"
 
 import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
 import { Input } from "@workspace/ui/components/input"
 import { Label } from "@workspace/ui/components/label"
 
 import { api } from "@/lib/api"
 import { downloadAuthenticatedExport } from "@/lib/download-blob"
-
-type Policy = {
-  id: string
-  name: string
-  status: string
-  rate: string | null
-  fixedAmount: string | null
-  includeArrears?: boolean
-  includePenalty?: boolean
-  startsOn: string | null
-  endsOn: string | null
-  rebateType?: string
-  penaltyType?: string
-  trigger?: string
-}
 
 export function FinancialAdminPanels(props: {
   assessmentYearId: string
@@ -54,12 +34,6 @@ export function FinancialAdminPanels(props: {
     sourceReference: "",
     balanceKind: "COMPONENTS" as "COMPONENTS" | "CLOSING_ONLY",
   })
-  const [rebateName, setRebateName] = React.useState("Early payment rebate")
-  const [rebateRate, setRebateRate] = React.useState("10")
-  const [includeArrears, setIncludeArrears] = React.useState(true)
-  const [penaltyName, setPenaltyName] = React.useState("Property tax penalty")
-  const [penaltyRate, setPenaltyRate] = React.useState("0")
-  const [applyAfterRebate, setApplyAfterRebate] = React.useState(false)
   const [importResult, setImportResult] = React.useState<{
     valid: number
     failed: number
@@ -74,27 +48,6 @@ export function FinancialAdminPanels(props: {
     }>
     errors: Array<{ row: number; message: string }>
   } | null>(null)
-
-  const rebates = useQuery({
-    queryKey: ["rebate-policies", props.assessmentYearId],
-    enabled: Boolean(props.assessmentYearId),
-    queryFn: () =>
-      api
-        .get<Policy[]>(
-          `/api/v1/rebate-policies?assessmentYearId=${props.assessmentYearId}`
-        )
-        .then((res) => res.data),
-  })
-  const penalties = useQuery({
-    queryKey: ["penalty-policies", props.assessmentYearId],
-    enabled: Boolean(props.assessmentYearId),
-    queryFn: () =>
-      api
-        .get<Policy[]>(
-          `/api/v1/penalty-policies?assessmentYearId=${props.assessmentYearId}`
-        )
-        .then((res) => res.data),
-  })
 
   const refreshLedger = () => {
     void queryClient.invalidateQueries({ queryKey: ["demand-outstanding"] })
@@ -194,54 +147,6 @@ export function FinancialAdminPanels(props: {
         return
       }
       toast.success(`Imported ${"inserted" in result ? result.inserted : result.valid} historical rows`)
-      refreshLedger()
-    },
-    onError: (error: Error) => toast.error(error.message),
-  })
-
-  const createRebate = useMutation({
-    mutationFn: () =>
-      api.post<{ id: string }>("/api/v1/rebate-policies", {
-        name: rebateName,
-        assessmentYearId: props.assessmentYearId,
-        rebateType: "PERCENTAGE",
-        rate: rebateRate,
-        includePropertyTax: true,
-        includeWaterTax: true,
-        includeDrainageTax: true,
-        includeArrears,
-        includePenalty: false,
-        includeInterest: false,
-      }),
-    onSuccess: async (res) => {
-      await api.post(`/api/v1/rebate-policies/${res.data.id}/activate`, {})
-      toast.success("Rebate policy activated. Published demands were not changed.")
-      void queryClient.invalidateQueries({ queryKey: ["rebate-policies"] })
-      refreshLedger()
-    },
-    onError: (error: Error) => toast.error(error.message),
-  })
-
-  const createPenalty = useMutation({
-    mutationFn: () =>
-      api.post<{ id: string }>("/api/v1/penalty-policies", {
-        name: penaltyName,
-        assessmentYearId: props.assessmentYearId,
-        penaltyType: applyAfterRebate
-          ? "PERCENT_OF_ELIGIBLE_BASE"
-          : "PERCENT_OF_PROPERTY_TAX",
-        rate: penaltyRate,
-        trigger: "ON_ASSESSMENT",
-        includePropertyTax: true,
-        includeWaterTax: applyAfterRebate,
-        includeDrainageTax: applyAfterRebate,
-        includeArrears: applyAfterRebate,
-        applyAfterRebate,
-      }),
-    onSuccess: async (res) => {
-      await api.post(`/api/v1/penalty-policies/${res.data.id}/activate`, {})
-      toast.success("Penalty policy activated. Published demands were not changed.")
-      void queryClient.invalidateQueries({ queryKey: ["penalty-policies"] })
       refreshLedger()
     },
     onError: (error: Error) => toast.error(error.message),
@@ -441,78 +346,17 @@ export function FinancialAdminPanels(props: {
       ) : null}
 
       {props.canConfigure ? (
-        <div className="grid gap-3 lg:grid-cols-2">
-          <Card id="rebate">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Rebate settings / छूट</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {(rebates.data ?? []).map((policy) => (
-                <p key={policy.id}>
-                  {policy.name}: {policy.rate ?? policy.fixedAmount}% · {policy.status}
-                  {policy.includeArrears ? " · includes arrears" : " · current-year taxes"}
-                </p>
-              ))}
-              <Input value={rebateName} onChange={(event) => setRebateName(event.target.value)} />
-              <Input value={rebateRate} onChange={(event) => setRebateRate(event.target.value)} />
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={includeArrears}
-                  onChange={(event) => setIncludeArrears(event.target.checked)}
-                />
-                Apply to previous-year arrears
-              </label>
-              <Button
-                type="button"
-                className="cursor-pointer"
-                disabled={createRebate.isPending}
-                onClick={() => createRebate.mutate()}
-              >
-                Save and activate rebate
-              </Button>
-            </CardContent>
-          </Card>
-          <Card id="penalty">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Penalty settings / शास्ति</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {(penalties.data ?? []).map((policy) => (
-                <p key={policy.id}>
-                  {policy.name}: {policy.rate ?? policy.fixedAmount} · {policy.status} ·{" "}
-                  {policy.trigger}
-                </p>
-              ))}
-              <Input value={penaltyName} onChange={(event) => setPenaltyName(event.target.value)} />
-              <Input
-                value={penaltyRate}
-                onChange={(event) => setPenaltyRate(event.target.value)}
-              />
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={applyAfterRebate}
-                  onChange={(event) => setApplyAfterRebate(event.target.checked)}
-                />
-                Apply after rebate, including arrears
-              </label>
-              <p className="text-muted-foreground">
-                {applyAfterRebate
-                  ? "Penalty is a percentage of the eligible base after rebate, including previous-year arrears. It is applied once when a demand is calculated."
-                  : "Percentage of property tax, applied once when a demand is calculated. If no policy is active, the tax-rate penalty percent is used."}{" "}
-                Published demands are not rewritten.
-              </p>
-              <Button
-                type="button"
-                className="cursor-pointer"
-                disabled={createPenalty.isPending}
-                onClick={() => createPenalty.mutate()}
-              >
-                Save and activate penalty
-              </Button>
-            </CardContent>
-          </Card>
+        <div id="rebate" className="rounded-md border p-3 text-sm">
+          <p className="font-medium" id="penalty">Rebate and penalty rules / छूट एवं शास्ति</p>
+          <p className="mt-1 text-muted-foreground">
+            Rules are set separately for each tax and need approval before they apply.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Link className="underline" href="/tax-admin/rebates/property">Property tax rebates</Link>
+            <Link className="underline" href="/tax-admin/rebates/water">Water tax rebates</Link>
+            <Link className="underline" href="/tax-admin/penalties/property">Property tax penalties</Link>
+            <Link className="underline" href="/tax-admin/penalties/water">Water tax penalties</Link>
+          </div>
         </div>
       ) : null}
     </div>

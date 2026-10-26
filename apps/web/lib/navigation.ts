@@ -21,6 +21,11 @@ export const mainNav: NavItem[] = [
         href: "/departments",
         description: { hi: "नगर पालिका के छह विभाग और उनके कार्य", en: "The six departments and what they do" },
       },
+      {
+        label: { hi: "वार्ड-वार कर (GIS)", en: "Ward tax & GIS" },
+        href: "/gis",
+        description: { hi: "वार्ड-वार सर्वे और प्रकाशित कर मांग", en: "Ward-wise surveys and published tax demand" },
+      },
     ],
   },
   {

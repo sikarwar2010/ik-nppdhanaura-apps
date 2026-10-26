@@ -51,10 +51,18 @@ import {
   type SuccessPaymentFact,
   type UnreconciledYear,
 } from "./outstanding"
-import { resolveAssessmentCharges } from "./assessment-charges"
+import {
+  type CategoryCharges,
+  type CategoryPenaltyRule,
+  type CategoryRebateRule,
+  type ChargeBreakdown,
+  PolicyConflictError,
+  rebateRuleFromPolicy,
+  resolveCategoryCharges,
+} from "./category-charges"
 import { penaltyRuleFromPolicy } from "./penalty-policy"
 import { insertPublishedDemand } from "./persist"
-import { policyIsCurrent, type RebateRule } from "./rebate"
+import { policyIsCurrent } from "./rebate"
 
 const SUCCESS_PAYMENT_WHERE = {
   status: PaymentStatus.SUCCESS,
@@ -154,6 +162,7 @@ export class DemandsService {
       rebateAmount: loaded.breakdown.rebateAmount,
       rebatePolicyId: loaded.rebatePolicyId,
       penaltyPolicyId: loaded.penaltyPolicyId,
+      chargeBreakdown: loaded.chargeBreakdown,
       idempotencyKey,
       actorId,
     })
@@ -580,9 +589,25 @@ export class DemandsService {
             "Only a successful payment can be reversed. Pending, failed, and already reversed payments do not change outstanding balances.",
         })
       }
+      // Lock the demands this payment settled so a concurrent collection
+      // cannot allocate against a balance that is about to change.
+      const settled = await tx.paymentAllocation.findMany({
+        where: { paymentId, status: PaymentAllocationStatus.ACTIVE },
+        select: { assessmentDemandId: true },
+      })
+      if (settled.length > 0) {
+        await tx.$queryRaw`SELECT id FROM assessment_demand WHERE id IN (${Prisma.join(
+          settled.map((row) => row.assessmentDemandId)
+        )}) FOR UPDATE`
+      }
       const paymentRow = await tx.payment.update({
         where: { id: paymentId },
-        data: { status: PaymentStatus.REFUNDED },
+        data: {
+          status: PaymentStatus.REFUNDED,
+          reversedAt: new Date(),
+          reversedById: actorId,
+          reversalReason: dto.reason.trim(),
+        },
       })
       await tx.paymentAllocation.updateMany({
         where: { paymentId, status: PaymentAllocationStatus.ACTIVE },
@@ -730,6 +755,7 @@ export class DemandsService {
     rebateAmount?: string
     rebatePolicyId?: string | null
     penaltyPolicyId?: string | null
+    chargeBreakdown?: ChargeBreakdown | null
     idempotencyKey: string
     actorId: string
   }) {
@@ -771,6 +797,9 @@ export class DemandsService {
               rebateAmount: input.rebateAmount ?? "0.00",
               rebatePolicyId: input.rebatePolicyId ?? null,
               penaltyPolicyId: input.penaltyPolicyId ?? null,
+              chargeBreakdown: input.chargeBreakdown
+                ? (input.chargeBreakdown as unknown as Prisma.InputJsonValue)
+                : Prisma.JsonNull,
               verificationStatus: "VERIFIED",
               idempotencyKey: input.idempotencyKey,
               publishedAt: new Date(),
@@ -902,47 +931,48 @@ export class DemandsService {
     }
 
     const missingHistoryYears = await this.missingHistory(year.code, demands)
-    const [rebatePolicy, penaltyPolicy] = await Promise.all([
-      this.prisma.rebatePolicy.findFirst({
+    const [rebatePolicies, penaltyPolicies] = await Promise.all([
+      this.prisma.rebatePolicy.findMany({
         where: { assessmentYearId: year.id, status: "ACTIVE" },
+        orderBy: { approvedAt: "desc" },
       }),
-      this.prisma.penaltyPolicy.findFirst({
+      this.prisma.penaltyPolicy.findMany({
         where: { assessmentYearId: year.id, status: "ACTIVE" },
+        orderBy: { approvedAt: "desc" },
       }),
     ])
     const asOf = new Date()
     let penaltyPolicyId: string | null = null
     let rebatePolicyId: string | null = null
-    let rebateRule: RebateRule | null = null
     let lockedRebate: { amount: string; scope: string } | null = null
+    let chargeBreakdown: ChargeBreakdown | null = null
 
-    if (!selected && rebatePolicy) {
-      const current = policyIsCurrent({
-        status: rebatePolicy.status,
-        startsOn: rebatePolicy.startsOn,
-        endsOn: rebatePolicy.endsOn,
-        paymentDeadline: rebatePolicy.paymentDeadline,
-        asOf,
-      })
-      if (current) {
-        rebatePolicyId = rebatePolicy.id
-        rebateRule = {
-          active: true,
-          type: rebatePolicy.rebateType,
-          rate: rebatePolicy.rate?.toString() ?? "0",
-          fixedAmount: rebatePolicy.fixedAmount?.toString() ?? "0",
-          includePropertyTax: rebatePolicy.includePropertyTax,
-          includeWaterTax: rebatePolicy.includeWaterTax,
-          includeDrainageTax: rebatePolicy.includeDrainageTax,
-          includeArrears: rebatePolicy.includeArrears,
-          includePenalty: rebatePolicy.includePenalty,
-          includeInterest: rebatePolicy.includeInterest,
-          maxAmount: rebatePolicy.maxAmount?.toString() ?? null,
-        }
-      }
-    }
+    // Published demands keep their stored rebate and penalty; rules apply only
+    // to a demand that has not been published yet.
+    const rebateRules: CategoryRebateRule[] = selected
+      ? []
+      : rebatePolicies.flatMap((policy) =>
+          policyIsCurrent({
+            status: policy.status,
+            startsOn: policy.startsOn,
+            endsOn: policy.endsOn,
+            paymentDeadline: policy.paymentDeadline,
+            asOf,
+          })
+            ? [rebateRuleFromPolicy(policy)]
+            : []
+        )
+    const penaltyRules: CategoryPenaltyRule[] =
+      selected || !calculated
+        ? []
+        : penaltyPolicies.flatMap((policy) => {
+            const rule = penaltyRuleFromPolicy({ ...policy, asOf })
+            return rule
+              ? [{ ...rule, category: policy.taxCategory, policyId: policy.id }]
+              : []
+          })
 
-    if (!selected && (rebateRule || (calculated && penaltyPolicy))) {
+    if (!selected && (rebateRules.length > 0 || penaltyRules.length > 0)) {
       const draft = calculateOutstanding({
         selectedYear: year,
         demands,
@@ -950,23 +980,32 @@ export class DemandsService {
         calculatedCurrent: calculated?.components ?? null,
         missingHistoryYears,
       })
-      const penaltyRule =
-        calculated && penaltyPolicy
-          ? penaltyRuleFromPolicy({ ...penaltyPolicy, asOf })
-          : null
-      const charges = resolveAssessmentCharges({
-        asOf,
-        propertyTax: calculated?.components.propertyTax ?? "0.00",
-        waterTax: calculated?.components.waterTax ?? "0.00",
-        drainageTax: calculated?.components.drainageTax ?? "0.00",
-        interest: calculated?.components.interest ?? "0.00",
-        taxConfigPenalty: calculated?.components.penalty ?? "0.00",
-        previousArrears: draft.openingArrears,
-        rebateRule,
-        penaltyRule,
-      })
-      if (calculated && charges.penaltyPolicyApplied && penaltyPolicy) {
-        penaltyPolicyId = penaltyPolicy.id
+      let charges: CategoryCharges
+      try {
+        charges = resolveCategoryCharges({
+          asOf,
+          propertyTax: calculated?.components.propertyTax ?? "0.00",
+          waterTax: calculated?.components.waterTax ?? "0.00",
+          drainageTax: calculated?.components.drainageTax ?? "0.00",
+          interest: calculated?.components.interest ?? "0.00",
+          taxConfigPenalty: calculated?.components.penalty ?? "0.00",
+          previousArrears: draft.openingArrears,
+          previousByCategory: {
+            PROPERTY_TAX: draft.previousPropertyTaxOutstanding,
+            WATER_TAX: draft.previousWaterTaxOutstanding,
+            DRAINAGE_TAX: draft.previousDrainageTaxOutstanding,
+          },
+          rebateRules,
+          penaltyRules,
+        })
+      } catch (error) {
+        if (error instanceof PolicyConflictError) {
+          throw new ConflictException({ code: error.code, message: error.message })
+        }
+        throw error
+      }
+      if (calculated && charges.penaltyPolicyApplied) {
+        penaltyPolicyId = charges.penaltyPolicyIds[0] ?? null
         calculated = {
           ...calculated,
           components: componentsFromParts({
@@ -978,6 +1017,8 @@ export class DemandsService {
           }),
         }
       }
+      rebatePolicyId = charges.rebatePolicyIds[0] ?? null
+      chargeBreakdown = charges.breakdown
       lockedRebate = {
         amount: charges.rebateAmount,
         scope: charges.rebateScope,
@@ -992,7 +1033,15 @@ export class DemandsService {
       lockedRebate,
       missingHistoryYears,
     })
-    return { survey, year, breakdown, calculated, rebatePolicyId, penaltyPolicyId }
+    return {
+      survey,
+      year,
+      breakdown,
+      calculated,
+      rebatePolicyId,
+      penaltyPolicyId,
+      chargeBreakdown,
+    }
   }
 
   private async calculateCurrent(

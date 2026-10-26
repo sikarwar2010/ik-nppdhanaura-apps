@@ -1,6 +1,6 @@
 /**
  * A4 Property Tax Demand Notice — official government-document layout
- * for Nagar Panchayat Chhata. Site imagery and GIS map/coordinates omitted.
+ * for Nagar Palika Parishad Dhanaura. Site imagery and GIS map/coordinates omitted.
  */
 
 type FloorRow = {
@@ -78,7 +78,7 @@ function buildAddress(survey: SurveyData): string {
     survey.streetName,
     survey.locality,
     survey.colony,
-    survey.city ?? "Nagar Panchayat Chhata",
+    survey.city ?? "Dhanaura",
     survey.pincode,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(", ") : "—"
@@ -217,7 +217,9 @@ body {
 
 .page {
   width: 210mm;
-  height: 297mm;
+  /* At least one A4 page; a long floor table continues on the next page
+     instead of being clipped. */
+  min-height: 297mm;
   margin: 0 auto;
   padding: 10mm 10mm 9mm 10mm;
   background: #fff;
@@ -225,13 +227,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  overflow: hidden;
 }
 
 @media print {
   html, body {
     width: 210mm;
-    height: 297mm;
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
@@ -239,13 +239,14 @@ body {
   .no-print { display: none !important; }
   .page {
     width: 210mm;
-    height: 297mm;
+    min-height: 296mm;
     margin: 0;
     padding: 10mm 10mm 9mm 10mm;
     box-shadow: none;
     page-break-after: avoid;
-    page-break-inside: avoid;
   }
+  .header, .meta, .cols, .tax-grid, .arrears, .notice, .sig { break-inside: avoid; }
+  table.alv tr { break-inside: avoid; }
 }
 
 /* —— Header —— */
@@ -259,16 +260,16 @@ body {
   flex-shrink: 0;
 }
 .logo {
-  width: 116px;
-  height: 116px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2px;
 }
 .logo img {
-  width: 112px;
-  height: 112px;
+  width: 96px;
+  height: 96px;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -281,7 +282,7 @@ body {
   overflow-wrap: break-word;
 }
 .office-en {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: 0.01em;
@@ -295,8 +296,8 @@ body {
   line-height: 1.35;
 }
 .title-en {
-  margin-top: 12px;
-  font-size: 24px;
+  margin-top: 6px;
+  font-size: 21px;
   font-weight: 800;
   color: #0369a1;
   letter-spacing: 0.15px;
@@ -365,8 +366,9 @@ body {
   display: grid;
   grid-template-columns: 42% 58%;
   border-bottom: 1px solid #e2e8f0;
-  flex: 1;
-  min-height: 24px;
+  /* Grow with wrapped Hindi text; never shrink below its content. */
+  flex: 1 0 auto;
+  min-height: 21px;
   align-items: stretch;
 }
 .row:last-child { border-bottom: none; }
@@ -409,17 +411,15 @@ body {
 
 /* —— ALV table —— */
 .alv-wrap {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 .alv-scroll {
   width: 100%;
-  overflow-x: auto;
+  overflow: visible;
   border: 1.5px solid #94a3b8;
   border-top: none;
-  flex: 1;
 }
 table.alv {
   width: 100%;
@@ -548,15 +548,15 @@ table.alv tr.total td {
   display: flex;
   justify-content: flex-end;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 6px;
   flex-shrink: 0;
 }
 .sig-box { width: 190px; text-align: center; }
 .sig-mark { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
 .sig-line {
   border-top: 1.5px solid #0f172a;
-  margin-top: 28px;
-  padding-top: 5px;
+  margin-top: 18px;
+  padding-top: 4px;
 }
 .sig-en { font-size: 11px; font-weight: 800; }
 .sig-hi { font-size: 10px; color: #334155; margin-top: 2px; }
@@ -706,7 +706,7 @@ table.alv tr.total td {
           <th style="width:12%">Area (Sqft) / क्षेत्रफल</th>
           <th style="width:10%">Rate (₹) / दर</th>
           <th style="width:13%">ALV (₹) / वार्षिक मूल्यांकन</th>
-          <th style="width:12%">Tax (${esc(tax.propertyTaxPct)}) / कर</th>
+          <th style="width:12%">Tax (${esc(tax.propertyTaxPct)}%) / कर</th>
         </tr>
       </thead>
       <tbody>

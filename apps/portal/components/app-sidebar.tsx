@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -78,12 +78,12 @@ function NavCollapsibleGroup({
   }
   const isActive = isItemActive(item, pathname)
   const [open, setOpen] = useState(isActive)
-
-  useEffect(() => {
-    if (isActive) {
-      setOpen(true)
-    }
-  }, [isActive])
+  // Expand the group when navigation makes one of its pages active.
+  const [wasActive, setWasActive] = useState(isActive)
+  if (isActive !== wasActive) {
+    setWasActive(isActive)
+    if (isActive) setOpen(true)
+  }
 
   return (
     <Collapsible
@@ -112,7 +112,7 @@ function NavCollapsibleGroup({
                       ? isNavHrefActive(child.href, pathname, child.exact)
                       : false
                   }
-                  className="cursor-pointer rounded-lg transition-colors duration-200"
+                  className="cursor-pointer rounded-lg transition-colors duration-200 data-active:bg-white/12 data-active:font-semibold data-active:text-white data-active:shadow-[inset_3px_0_0_var(--sidebar-ring)]"
                 >
                   <span>{label(child.title)}</span>
                 </SidebarMenuSubButton>
@@ -146,7 +146,7 @@ export function AppSidebar() {
       <SidebarHeader className="gap-0 px-3 pt-4 pb-2">
         <div
           className={cn(
-            "flex items-center gap-3 rounded-xl border border-sidebar-border bg-card px-3 py-2.5 shadow-sm",
+            "flex items-center gap-3 rounded-xl border border-sidebar-border bg-white/5 px-3 py-2.5",
             "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
           )}
         >
@@ -161,11 +161,11 @@ export function AppSidebar() {
             />
           </div>
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold tracking-tight text-foreground">
+            <p className="truncate text-sm font-semibold tracking-tight text-white">
               Nagar Palika Parishad
             </p>
-            <p className="truncate text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              Dhanaura,Amroha
+            <p className="truncate text-[11px] font-medium tracking-wide text-sidebar-foreground/80 uppercase">
+              Dhanaura, Amroha
             </p>
           </div>
         </div>
@@ -181,7 +181,7 @@ export function AppSidebar() {
                   <Skeleton className="h-10 w-full rounded-xl" />
                 </div>
               ) : isError ? (
-                <div className="space-y-2 px-2 text-xs text-muted-foreground">
+                <div className="space-y-2 px-2 text-xs text-sidebar-foreground">
                   <p role="alert">
                     {formatApiError(
                       error,
@@ -198,7 +198,7 @@ export function AppSidebar() {
                   </Button>
                 </div>
               ) : visible.length === 0 ? (
-                <p className="px-2 text-xs text-muted-foreground">
+                <p className="px-2 text-xs text-sidebar-foreground">
                   No menu access for this account. Ask an admin to assign a
                   role.
                 </p>
