@@ -69,7 +69,7 @@ All public content lives in `content/*.ts`. Every edit is validated when the sit
 | Team portraits | `content/people.ts` → `teamPortraits` | See below. |
 | Gallery albums / events | `content/gallery.ts` | Put photos in `public/media/…`; give every photo Hindi and English alt text. |
 | Schemes, important links | `content/schemes.ts` | |
-| Contact details, office hours, logo | `content/site.ts` | |
+| Contact details, office hours, emblem | `content/site.ts` | `logo` points to the supplied UP Government emblem (`public/media/brand/`); set it to `null` for the typographic mark. |
 | About text | `content/about.ts` | |
 | Website policies | `content/policies.ts` | |
 | Interface labels | `locales/hi.ts`, `locales/en.ts` | Both files must have the same keys (unit-tested). |
@@ -110,6 +110,10 @@ Legacy URLs (`/public/about.php`, `/public/notice.php?id=1`, …) permanently re
 - **Type:** Noto Sans Devanagari + Inter via `next/font` (self-hosted at build time). Devanagari gets extra line height.
 - **Components:** `btn-primary`, `btn-secondary`, `btn-accent`, `card`, `card-interactive`, `badge-*`, `eyebrow`, `prose-civic`, `container-site`, and a low-opacity `jaali` lattice motif. React components are in `components/site/`.
 - **Behaviour:** visible focus rings, a skip link, an A-/A/A+ text-size control, reduced-motion support, 44px touch targets in the header, and a sticky navigation bar.
+
+## GIS and ward-wise tax page (`/gis`)
+
+Ward-level figures come from the API's public endpoint `GET /api/v1/public/ward-stats`, which aggregates published, verified demands on the municipal ledger. The website never calculates tax itself. No ward boundary geometry exists yet, so the page shows a ward directory, a bar chart and a table, and says so. Collections and outstanding totals appear only when the API runs with `PUBLIC_DISCLOSE_COLLECTIONS=true`. The e2e suite uses `e2e/mock-api.mjs`, a test-only fixture server.
 
 ## Search
 

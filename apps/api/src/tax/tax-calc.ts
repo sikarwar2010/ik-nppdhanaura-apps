@@ -1,6 +1,6 @@
 /** Pure tax helpers for ward demand reports and citizen dues. */
 
-import { moneyToNumber } from "../demands/money"
+import { dec, money, moneyToNumber } from "../demands/money"
 import { classifyGisUseCode, type GisUseClass } from "./tax-zone-map"
 
 export function roundMoney(amount: number): number {
@@ -94,9 +94,10 @@ export function resolveEffectiveMonthlyRate(
   propertyUse?: string | null,
   gisUseClass?: GisUseClass | null
 ): number {
-  return roundMoney(
-    baseRate *
+  return moneyToNumber(
+    dec(baseRate).mul(
       resolveUsageRateMult(usageFactor, usageType, propertyUse, gisUseClass)
+    )
   )
 }
 
@@ -118,10 +119,15 @@ export function computeFloorAlv(
   assessablePct: number,
   propertyTaxPct: number
 ): { grossAlv: number; assessableAlv: number; propertyTax: number } {
-  const grossAlv = roundMoney(areaSqFt * monthlyRatePerSqFt * 12)
-  const assessableAlv = roundMoney(grossAlv * (assessablePct / 100))
-  const propertyTax = roundMoney(assessableAlv * (propertyTaxPct / 100))
-  return { grossAlv, assessableAlv, propertyTax }
+  // Decimal arithmetic (no binary floating point), half-up to paise per step.
+  const grossAlv = money(dec(areaSqFt).mul(monthlyRatePerSqFt).mul(12))
+  const assessableAlv = money(grossAlv.mul(assessablePct).div(100))
+  const propertyTax = money(assessableAlv.mul(propertyTaxPct).div(100))
+  return {
+    grossAlv: grossAlv.toNumber(),
+    assessableAlv: assessableAlv.toNumber(),
+    propertyTax: propertyTax.toNumber(),
+  }
 }
 
 export function computeDemandTotals(
@@ -138,16 +144,15 @@ export function computeDemandTotals(
   penalty: number
   totalAnnualDemand: number
 } {
-  const waterTax = includeWater
-    ? roundMoney(totalAssessableAlv * (waterTaxPct / 100))
-    : 0
+  const pct = (base: number, rate: number) =>
+    moneyToNumber(dec(base).mul(rate).div(100))
+  const waterTax = includeWater ? pct(totalAssessableAlv, waterTaxPct) : 0
   const drainageTax = includeDrainage
-    ? roundMoney(totalAssessableAlv * (drainageTaxPct / 100))
+    ? pct(totalAssessableAlv, drainageTaxPct)
     : 0
-  const penalty =
-    penaltyPct > 0 ? roundMoney(propertyTax * (penaltyPct / 100)) : 0
-  const totalAnnualDemand = roundMoney(
-    propertyTax + waterTax + drainageTax + penalty
+  const penalty = penaltyPct > 0 ? pct(propertyTax, penaltyPct) : 0
+  const totalAnnualDemand = moneyToNumber(
+    dec(propertyTax).plus(waterTax).plus(drainageTax).plus(penalty)
   )
   return { waterTax, drainageTax, penalty, totalAnnualDemand }
 }

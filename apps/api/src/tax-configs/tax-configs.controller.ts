@@ -69,6 +69,12 @@ export class TaxConfigsController {
     return this.taxConfigsService.upsertCells(id, dto.cells ?? [], user.id)
   }
 
+  @Get("overview")
+  @RequirePermission("report:read")
+  async overview(@Query("assessmentYearId") assessmentYearId: string) {
+    return this.taxConfigsService.overview(assessmentYearId)
+  }
+
   @Post("preview")
   @RequirePermission("report:read")
   preview(@Body() dto: TaxPreviewDto) {

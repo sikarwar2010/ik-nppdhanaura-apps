@@ -1,4 +1,5 @@
 import type { PropertyTaxDemandNoticeViewModel } from "./demand-notice-view-model"
+import { EMBLEM_DATA_URI } from "../../common/emblem"
 
 const DEFAULT_WEBSITE_HOST = "www.nppdhanaura.in"
 
@@ -42,7 +43,9 @@ body {
 
 .page {
   width: 210mm;
-  height: 297mm;
+  /* At least one A4 page; a long floor table continues on the next page
+     instead of being clipped. */
+  min-height: 297mm;
   margin: 0 auto 12px;
   padding: 10mm 10mm 9mm 10mm;
   background: #fff;
@@ -50,7 +53,6 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0;
-  overflow: hidden;
   page-break-after: always;
   page-break-inside: avoid;
 }
@@ -69,14 +71,15 @@ body {
   .no-print { display: none !important; }
   .page {
     width: 210mm;
-    height: 297mm;
+    min-height: 296mm;
     margin: 0;
     padding: 10mm 10mm 9mm 10mm;
     box-shadow: none;
     page-break-after: always;
-    page-break-inside: avoid;
   }
   .page:last-child { page-break-after: auto; }
+  .header, .meta, .cols, .tax-grid, .arrears, .notice, .sig { break-inside: avoid; }
+  table.alv tr { break-inside: avoid; }
 }
 
 .header {
@@ -84,21 +87,21 @@ body {
   grid-template-columns: 120px 1fr 120px;
   align-items: center;
   gap: 12px;
-  padding: 2px 0 12px;
+  padding: 0 0 8px;
   border-bottom: 3px solid #0f172a;
   flex-shrink: 0;
 }
 .logo {
-  width: 116px;
-  height: 116px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2px;
 }
 .logo img {
-  width: 112px;
-  height: 112px;
+  width: 96px;
+  height: 96px;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -111,7 +114,7 @@ body {
   overflow-wrap: break-word;
 }
 .office-en {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   color: #0f172a;
   letter-spacing: 0.01em;
@@ -125,8 +128,8 @@ body {
   line-height: 1.35;
 }
 .title-en {
-  margin-top: 12px;
-  font-size: 24px;
+  margin-top: 6px;
+  font-size: 21px;
   font-weight: 800;
   color: #0369a1;
   letter-spacing: 0.15px;
@@ -136,7 +139,7 @@ body {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
-  margin-top: 6px;
+  margin-top: 2px;
   line-height: 1.45;
 }
 
@@ -145,12 +148,12 @@ body {
   grid-template-columns: 1fr 1fr 1fr;
   border: 1.5px solid #94a3b8;
   overflow: hidden;
-  margin-top: 10px;
+  margin-top: 8px;
   flex-shrink: 0;
 }
 .meta-cell {
   text-align: center;
-  padding: 8px 6px;
+  padding: 5px 6px;
   border-right: 1px solid #94a3b8;
   background: #f8fafc;
 }
@@ -175,7 +178,7 @@ body {
   grid-template-columns: 1fr 1fr;
   border: 1.5px solid #94a3b8;
   overflow: hidden;
-  margin-top: 10px;
+  margin-top: 8px;
   flex: 0 0 auto;
 }
 .col { min-width: 0; display: flex; flex-direction: column; }
@@ -193,13 +196,14 @@ body {
   display: grid;
   grid-template-columns: 42% 58%;
   border-bottom: 1px solid #e2e8f0;
-  flex: 1;
-  min-height: 24px;
+  /* Grow with wrapped Hindi text; never shrink below its content. */
+  flex: 1 0 auto;
+  min-height: 21px;
   align-items: stretch;
 }
 .row:last-child { border-bottom: none; }
 .lbl {
-  padding: 5px 8px;
+  padding: 4px 8px;
   font-size: 8.5px;
   font-weight: 700;
   color: #475569;
@@ -210,7 +214,7 @@ body {
   align-items: center;
 }
 .val {
-  padding: 5px 8px;
+  padding: 4px 8px;
   font-size: 11px;
   font-weight: 600;
   color: #020617;
@@ -227,25 +231,23 @@ body {
   font-weight: 800;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  padding: 6px 9px;
+  padding: 5px 9px;
   color: #0f172a;
-  margin-top: 10px;
+  margin-top: 8px;
   flex-shrink: 0;
 }
 .sec.sec-flush { margin-top: 0; }
 
 .alv-wrap {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 .alv-scroll {
   width: 100%;
-  overflow-x: auto;
+  overflow: visible;
   border: 1.5px solid #94a3b8;
   border-top: none;
-  flex: 1;
 }
 table.alv {
   width: 100%;
@@ -380,15 +382,15 @@ table.alv tr.total td {
   display: flex;
   justify-content: flex-end;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 6px;
   flex-shrink: 0;
 }
 .sig-box { width: 190px; text-align: center; }
 .sig-mark { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
 .sig-line {
   border-top: 1.5px solid #0f172a;
-  margin-top: 28px;
-  padding-top: 5px;
+  margin-top: 18px;
+  padding-top: 4px;
 }
 .sig-en { font-size: 11px; font-weight: 800; }
 .sig-hi { font-size: 10px; color: #334155; margin-top: 2px; }
@@ -614,7 +616,7 @@ function renderNoticePage(
           <th style="width:12%">Area (Sqft) / क्षेत्रफल</th>
           <th style="width:10%">Rate (₹) / दर</th>
           <th style="width:13%">ALV (₹) / वार्षिक मूल्यांकन</th>
-          <th style="width:12%">Tax (${esc(vm.propertyTaxPct)}) / कर</th>
+          <th style="width:12%">Tax (${esc(vm.propertyTaxPct)}%) / कर</th>
         </tr>
       </thead>
       <tbody>
@@ -705,7 +707,7 @@ export function generateDemandNoticeDocumentHtml(
     throw new Error("At least one notice is required")
   }
   const logoUrl =
-    options?.logoUrl?.trim() || "/branding/up-government-logo.png"
+    options?.logoUrl?.trim() || EMBLEM_DATA_URI
   const websiteHost =
     options?.websiteDisplayHost?.trim() || DEFAULT_WEBSITE_HOST
   const forPdf = options?.forPdf === true

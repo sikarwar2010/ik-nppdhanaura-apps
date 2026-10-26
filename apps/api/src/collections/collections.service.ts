@@ -35,6 +35,7 @@ import type {
   ReceiptListQueryDto,
 } from "./collections.dto"
 import { renderReceiptHtml, type ReceiptSnapshot } from "./receipt-html"
+import { maskMobile } from "../public-property-tax/masking.util"
 import { rupeesInWords } from "./rupees-in-words"
 
 const MUNICIPALITY = "Nagar Palika Parishad Dhanaura"
@@ -686,6 +687,8 @@ export class CollectionsService {
         assessmentYear: payment.assessmentYear?.name ?? null,
         cashierName: payment.collectedBy?.name ?? null,
         remarks: payment.remarks,
+        reversedAt: payment.reversedAt,
+        reversalReason: payment.reversalReason,
       })),
       meta: {
         page,
@@ -698,7 +701,32 @@ export class CollectionsService {
 
   async receiptHtml(paymentId: string): Promise<string> {
     const snapshot = await this.snapshotOrThrow(paymentId)
-    return renderReceiptHtml(snapshot)
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: paymentId },
+      select: { status: true, reversedAt: true, reversedById: true, reversalReason: true },
+    })
+    // A reversed payment reprints its original receipt with a REVERSED stamp.
+    let reversal: { at: string; by: string; reason: string } | null = null
+    if (payment && (payment.status === PaymentStatus.REFUNDED || payment.reversedAt)) {
+      const actor = payment.reversedById
+        ? await this.prisma.user.findUnique({
+            where: { id: payment.reversedById },
+            select: { name: true },
+          })
+        : null
+      reversal = {
+        at: payment.reversedAt
+          ? new Intl.DateTimeFormat("en-IN", {
+              timeZone: "Asia/Kolkata",
+              dateStyle: "medium",
+              timeStyle: "short",
+            }).format(payment.reversedAt)
+          : "—",
+        by: actor?.name ?? "—",
+        reason: payment.reversalReason ?? "—",
+      }
+    }
+    return renderReceiptHtml({ ...snapshot, reversal })
   }
 
   async receiptPdf(paymentId: string): Promise<Buffer> {
@@ -798,6 +826,12 @@ export class CollectionsService {
       allocationText: lines
         .map((line) => `${line.assessmentYearCode} ₹ ${line.amount}`)
         .join("; "),
+      fatherName: survey.ownerFatherName ?? undefined,
+      wardNumber: String(survey.ward.number),
+      houseNo: survey.houseNo ?? undefined,
+      locality: survey.locality ?? survey.colony ?? undefined,
+      mobileMasked: survey.mobile ? maskMobile(survey.mobile) : undefined,
+      paymentReference: payment.chequeDdReference ?? undefined,
     }
     return tx.payment.update({
       where: { id: payment.id },

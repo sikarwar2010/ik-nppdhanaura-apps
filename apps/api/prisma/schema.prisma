@@ -595,6 +595,10 @@ model Payment {
   receiptSnapshot   Json?
   attachmentKey     String?
   refundableAmount  Decimal?        @db.Decimal(14, 2)
+  /// Set when a successful payment is reversed. The receipt is kept and stamped.
+  reversedAt        DateTime?
+  reversedById      String?
+  reversalReason    String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
@@ -743,6 +747,16 @@ enum PenaltyType {
   FIXED_AMOUNT
 }
 
+/// Which tax a rebate or penalty rule applies to. COMBINED is the legacy
+/// single rule whose include* flags choose the components; category rules
+/// apply only to their own component (and its own arrears when allowed).
+enum TaxCategory {
+  COMBINED
+  PROPERTY_TAX
+  WATER_TAX
+  DRAINAGE_TAX
+}
+
 enum PenaltyTrigger {
   ON_ASSESSMENT
   DUE_DATE_PASSED
@@ -778,6 +792,7 @@ model RebatePolicy {
   name               String
   assessmentYearId   String
   assessmentYear     ReferenceEntry @relation("RebatePolicyYear", fields: [assessmentYearId], references: [id])
+  taxCategory        TaxCategory    @default(COMBINED)
   rebateType         RebateType
   rate               Decimal?       @db.Decimal(8, 4)
   fixedAmount        Decimal?       @db.Decimal(14, 2)
@@ -795,12 +810,14 @@ model RebatePolicy {
   approvedAt         DateTime?
   approvedById       String?
   approvedBy         User?          @relation("RebatePolicyApprovedBy", fields: [approvedById], references: [id])
+  createdById        String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
   demands AssessmentDemand[]
 
   @@index([assessmentYearId, status])
+  @@index([assessmentYearId, taxCategory, status])
   @@map("rebate_policy")
 }
 
@@ -809,6 +826,7 @@ model PenaltyPolicy {
   name               String
   assessmentYearId   String
   assessmentYear     ReferenceEntry @relation("PenaltyPolicyYear", fields: [assessmentYearId], references: [id])
+  taxCategory        TaxCategory    @default(COMBINED)
   penaltyType        PenaltyType
   rate               Decimal?       @db.Decimal(8, 4)
   fixedAmount        Decimal?       @db.Decimal(14, 2)
@@ -828,12 +846,14 @@ model PenaltyPolicy {
   approvedAt         DateTime?
   approvedById       String?
   approvedBy         User?          @relation("PenaltyPolicyApprovedBy", fields: [approvedById], references: [id])
+  createdById        String?
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
   demands AssessmentDemand[]
 
   @@index([assessmentYearId, status])
+  @@index([assessmentYearId, taxCategory, status])
   @@map("penalty_policy")
 }
 
@@ -873,6 +893,8 @@ model AssessmentDemand {
   sourceReference    String?
   remarks            String?
   balanceKind        DemandBalanceKind        @default(COMPONENTS)
+  /// Per-category rebate/penalty amounts and rule IDs used when published.
+  chargeBreakdown    Json?
   idempotencyKey     String?                  @unique
   publishedAt        DateTime?
   publishedById      String?

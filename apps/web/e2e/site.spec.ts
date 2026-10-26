@@ -265,3 +265,28 @@ test.describe("accessibility (axe, WCAG 2.2 A/AA rules)", () => {
     }
   }
 })
+
+test.describe("GIS ward dashboard", () => {
+  test("shows ward aggregates, filters by ward and hides personal data", async ({ page }) => {
+    await page.goto("/gis")
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("GIS एवं वार्ड-वार कर पारदर्शिता")
+    await expect(page.getByText(/वार्ड सीमाओं का डिजिटल नक्शा अभी उपलब्ध नहीं है/)).toBeVisible()
+    await expect(page.getByText("₹4,15,800").first()).toBeVisible()
+    await expect(page.getByRole("progressbar").first()).toHaveAttribute("aria-valuetext", "90 / 120")
+    await expect(page.getByText(/अभी कोई सर्वे दर्ज नहीं/)).toBeVisible()
+    await expect(page.getByText(/सार्वजनिक प्रकटीकरण की स्वीकृति/)).toBeVisible()
+    await expect(page.getByRole("table")).toContainText("₹3,40,200.00")
+
+    await page.locator("select[name=ward]").selectOption("2")
+    await page.getByRole("button", { name: "दिखाएँ" }).click()
+    await expect(page).toHaveURL(/ward=2/)
+    await expect(page.getByRole("table").locator("tbody tr")).toHaveCount(1)
+    await expect(page.getByRole("table")).toContainText("₹75,600.00")
+  })
+
+  test("unknown year shows an honest empty state", async ({ page }) => {
+    await page.goto("/gis?year=1999-2000")
+    await expect(page.getByText("चुने गए वर्ष की कोई मांग प्रकाशित नहीं है।")).toBeVisible()
+  })
+})
+

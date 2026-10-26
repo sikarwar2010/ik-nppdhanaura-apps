@@ -58,7 +58,9 @@
     "CI",
     "PLAYWRIGHT_BASE_URL",
     "E2E_PORT",
-    "SITE_URL"
+    "SITE_URL",
+    "PUBLIC_DISCLOSE_COLLECTIONS",
+    "ATOM_FALLBACK_EMAIL"
   ],
   "tasks": {
     "build": {

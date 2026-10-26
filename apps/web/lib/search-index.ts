@@ -31,6 +31,7 @@ const pages: SearchDoc[] = [
     keywords: "history itihas parichay introduction इतिहास परिचय",
   },
   { id: "page:administration", type: "page", href: "/administration", title: both("admin.title"), body: both("admin.lead"), keywords: "chairman adhyaksh eo executive officer अध्यक्ष अधिशासी अधिकारी" },
+  { id: "page:gis", type: "page", href: "/gis", title: both("gis.title"), body: both("gis.lead"), keywords: "gis ward map statistics वार्ड नक्शा आँकड़े कर मांग" },
   { id: "page:departments", type: "page", href: "/departments", title: both("departments.title"), body: both("departments.lead") },
   { id: "page:services", type: "page", href: "/services", title: both("services.title"), body: both("services.lead") },
   { id: "page:notices", type: "page", href: "/notices", title: both("notices.title"), body: both("notices.lead") },

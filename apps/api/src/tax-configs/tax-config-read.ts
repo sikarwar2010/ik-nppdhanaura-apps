@@ -216,5 +216,90 @@ export function buildTaxPreview(
       penalty: preview.penalty,
       demand: preview.demand,
     },
+    basis: {
+      baseMonthlyRate: Number(annualRate),
+      effectiveMonthlyRate: preview.effectiveMonthlyRate,
+      rateMultiplier: Number(annualRate) > 0 ? preview.effectiveMonthlyRate / Number(annualRate) : 1,
+      appliedAssessablePct: preview.assessablePct,
+      gisClass: preview.gisClass,
+      waterAndDrainageApply: preview.gisClass !== "open_land",
+    },
+    /** Server-built formula steps for the staff preview (same numbers as above). */
+    steps: taxPreviewSteps(input.areaSqFt, Number(annualRate), preview, {
+      propertyTaxPct,
+      waterTaxPct,
+      drainageTaxPct,
+      penaltyPct,
+    }),
+    roundingRule:
+      "Each step is rounded half-up to the nearest paisa (₹0.01) using decimal arithmetic.",
   }
+}
+
+function rupees(n: number): string {
+  return `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+export function taxPreviewSteps(
+  areaSqFt: number,
+  baseMonthlyRate: number,
+  p: ReturnType<typeof computeGisPreviewDemand>,
+  pct: { propertyTaxPct: number; waterTaxPct: number; drainageTaxPct: number; penaltyPct: number }
+): Array<{ label: string; formula: string; amount: string }> {
+  const amount = (n: number) => n.toFixed(2)
+  const mult = baseMonthlyRate > 0 ? p.effectiveMonthlyRate / baseMonthlyRate : 1
+  const steps = [
+    {
+      label: "Monthly rate used",
+      formula:
+        mult === 1
+          ? `Base rate ₹${baseMonthlyRate} per sq ft per month (${p.gisClass.replace("_", " ")})`
+          : `Base rate ₹${baseMonthlyRate} × ${mult} (${p.gisClass} use) per sq ft per month`,
+      amount: amount(p.effectiveMonthlyRate),
+    },
+    {
+      label: "Gross annual letting value (ALV)",
+      formula: `${areaSqFt} sq ft × ₹${p.effectiveMonthlyRate} × 12 months`,
+      amount: amount(p.grossAlv),
+    },
+    {
+      label: "Assessable ALV",
+      formula: `${rupees(p.grossAlv)} × ${p.assessablePct}% assessable`,
+      amount: amount(p.assessableAlv),
+    },
+    {
+      label: "Property tax",
+      formula: `${rupees(p.assessableAlv)} × ${pct.propertyTaxPct}%`,
+      amount: amount(p.propertyTax),
+    },
+    {
+      label: "Water tax",
+      formula:
+        p.gisClass === "open_land"
+          ? "Not charged on open land"
+          : `${rupees(p.assessableAlv)} × ${pct.waterTaxPct}%`,
+      amount: amount(p.waterTax),
+    },
+    {
+      label: "Drainage tax",
+      formula:
+        p.gisClass === "open_land"
+          ? "Not charged on open land"
+          : `${rupees(p.assessableAlv)} × ${pct.drainageTaxPct}%`,
+      amount: amount(p.drainageTax),
+    },
+  ]
+  if (pct.penaltyPct > 0) {
+    steps.push({
+      label: "Rate-table penalty",
+      formula: `${rupees(p.propertyTax)} property tax × ${pct.penaltyPct}% (used only when no penalty rule is active)`,
+      amount: amount(p.penalty),
+    })
+  }
+  steps.push({
+    label: "Annual demand (before rebate)",
+    formula: "Property + water + drainage tax + penalty",
+    amount: amount(p.demand),
+  })
+  return steps
 }

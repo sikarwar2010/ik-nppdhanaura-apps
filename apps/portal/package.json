@@ -10,7 +10,7 @@
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test": "node --test lib/health-route.test.mjs lib/auth-me-route.test.mjs lib/proxy-to-api.test.mjs lib/portal-api-fetch.test.mjs lib/route-access-gate.test.mjs lib/route-permissions.test.mjs && pnpm --filter api exec tsx --test ../portal/lib/floors.test.ts ../portal/lib/catalog-labels.test.ts ../portal/lib/ward1-catalog.test.ts",
+    "test": "node --test lib/health-route.test.mjs lib/auth-me-route.test.mjs lib/proxy-to-api.test.mjs lib/portal-api-fetch.test.mjs lib/route-access-gate.test.mjs lib/route-permissions.test.mjs && pnpm --filter api exec tsx --test ../portal/lib/floors.test.ts ../portal/lib/catalog-labels.test.ts ../portal/lib/ward1-catalog.test.ts ../portal/lib/app-nav.test.ts",
     "test:e2e": "playwright test",
     "e2e": "playwright test"
   },
@@ -34,6 +34,7 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "catalog:",
