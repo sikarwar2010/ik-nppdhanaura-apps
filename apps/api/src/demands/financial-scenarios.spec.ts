@@ -135,7 +135,7 @@ describe("A: partial offline payment", () => {
     expect(html).toContain("4,500.00")
     expect(html).toContain("2,500.00")
     expect(html).toContain("2,000.00")
-    expect(html).toContain("PART PAYMENT")
+    expect(html).toContain("PARTIAL PAYMENT RECEIVED")
   })
 })
 
@@ -147,7 +147,7 @@ describe("B: full payment", () => {
     expect(position.outstanding).toBe("0.00")
     expect(position.status).toBe("PAID")
     const html = renderReceiptHtml(receipt({ totalPayable: "4500.00", amountReceived: "4500.00", remaining: "0.00" }))
-    expect(html).not.toContain("PART PAYMENT")
+    expect(html).not.toContain("PARTIAL PAYMENT RECEIVED")
     expect(html).toContain("FULLY PAID")
   })
 

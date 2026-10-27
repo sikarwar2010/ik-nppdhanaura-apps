@@ -1,5 +1,6 @@
 import { Type } from "class-transformer"
 import {
+  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -87,6 +88,12 @@ export class CollectTaxDto {
   @Matches(DAY)
   paymentDate?: string
 
+  /** HH:mm in IST. Optional; see collectionInstant. */
+  @IsOptional()
+  @IsString()
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/)
+  paymentTime?: string
+
   @IsOptional()
   @IsString()
   reference?: string
@@ -144,4 +151,72 @@ export class ReceiptListQueryDto {
   @Min(1)
   @Max(100)
   pageSize?: number
+}
+
+export class CollectionPreviewDto {
+  @IsString()
+  @MinLength(1)
+  surveyId!: string
+
+  @IsString()
+  @MinLength(1)
+  assessmentYearId!: string
+
+  @IsString()
+  @Matches(MONEY)
+  amount!: string
+}
+
+export class LedgerQueryDto {
+  @IsString()
+  @MinLength(1)
+  surveyId!: string
+
+  @IsOptional()
+  @IsString()
+  assessmentYearId?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(DAY)
+  dateFrom?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(DAY)
+  dateTo?: string
+
+  @IsOptional()
+  @IsIn(["propertyTax", "waterTax", "drainageTax", "penalty", "interest"])
+  category?: "propertyTax" | "waterTax" | "drainageTax" | "penalty" | "interest"
+
+  @IsOptional()
+  @IsIn(["POSTED", "REVERSED", "PENDING", "UNVERIFIED"])
+  status?: "POSTED" | "REVERSED" | "PENDING" | "UNVERIFIED"
+}
+
+export class ReceiptCopyQueryDto {
+  @IsOptional()
+  @IsIn(["both", "consumer", "office"])
+  copy?: "both" | "consumer" | "office"
+}
+
+export class YearEndQueryDto {
+  @IsString()
+  @MinLength(1)
+  assessmentYearId!: string
+}
+
+export class YearEndCloseDto {
+  @IsString()
+  @MinLength(1)
+  assessmentYearId!: string
+
+  @IsString()
+  @MinLength(5)
+  reason!: string
+
+  @IsOptional()
+  @IsBoolean()
+  acknowledgeIssues?: boolean
 }

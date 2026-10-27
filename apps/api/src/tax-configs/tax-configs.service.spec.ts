@@ -90,7 +90,26 @@ describe("TaxConfigsService.get", () => {
       "0",
       "0.5",
     ])
+    expect(result.publishedAt).toBeNull()
+    expect(result.previouslyPublished).toBe(false)
     expect(prisma.taxConfig.create).not.toHaveBeenCalled()
+  })
+
+  it("marks rates as previously published when a publish already exists", async () => {
+    const findUnique = jest.fn().mockResolvedValue(
+      config({
+        status: "DRAFT",
+        version: 1,
+        publishedAt: new Date("2026-04-01T00:00:00.000Z"),
+        _count: { versions: 1 },
+      })
+    )
+    const { service } = harness(findUnique)
+    const result = await service.get("ward-1", "year-1")
+    expect(result.configured && result.previouslyPublished).toBe(true)
+    expect(result.configured && result.publishedAt).toBe(
+      "2026-04-01T00:00:00.000Z"
+    )
   })
 
   it("returns configured false when no row exists and does not create zeros", async () => {

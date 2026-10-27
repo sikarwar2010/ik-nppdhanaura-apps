@@ -32,8 +32,9 @@ import {
 } from "@workspace/ui/components/select"
 import { buildSelectItems } from "@workspace/ui/lib/select-items"
 
+import { ConfirmDialog } from "@/components/admin/admin-ui"
 import { useCan } from "@/hooks/use-permission"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
 import { downloadAuthenticatedExport } from "@/lib/download-blob"
 import { FinancialAdminPanels } from "./financial-panels"
 
@@ -65,6 +66,8 @@ type TaxConfig = {
   penaltyPct: string | number | null
   assessablePct: string | number | null
   commercialAssessablePct: string | number | null
+  publishedAt?: string | null
+  previouslyPublished?: boolean
   cells: TaxCell[]
 }
 
@@ -159,6 +162,20 @@ const GIS_USE_PREVIEW_OPTIONS = [
   { code: "P", name: "P - Open plot" },
 ] as const
 
+function needsChangeReason(config: {
+  status: string
+  version: number
+  publishedAt?: string | null
+  previouslyPublished?: boolean
+}): boolean {
+  return (
+    config.previouslyPublished === true ||
+    Boolean(config.publishedAt) ||
+    config.status === "PUBLISHED" ||
+    config.version > 1
+  )
+}
+
 function rateNumber(v: string | number | null | undefined): number | null {
   if (v == null || v === "") return null
   const parsed = typeof v === "number" ? v : Number(v)
@@ -210,6 +227,8 @@ export function ReportsTaxWorkspace({
   const [ledgerSurveyId, setLedgerSurveyId] = React.useState("")
   const [creditAmount, setCreditAmount] = React.useState("")
   const [creditReason, setCreditReason] = React.useState("")
+  const [publishOpen, setPublishOpen] = React.useState(false)
+  const [reasonRequiredId, setReasonRequiredId] = React.useState<string | null>(null)
   const canPublishDemand = useCan("demand:publish")
   const canAdjustDemand = useCan("demand:adjust")
   const canConfigure = useCan("settings:update")
@@ -294,6 +313,9 @@ export function ReportsTaxWorkspace({
       ? taxConfigQuery.data
       : null
   const configMissing = taxConfigQuery.data?.configured === false
+  const republish =
+    (config ? needsChangeReason(config) : false) ||
+    (config != null && reasonRequiredId === config.id)
   const roads = React.useMemo(() => zonesQuery.data ?? [], [zonesQuery.data])
   const constructions = React.useMemo(
     () => constructionsQuery.data ?? [],
@@ -436,18 +458,27 @@ export function ReportsTaxWorkspace({
       wardId: string
       assessmentYearId: string
       configId: string
+      reason?: string
     }) => {
       const res = await api.post<TaxConfig>(
         `/api/v1/tax-configs/${input.configId}/publish`,
-        {}
+        { reason: input.reason || undefined }
       )
       return res.data
     },
     onSuccess: (data, variables) => {
       toast.success("Tax rates published")
+      setReasonRequiredId(null)
+      setPublishOpen(false)
       rememberConfig(variables.wardId, variables.assessmentYearId, data)
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error, variables) => {
+      if (e instanceof ApiError && e.code === "TAX_RATE_CHANGE_REASON_REQUIRED") {
+        setReasonRequiredId(variables.configId)
+        setPublishOpen(true)
+      }
+      toast.error(e.message)
+    },
   })
 
   const createDraftMut = useMutation({
@@ -716,14 +747,7 @@ export function ReportsTaxWorkspace({
               type="button"
               className="cursor-pointer"
               disabled={!config || publishMut.isPending}
-              onClick={() => {
-                if (!config) return
-                publishMut.mutate({
-                  wardId,
-                  assessmentYearId,
-                  configId: config.id,
-                })
-              }}
+              onClick={() => setPublishOpen(true)}
             >
               <Upload className="mr-2 size-4" aria-hidden />
               Publish
@@ -1265,6 +1289,29 @@ export function ReportsTaxWorkspace({
           </CardContent>
         </Card>
       </div>
+      <ConfirmDialog
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        title="Publish these tax rates?"
+        description={
+          republish
+            ? "These rates were published before. Enter the reason for the change (for example the board resolution number). New demands will use this version. Demands, receipts and notices already published keep their original figures."
+            : "New demands for this ward will use these rates. Demands, receipts and notices already published keep their original figures."
+        }
+        confirmLabel="Publish rates"
+        requireReason={republish}
+        reasonLabel="Reason for the change"
+        pending={publishMut.isPending}
+        onConfirm={(reason) => {
+          if (!config) return
+          publishMut.mutate({
+            wardId,
+            assessmentYearId,
+            configId: config.id,
+            reason,
+          })
+        }}
+      />
     </div>
   )
 }

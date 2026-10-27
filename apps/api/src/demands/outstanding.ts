@@ -370,6 +370,80 @@ function consume(amount: MoneyInput, left: MoneyInput) {
   return { next: money(value.minus(remaining)), left: money(0) }
 }
 
+/**
+ * Order in which payments, credits and rebates settle one assessment year's
+ * components. Shared by collection posting, the ledger and the notice so the
+ * per-tax split is the same everywhere. (Existing rule; see the tax-portal
+ * policy questions before changing it.)
+ */
+export const COMPONENT_ORDER = [
+  "interest",
+  "penalty",
+  "drainageTax",
+  "waterTax",
+  "propertyTax",
+] as const
+
+export type YearComponent = (typeof COMPONENT_ORDER)[number]
+export type ComponentAmounts = Record<YearComponent, string>
+
+export type YearComponentsInput = {
+  propertyTax: MoneyInput
+  waterTax: MoneyInput
+  drainageTax: MoneyInput
+  penalty: MoneyInput
+  /** Interest plus approved debits (other charges). */
+  interest: MoneyInput
+}
+
+export function zeroComponentAmounts(): ComponentAmounts {
+  return {
+    interest: "0.00",
+    penalty: "0.00",
+    drainageTax: "0.00",
+    waterTax: "0.00",
+    propertyTax: "0.00",
+  }
+}
+
+/** What is still unpaid on each component after `applied` (payments + credits + rebate) settled them in order. */
+export function componentBalances(
+  components: YearComponentsInput,
+  applied: MoneyInput
+): ComponentAmounts {
+  let left = money(applied)
+  const out = zeroComponentAmounts()
+  for (const key of COMPONENT_ORDER) {
+    const step = consume(components[key], left)
+    out[key] = moneyString(step.next)
+    left = step.left
+  }
+  return out
+}
+
+/**
+ * Splits `amount` across the components that are still unpaid after
+ * `appliedBefore`, in COMPONENT_ORDER. The parts always add up to `amount`
+ * when it does not exceed the unpaid total; any excess is left in `unapplied`.
+ */
+export function splitPaymentByComponent(
+  components: YearComponentsInput,
+  appliedBefore: MoneyInput,
+  amount: MoneyInput
+): { parts: ComponentAmounts; unapplied: string } {
+  const before = componentBalances(components, appliedBefore)
+  let left = money(amount)
+  const parts = zeroComponentAmounts()
+  for (const key of COMPONENT_ORDER) {
+    const due = money(before[key])
+    if (!left.gt(0) || !due.gt(0)) continue
+    const take = due.lte(left) ? due : left
+    parts[key] = moneyString(take)
+    left = money(left.minus(take))
+  }
+  return { parts, unapplied: moneyString(left) }
+}
+
 function previousYearFigures(years: YearBreakdown[], selectedYearCode: string) {
   const prior = years.filter(
     (year) =>
@@ -390,21 +464,21 @@ function previousYearFigures(years: YearBreakdown[], selectedYearCode: string) {
       historical = money(dec(historical).plus(year.outstanding))
       continue
     }
-    let left = money(dec(year.payments).plus(year.credits).plus(year.rebate))
-    const interest = consume(dec(year.interest).plus(year.debits), left)
-    left = interest.left
-    const penalty = consume(year.penalty, left)
-    left = penalty.left
-    const drainagePart = consume(year.drainageTax, left)
-    left = drainagePart.left
-    const waterPart = consume(year.waterTax, left)
-    left = waterPart.left
-    const propertyPart = consume(year.propertyTax, left)
-    property = money(dec(property).plus(propertyPart.next))
-    water = money(dec(water).plus(waterPart.next))
-    drainage = money(dec(drainage).plus(drainagePart.next))
+    const unpaid = componentBalances(
+      {
+        propertyTax: year.propertyTax,
+        waterTax: year.waterTax,
+        drainageTax: year.drainageTax,
+        penalty: year.penalty,
+        interest: dec(year.interest).plus(year.debits),
+      },
+      dec(year.payments).plus(year.credits).plus(year.rebate)
+    )
+    property = money(dec(property).plus(unpaid.propertyTax))
+    water = money(dec(water).plus(unpaid.waterTax))
+    drainage = money(dec(drainage).plus(unpaid.drainageTax))
     penaltyInterest = money(
-      dec(penaltyInterest).plus(penalty.next).plus(interest.next)
+      dec(penaltyInterest).plus(unpaid.penalty).plus(unpaid.interest)
     )
   }
   return {

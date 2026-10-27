@@ -43,6 +43,7 @@ export class TaxConfigsService {
     },
     assessmentYear: true,
     ward: true,
+    _count: { select: { versions: true } },
   } as const
 
   async get(wardId: string, assessmentYearId: string) {

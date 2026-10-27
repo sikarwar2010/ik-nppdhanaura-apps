@@ -336,6 +336,19 @@ table.alv tr.total td {
   color: #fff;
 }
 
+.settle {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  border: 1.5px solid #94a3b8;
+  border-top: none;
+  font-size: 8.5px;
+}
+.settle-cell { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 4px 6px; border-right: 1px solid #cbd5e1; }
+.settle-cell:last-child { border-right: none; }
+.settle-cell strong { font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.settle-cell.net { background: #f0fdf4; }
+.settle-cell.net strong { font-size: 12px; }
+
 .notice {
   border: 1.5px solid #64748b;
   padding: 8px 10px;
@@ -431,6 +444,19 @@ function confirmedMoney(authoritative: boolean, value: number): string {
 
 function componentCell(value: number | null): string {
   return value == null ? "—" : money(value)
+}
+
+/** Gross − rebates/credits − already paid = net payable, all from the ledger engine. */
+function renderSettlement(vm: PropertyTaxDemandNoticeViewModel): string {
+  const l = vm.ledger
+  const cell = (label: string, value: string, cls = "") =>
+    `<div class="settle-cell${cls}"><span>${label}</span><strong>${value}</strong></div>`
+  return `<div class="settle">
+    ${cell("Gross demand (arrears, tax, penalty, interest, charges) / सकल मांग", confirmedMoney(l.authoritative, l.grossEligibleDemand))}
+    ${cell("Less rebate &amp; credits / घटाएँ छूट व समायोजन", `₹ ${money(l.rebateAmount + l.approvedCredits)}`)}
+    ${cell("Less amount already paid / घटाएँ जमा राशि", `₹ ${money(l.paymentsAllocated)}`)}
+    ${cell("Net amount payable / शुद्ध देय राशि", confirmedMoney(l.authoritative, l.netOutstanding), " net")}
+  </div>`
 }
 
 function renderArrears(vm: PropertyTaxDemandNoticeViewModel): string {
@@ -669,6 +695,7 @@ function renderNoticePage(
         <div class="tax-amt">${confirmedMoney(vm.ledger.authoritative, vm.ledger.totalPayable)}</div>
       </div>
     </div>
+    ${renderSettlement(vm)}
   </div>
 
   ${renderArrears(vm)}

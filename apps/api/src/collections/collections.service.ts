@@ -16,25 +16,42 @@ import {
   isPositiveMoney,
   money,
   moneyString,
-  subMoney,
   sumMoney,
 } from "../demands/money"
 import { renderDemandNoticePdfFromHtml } from "../reports/demand-notice/demand-notice-pdf"
 import { PrismaService } from "../prisma/prisma.service"
 import {
-  allocateOldestFirst,
+  allocateWithComponents,
+  allocationSummary,
   CollectionRuleError,
+  collectionInstant,
   formatReceiptNumber,
   idempotencyDecision,
   replayedReceipt,
   settlesImmediately,
+  type AllocationLine,
 } from "./collection-rules"
 import type {
   CollectTaxDto,
   CollectionListQueryDto,
+  CollectionPreviewDto,
+  LedgerQueryDto,
   ReceiptListQueryDto,
+  YearEndCloseDto,
 } from "./collections.dto"
-import { renderReceiptHtml, type ReceiptSnapshot } from "./receipt-html"
+import {
+  buildConsumerLedger,
+  filterLedgerEntries,
+  type LedgerDemandInput,
+} from "./consumer-ledger"
+import {
+  renderReceiptHtml,
+  type ReceiptAllocation,
+  type ReceiptCopy,
+  type ReceiptSnapshot,
+} from "./receipt-html"
+import { buildYearEndReport, type YearEndLine } from "./year-end"
+import type { ComponentAmounts } from "../demands/outstanding"
 import { maskMobile } from "../public-property-tax/masking.util"
 import { rupeesInWords } from "./rupees-in-words"
 
@@ -96,6 +113,48 @@ function asSnapshot(value: Prisma.JsonValue | null): ReceiptSnapshot | null {
   const row = value as Record<string, unknown>
   if (typeof row.receiptNumber !== "string") return null
   return row as unknown as ReceiptSnapshot
+}
+
+function istDateTime(date: Date): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date)
+}
+
+function toReceiptAllocation(line: AllocationLine): ReceiptAllocation {
+  return {
+    assessmentYearCode: line.assessmentYearCode,
+    assessmentYearName: line.assessmentYearName,
+    closingBalanceOnly: line.closingBalanceOnly,
+    amount: line.amount,
+    outstandingAfter: line.outstandingAfter,
+    parts: {
+      propertyTax: line.parts.propertyTax,
+      waterTax: line.parts.waterTax,
+      drainageTax: line.parts.drainageTax,
+      penalty: line.parts.penalty,
+      interest: line.parts.interest,
+    },
+  }
+}
+
+/** The tax-wise split stored on a receipt for one year, if that receipt has one. */
+function postedPartsFor(
+  value: Prisma.JsonValue | null,
+  yearCode: string
+): ComponentAmounts | null {
+  const snapshot = asSnapshot(value)
+  const line = snapshot?.allocations?.find((row) => row.assessmentYearCode === yearCode)
+  if (!line) return null
+  return {
+    interest: line.parts.interest,
+    penalty: line.parts.penalty,
+    drainageTax: line.parts.drainageTax,
+    waterTax: line.parts.waterTax,
+    propertyTax: line.parts.propertyTax,
+  }
 }
 
 @Injectable()
@@ -383,22 +442,24 @@ export class CollectionsService {
     return Buffer.from(bytes)
   }
 
-  async search(term: string, user: AuthUser) {
+  async search(term: string, user: AuthUser, wardId?: string) {
     const q = term.trim()
-    if (q.length < 2) return []
+    // Inside a ward a single character is enough (house numbers like "7").
+    if (wardId ? false : q.length < 2) return []
     const includeMobile = canReadMobile(user)
     const surveys = await this.prisma.survey.findMany({
       where: {
         deletedAt: null,
         status: "ACTIVE",
-        OR: [
+        ...(wardId ? { wardId } : {}),
+        OR: q ? [
           { surveyId: { contains: q, mode: "insensitive" } },
           { ownerName: { contains: q, mode: "insensitive" } },
           { parcelNo: { contains: q, mode: "insensitive" } },
           { houseNo: { contains: q, mode: "insensitive" } },
           { propertyNo: { contains: q, mode: "insensitive" } },
           ...(includeMobile ? [{ mobile: { contains: q } }] : []),
-        ],
+        ] : undefined,
       },
       include: { ward: { select: { name: true, number: true } } },
       take: 20,
@@ -409,6 +470,8 @@ export class CollectionsService {
       propertyId: survey.surveyId,
       ownerName: survey.ownerName,
       wardName: survey.ward.name,
+      wardNumber: survey.ward.number,
+      houseNo: survey.houseNo,
       address: addressOf(survey),
       mobile: includeMobile ? survey.mobile : null,
     }))
@@ -440,12 +503,19 @@ export class CollectionsService {
         surveyId: survey.id,
         propertyId: survey.surveyId,
         ownerName: survey.ownerName,
+        fatherName: survey.ownerFatherName,
         wardName: survey.ward.name,
+        wardNumber: survey.ward.number,
+        houseNo: survey.houseNo,
         address: addressOf(survey),
         mobile: includeMobile ? survey.mobile : null,
       },
       assessmentYear: { id: year.id, code: year.code, name: year.name },
+      openingArrears: breakdown.openingArrears,
+      approvedCredits: breakdown.approvedCredits,
+      approvedDebits: breakdown.approvedDebits,
       demandReference: demand?.demandReference ?? null,
+      demandPublished: Boolean(breakdown.publishedDemandId && demand?.demandReference),
       propertyTax: breakdown.propertyTax,
       waterTax: breakdown.waterTax,
       drainageTax: breakdown.drainageTax,
@@ -487,7 +557,7 @@ export class CollectionsService {
         message: "Cheque, draft, UPI, and bank transfer need a reference number",
       })
     }
-    const collectedAt = this.collectionInstant(dto.paymentDate)
+    const collectedAt = this.collectedAtOrThrow(dto.paymentDate, dto.paymentTime)
     const survey = await this.surveyOrThrow(dto.surveyId)
     const year = await this.yearOrThrow(dto.assessmentYearId)
     const existing = await this.prisma.payment.findUnique({
@@ -699,7 +769,56 @@ export class CollectionsService {
     }
   }
 
-  async receiptHtml(paymentId: string): Promise<string> {
+  /**
+   * Shows how an amount would be applied (oldest year first, then tax by tax)
+   * using the same rule as posting. Nothing is saved.
+   */
+  async previewCollection(dto: CollectionPreviewDto) {
+    const survey = await this.surveyOrThrow(dto.surveyId)
+    const year = await this.yearOrThrow(dto.assessmentYearId)
+    if (!isPositiveMoney(dto.amount)) {
+      throw new BadRequestException({
+        code: "AMOUNT_REQUIRED",
+        message: "Enter an amount greater than zero",
+      })
+    }
+    const breakdown = await this.demands.outstanding(survey.id, year.id)
+    if (!breakdown.authoritative || !breakdown.publishedDemandId) {
+      throw new ConflictException({
+        code: "DEMAND_NOT_READY",
+        message:
+          "Publish a verified demand before collection. Missing historical years are not treated as zero.",
+      })
+    }
+    const allocation = await this.prisma.$transaction(async (tx) => {
+      const years = await this.demands.lockedCollectableYears(tx, survey.id, year.code)
+      try {
+        return allocateWithComponents(moneyString(dto.amount), years)
+      } catch (error) {
+        if (error instanceof CollectionRuleError) {
+          throw new BadRequestException({ code: error.code, message: error.message })
+        }
+        throw error
+      }
+    })
+    return {
+      surveyId: survey.id,
+      assessmentYearId: year.id,
+      amount: moneyString(dto.amount),
+      outstandingBefore: allocation.outstandingBefore,
+      outstandingAfter: allocation.outstandingAfter,
+      paymentStatus: money(allocation.outstandingAfter).gt(0) ? "PARTIALLY_PAID" : "PAID",
+      lines: allocation.lines.map(toReceiptAllocation),
+      rule:
+        "Oldest year first. Within a year: interest and other charges, penalty, drainage tax, water tax, then property tax.",
+    }
+  }
+
+  async receiptHtml(
+    paymentId: string,
+    copy: ReceiptCopy = "both",
+    viewer?: AuthUser
+  ): Promise<string> {
     const snapshot = await this.snapshotOrThrow(paymentId)
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
@@ -715,23 +834,406 @@ export class CollectionsService {
           })
         : null
       reversal = {
-        at: payment.reversedAt
-          ? new Intl.DateTimeFormat("en-IN", {
-              timeZone: "Asia/Kolkata",
-              dateStyle: "medium",
-              timeStyle: "short",
-            }).format(payment.reversedAt)
-          : "—",
+        at: payment.reversedAt ? istDateTime(payment.reversedAt) : "—",
         by: actor?.name ?? "—",
         reason: payment.reversalReason ?? "—",
       }
     }
-    return renderReceiptHtml({ ...snapshot, reversal })
+    const now = new Date()
+    if (viewer) {
+      await this.audit.log({
+        action: "RECEIPT_PRINTED",
+        entity: "Payment",
+        entityId: paymentId,
+        actorId: viewer.id,
+        newValue: { receiptNumber: snapshot.receiptNumber, copy },
+      })
+    }
+    return renderReceiptHtml(
+      { ...snapshot, reversal },
+      {
+        copy,
+        office: {
+          paymentStatus:
+            payment?.status === PaymentStatus.REFUNDED ? "REVERSED" : (payment?.status ?? "—"),
+          printedBy: viewer?.name ?? "—",
+          printedAt: istDateTime(now),
+        },
+      }
+    )
   }
 
-  async receiptPdf(paymentId: string): Promise<Buffer> {
-    const html = await this.receiptHtml(paymentId)
+  async receiptPdf(paymentId: string, copy: ReceiptCopy = "both", viewer?: AuthUser): Promise<Buffer> {
+    const html = await this.receiptHtml(paymentId, copy, viewer)
     return renderDemandNoticePdfFromHtml(html)
+  }
+
+  /** Year-wise and transaction-wise ledger for one property. Read-only. */
+  async ledger(query: LedgerQueryDto, user: AuthUser) {
+    const survey = await this.surveyOrThrow(query.surveyId)
+    const demands = await this.prisma.assessmentDemand.findMany({
+      where: { surveyId: survey.id, status: "PUBLISHED" },
+      include: {
+        assessmentYear: { select: { id: true, code: true, name: true } },
+        publishedBy: { select: { name: true } },
+        adjustments: { include: { createdBy: { select: { name: true } } } },
+        allocations: {
+          include: {
+            payment: {
+              include: { collectedBy: { select: { name: true } } },
+            },
+          },
+        },
+      },
+    })
+    const pending = await this.prisma.payment.findMany({
+      where: { surveyId: survey.id, status: PaymentStatus.PENDING },
+      include: {
+        collectedBy: { select: { name: true } },
+        assessmentYear: { select: { code: true, name: true } },
+      },
+    })
+    const inputs: LedgerDemandInput[] = demands.map((demand) => ({
+      id: demand.id,
+      assessmentYearId: demand.assessmentYear.id,
+      assessmentYearCode: demand.assessmentYear.code,
+      assessmentYearName: demand.assessmentYear.name,
+      demandReference: demand.demandReference,
+      publishedAt: demand.publishedAt ?? demand.createdAt,
+      verificationStatus: demand.verificationStatus,
+      balanceKind: demand.balanceKind,
+      propertyTax: demand.propertyTax.toString(),
+      waterTax: demand.waterTax.toString(),
+      drainageTax: demand.drainageTax.toString(),
+      penalty: demand.penalty.toString(),
+      interest: demand.interest.toString(),
+      currentYearDemand: demand.currentYearDemand.toString(),
+      rebateAmount: demand.rebateAmount.toString(),
+      historicalPayments: demand.historicalPayments.toString(),
+      sourceReference: demand.sourceReference,
+      publishedByName: demand.publishedBy?.name ?? null,
+      adjustments: demand.adjustments.map((row) => ({
+        id: row.id,
+        kind: row.kind,
+        amount: row.amount.toString(),
+        reason: row.reason,
+        createdAt: row.createdAt,
+        createdByName: row.createdBy?.name ?? null,
+      })),
+      allocations: demand.allocations.map((row) => ({
+        id: row.id,
+        amount: row.amount.toString(),
+        status: row.status,
+        createdAt: row.createdAt,
+        reversedAt: row.reversedAt,
+        payment: {
+          id: row.payment.id,
+          status: row.payment.status,
+          receiptNumber: row.payment.receiptNumber,
+          paymentReference: row.payment.paymentReference,
+          gatewayReference: row.payment.gatewayReference,
+          remarks: row.payment.remarks,
+          paymentMode: row.payment.paymentMode,
+          collectionDate: row.payment.collectionDate,
+          createdAt: row.payment.createdAt,
+          collectedByName: row.payment.collectedBy?.name ?? null,
+          chequeDdReference: row.payment.chequeDdReference,
+          reversedAt: row.payment.reversedAt,
+          reversalReason: row.payment.reversalReason,
+          postedParts: postedPartsFor(row.payment.receiptSnapshot, demand.assessmentYear.code),
+        },
+      })),
+    }))
+    const built = buildConsumerLedger({
+      demands: inputs,
+      pendingPayments: pending.map((row) => ({
+        id: row.id,
+        amount: row.amount.toString(),
+        paymentMode: row.paymentMode,
+        collectionDate: row.collectionDate,
+        createdAt: row.createdAt,
+        collectedByName: row.collectedBy?.name ?? null,
+        chequeDdReference: row.chequeDdReference,
+        assessmentYearCode: row.assessmentYear?.code ?? null,
+        assessmentYearName: row.assessmentYear?.name ?? null,
+      })),
+    })
+
+    // Header figures come from the outstanding engine for the chosen year.
+    const latestCode = [...built.years].sort((a, b) =>
+      b.assessmentYearCode.localeCompare(a.assessmentYearCode)
+    )[0]?.assessmentYearId
+    const headerYearId = query.assessmentYearId || latestCode
+    const breakdown = headerYearId
+      ? await this.demands.outstanding(survey.id, headerYearId)
+      : null
+    const yearFilter = query.assessmentYearId
+      ? built.years.find((year) => year.assessmentYearId === query.assessmentYearId)
+          ?.assessmentYearCode ?? "__none__"
+      : undefined
+    const entries = filterLedgerEntries(built.entries, {
+      assessmentYearCode: yearFilter,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+      category: query.category,
+      status: query.status,
+    })
+    const includeMobile = canReadMobile(user)
+    return {
+      municipality: MUNICIPALITY,
+      property: {
+        surveyId: survey.id,
+        propertyId: survey.surveyId,
+        ownerName: survey.ownerName,
+        fatherName: survey.ownerFatherName,
+        wardName: survey.ward.name,
+        wardNumber: survey.ward.number,
+        houseNo: survey.houseNo,
+        address: addressOf(survey),
+        mobile: includeMobile ? survey.mobile : null,
+      },
+      header: breakdown
+        ? {
+            assessmentYearId: breakdown.selectedYearId,
+            assessmentYear: breakdown.selectedYearName,
+            openingBalance: breakdown.openingArrears,
+            currentDemand: moneyString(
+              sumMoney([breakdown.propertyTax, breakdown.waterTax, breakdown.drainageTax])
+            ),
+            propertyTax: breakdown.propertyTax,
+            waterTax: breakdown.waterTax,
+            drainageTax: breakdown.drainageTax,
+            penaltyAndInterest: moneyString(
+              sumMoney([breakdown.penalty, breakdown.interest, breakdown.approvedDebits])
+            ),
+            rebatesAndCredits: moneyString(
+              sumMoney([breakdown.rebateAmount, breakdown.approvedCredits])
+            ),
+            totalPayments: breakdown.paymentsAllocated,
+            closingOutstanding: breakdown.netOutstanding,
+            authoritative: breakdown.authoritative,
+            warning: breakdown.authoritative
+              ? null
+              : "Historical balances are incomplete. Missing or unverified years are not treated as zero.",
+            unreconciledYears: [
+              ...breakdown.unreconciledYears,
+              ...breakdown.missingHistoryYears,
+            ].map((year) => ({ name: year.name, reason: year.reason })),
+          }
+        : null,
+      years: built.years,
+      yearsWithArrears: built.years
+        .filter((year) => year.verificationStatus === "VERIFIED" && money(year.outstanding).gt(0))
+        .map((year) => ({ name: year.assessmentYearName, outstanding: year.outstanding })),
+      entries,
+      totalEntries: built.entries.length,
+      closingBalance: built.closingBalance,
+      reconciles: built.reconciles,
+      engineOutstanding: built.engineOutstanding,
+    }
+  }
+
+  /** Carry-forward reconciliation for one year. Read-only; safe to run any time. */
+  async yearEndPreview(assessmentYearId: string) {
+    const year = await this.yearOrThrow(assessmentYearId)
+    const profile = await this.prisma.assessmentYearProfile.findUnique({
+      where: { referenceEntryId: year.id },
+    })
+    const allYears = await this.prisma.referenceEntry.findMany({
+      where: { category: { code: "ASSESSMENT_YEAR" } },
+      select: { id: true, code: true, name: true },
+    })
+    const next =
+      allYears
+        .filter((row) => row.code.localeCompare(year.code) > 0)
+        .sort((a, b) => a.code.localeCompare(b.code))[0] ?? null
+    const lines = await this.prisma.$queryRaw<
+      Array<{
+        survey_id: string
+        year_code: string
+        demand: Prisma.Decimal
+        rebate: Prisma.Decimal
+        credits: Prisma.Decimal
+        payments: Prisma.Decimal
+        own_outstanding: Prisma.Decimal
+      }>
+    >`
+      WITH line AS (${this.ledgerLines()})
+      SELECT survey_id, year_code,
+        (current_year + interest + debits) AS demand,
+        rebate, credits, (paid + historical) AS payments, own_outstanding
+      FROM line
+      WHERE year_code <= ${year.code}
+    `
+    const nextStored = next
+      ? await this.prisma.assessmentDemand.findMany({
+          where: {
+            assessmentYearId: next.id,
+            status: "PUBLISHED",
+            verificationStatus: "VERIFIED",
+          },
+          select: { surveyId: true, openingArrears: true },
+        })
+      : []
+    const [flagRow] = await this.prisma.$queryRaw<
+      Array<{
+        unverified: number
+        unverified_amount: Prisma.Decimal | null
+        pending: number
+        pending_amount: Prisma.Decimal | null
+        without_demand: number
+        unassigned: number
+        gaps: number
+      }>
+    >`
+      SELECT
+        (SELECT COUNT(*)::int FROM assessment_demand d JOIN reference_entry y ON y.id = d."assessmentYearId"
+          WHERE d.status::text = 'PUBLISHED' AND d."verificationStatus"::text = 'UNVERIFIED' AND y.code <= ${year.code}) AS unverified,
+        (SELECT COALESCE(SUM(d."currentYearDemand"), 0) FROM assessment_demand d JOIN reference_entry y ON y.id = d."assessmentYearId"
+          WHERE d.status::text = 'PUBLISHED' AND d."verificationStatus"::text = 'UNVERIFIED' AND y.code <= ${year.code}) AS unverified_amount,
+        (SELECT COUNT(*)::int FROM payment p WHERE p.status::text = 'PENDING' AND p."paymentMode"::text <> 'ONLINE'
+          AND p."assessmentYearId" = ${year.id}) AS pending,
+        (SELECT COALESCE(SUM(p.amount), 0) FROM payment p WHERE p.status::text = 'PENDING' AND p."paymentMode"::text <> 'ONLINE'
+          AND p."assessmentYearId" = ${year.id}) AS pending_amount,
+        (SELECT COUNT(*)::int FROM payment p WHERE p.status::text = 'SUCCESS' AND p."assessmentYearId" = ${year.id}
+          AND (p.gateway IS NULL OR p.gateway <> 'sandbox')
+          AND NOT EXISTS (SELECT 1 FROM assessment_demand d WHERE d."surveyId" = p."surveyId"
+            AND d."assessmentYearId" = p."assessmentYearId" AND d.status::text = 'PUBLISHED')) AS without_demand,
+        (SELECT COUNT(*)::int FROM payment p WHERE p.status::text = 'SUCCESS' AND p."assessmentYearId" IS NULL
+          AND (p.gateway IS NULL OR p.gateway <> 'sandbox')
+          AND p.amount > COALESCE((SELECT SUM(a.amount) FROM payment_allocation a
+            WHERE a."paymentId" = p.id AND a.status::text = 'ACTIVE'), 0)) AS unassigned,
+        (SELECT COUNT(DISTINCT later."surveyId")::int FROM assessment_demand later
+          JOIN reference_entry ly ON ly.id = later."assessmentYearId"
+          WHERE later.status::text = 'PUBLISHED' AND ly.code > ${year.code}
+            AND NOT EXISTS (SELECT 1 FROM assessment_demand cur WHERE cur."surveyId" = later."surveyId"
+              AND cur."assessmentYearId" = ${year.id} AND cur.status::text = 'PUBLISHED'
+              AND cur."verificationStatus"::text = 'VERIFIED')
+            AND EXISTS (SELECT 1 FROM assessment_demand old JOIN reference_entry oy ON oy.id = old."assessmentYearId"
+              WHERE old."surveyId" = later."surveyId" AND old.status::text = 'PUBLISHED' AND oy.code < ${year.code})) AS gaps
+    `
+    const report = buildYearEndReport({
+      yearCode: year.code,
+      lines: lines.map(
+        (row): YearEndLine => ({
+          surveyId: row.survey_id,
+          yearCode: row.year_code,
+          demand: row.demand.toString(),
+          rebate: row.rebate.toString(),
+          credits: row.credits.toString(),
+          payments: row.payments.toString(),
+          ownOutstanding: row.own_outstanding.toString(),
+        })
+      ),
+      nextYear: next
+        ? {
+            yearCode: next.code,
+            storedOpening: nextStored.map((row) => ({
+              surveyId: row.surveyId,
+              openingArrears: row.openingArrears.toString(),
+            })),
+          }
+        : null,
+      flags: {
+        unverifiedDemands: Number(flagRow?.unverified ?? 0),
+        unverifiedAmount: moneyString(flagRow?.unverified_amount ?? 0),
+        pendingInstruments: Number(flagRow?.pending ?? 0),
+        pendingAmount: moneyString(flagRow?.pending_amount ?? 0),
+        paymentsWithoutDemand: Number(flagRow?.without_demand ?? 0),
+        unassignedPayments: Number(flagRow?.unassigned ?? 0),
+        gapProperties: Number(flagRow?.gaps ?? 0),
+      },
+    })
+    const lastClose = await this.prisma.auditLog.findFirst({
+      where: { action: "YEAR_END_CLOSED", entity: "AssessmentYear", entityId: year.id },
+      orderBy: { createdAt: "desc" },
+      include: { actor: { select: { name: true } } },
+    })
+    return {
+      assessmentYear: { id: year.id, code: year.code, name: year.name },
+      nextYear: next ? { id: next.id, code: next.code, name: next.name } : null,
+      status: profile?.status ?? "NOT_CONFIGURED",
+      canClose:
+        Boolean(profile) && (profile?.status === "ACTIVE" || profile?.status === "DRAFT"),
+      lastClose: lastClose
+        ? {
+            at: lastClose.createdAt.toISOString(),
+            by: lastClose.actor?.name ?? null,
+            reason:
+              (lastClose.metadata as { reason?: string } | null)?.reason ?? null,
+          }
+        : null,
+      report,
+    }
+  }
+
+  /**
+   * Closes the year after an authorised review. Nothing is copied or
+   * rewritten: the next year's arrears stay computed from these balances.
+   * Running it again on a closed year changes nothing.
+   */
+  async yearEndClose(dto: YearEndCloseDto, user: AuthUser) {
+    const reason = dto.reason?.trim() ?? ""
+    if (reason.length < 5) {
+      throw new BadRequestException({
+        code: "YEAR_END_REASON_REQUIRED",
+        message: "Give a reason or approval reference (at least 5 characters)",
+      })
+    }
+    const preview = await this.yearEndPreview(dto.assessmentYearId)
+    if (preview.status === "CLOSED" || preview.status === "ARCHIVED") {
+      throw new ConflictException({
+        code: "YEAR_ALREADY_CLOSED",
+        message: "This assessment year is already closed. Nothing was changed.",
+      })
+    }
+    if (!preview.canClose) {
+      throw new ConflictException({
+        code: "ASSESSMENT_YEAR_NOT_CONFIGURED",
+        message: "Set the assessment year's dates before closing it",
+      })
+    }
+    if (preview.report.blockingIssues.length > 0 && !dto.acknowledgeIssues) {
+      throw new ConflictException({
+        code: "YEAR_END_ISSUES",
+        message:
+          "Review the listed issues and confirm that they are acknowledged before closing the year.",
+        details: { issues: preview.report.blockingIssues },
+      })
+    }
+    const closed = await this.prisma.assessmentYearProfile.updateMany({
+      where: {
+        referenceEntryId: dto.assessmentYearId,
+        status: { in: ["ACTIVE", "DRAFT"] },
+      },
+      data: { status: "CLOSED" },
+    })
+    if (closed.count === 0) {
+      throw new ConflictException({
+        code: "YEAR_ALREADY_CLOSED",
+        message: "This assessment year was closed by someone else. Nothing was changed.",
+      })
+    }
+    const { report } = preview
+    await this.audit.log({
+      action: "YEAR_END_CLOSED",
+      entity: "AssessmentYear",
+      entityId: dto.assessmentYearId,
+      actorId: user.id,
+      oldValue: { status: preview.status },
+      newValue: {
+        status: "CLOSED",
+        openingArrears: report.openingArrears,
+        demand: report.demand,
+        rebateAndCredits: report.rebateAndCredits,
+        payments: report.payments,
+        closingCarryForward: report.closingCarryForward,
+        propertiesWithArrears: report.propertiesWithArrears,
+        chainOk: report.chainOk,
+      },
+      metadata: { reason, issuesAcknowledged: report.blockingIssues },
+    })
+    return this.yearEndPreview(dto.assessmentYearId)
   }
 
   private async settleInTransaction(
@@ -747,6 +1249,13 @@ export class CollectionsService {
         message: "Payment is not linked to a property and assessment year",
       })
     }
+    const collector =
+      payment.collectedById && payment.collectedById !== user.id
+        ? await tx.user.findUnique({
+            where: { id: payment.collectedById },
+            select: { id: true, name: true },
+          })
+        : { id: user.id, name: user.name }
     const survey = await tx.survey.findUnique({
       where: { id: payment.surveyId },
       include: { ward: true },
@@ -769,15 +1278,16 @@ export class CollectionsService {
       payment.surveyId,
       yearCode
     )
-    let lines: ReturnType<typeof allocateOldestFirst>
+    let allocation: ReturnType<typeof allocateWithComponents>
     try {
-      lines = allocateOldestFirst(moneyString(payment.amount), years)
+      allocation = allocateWithComponents(moneyString(payment.amount), years)
     } catch (error) {
       if (error instanceof CollectionRuleError) {
         throw new BadRequestException({ code: error.code, message: error.message })
       }
       throw error
     }
+    const lines = allocation.lines
     for (const line of lines) {
       await tx.paymentAllocation.create({
         data: {
@@ -788,7 +1298,7 @@ export class CollectionsService {
         },
       })
     }
-    const outstandingBefore = sumMoney(years.map((year) => year.unpaid))
+    const outstandingBefore = allocation.outstandingBefore
     const previousDues = sumMoney(
       years
         .filter((year) => year.assessmentYearCode.localeCompare(yearCode) < 0)
@@ -819,19 +1329,21 @@ export class CollectionsService {
       totalPayable: moneyString(outstandingBefore),
       amountReceived: moneyString(payment.amount),
       paymentMode: payment.paymentMode,
-      remaining: moneyString(subMoney(outstandingBefore, payment.amount)),
+      remaining: allocation.outstandingAfter,
       amountInWords: rupeesInWords(moneyString(payment.amount)),
-      cashierName: user.name,
+      cashierName: collector?.name ?? user.name,
       counterCode: payment.counterCode ?? "",
-      allocationText: lines
-        .map((line) => `${line.assessmentYearCode} ₹ ${line.amount}`)
-        .join("; "),
+      allocationText: allocationSummary(lines),
       fatherName: survey.ownerFatherName ?? undefined,
       wardNumber: String(survey.ward.number),
       houseNo: survey.houseNo ?? undefined,
       locality: survey.locality ?? survey.colony ?? undefined,
       mobileMasked: survey.mobile ? maskMobile(survey.mobile) : undefined,
       paymentReference: payment.chequeDdReference ?? undefined,
+      paymentId: payment.id,
+      collectorId: collector?.id ?? user.id,
+      confirmedBy: collector && collector.id !== user.id ? user.name : undefined,
+      allocations: lines.map(toReceiptAllocation),
     }
     return tx.payment.update({
       where: { id: payment.id },
@@ -881,7 +1393,9 @@ export class CollectionsService {
       receiptNumber: payment.receiptNumber,
       paymentMode: payment.paymentMode,
       remaining: snapshot?.remaining ?? null,
+      outstandingBefore: snapshot?.totalPayable ?? null,
       allocationText: snapshot?.allocationText ?? null,
+      allocations: snapshot?.allocations ?? null,
     }
   }
 
@@ -903,15 +1417,15 @@ export class CollectionsService {
     return snapshot
   }
 
-  private collectionInstant(day: string | undefined): Date {
-    if (!day) return new Date()
-    if (day > kolkataDay()) {
-      throw new BadRequestException({
-        code: "COLLECTION_DATE_IN_FUTURE",
-        message: "Collection date cannot be in the future",
-      })
+  private collectedAtOrThrow(day: string | undefined, time: string | undefined): Date {
+    try {
+      return collectionInstant(day, time)
+    } catch (error) {
+      if (error instanceof CollectionRuleError) {
+        throw new BadRequestException({ code: error.code, message: error.message })
+      }
+      throw error
     }
-    return new Date(`${day}T12:00:00+05:30`)
   }
 
   private ledgerLines(): Prisma.Sql {

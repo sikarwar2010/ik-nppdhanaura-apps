@@ -184,7 +184,7 @@ export default function AssessmentYearsPage() {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_26rem]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_26rem] [&>*]:min-w-0">
         <Panel
           title="All assessment years"
           description="Newest first. Click a year to see its history."
@@ -218,7 +218,7 @@ export default function AssessmentYearsPage() {
           ) : rows.length === 0 ? (
             <EmptyBlock title="No assessment years match">Clear the search or filter.</EmptyBlock>
           ) : (
-            <div className="-mx-4 overflow-x-auto sm:mx-0">
+            <div className="-mx-4 relative overflow-x-auto sm:mx-0">
               <table className="w-full min-w-[46rem] text-sm">
                 <thead className="border-b bg-muted/50 text-left text-xs tracking-wide text-muted-foreground uppercase">
                   <tr>

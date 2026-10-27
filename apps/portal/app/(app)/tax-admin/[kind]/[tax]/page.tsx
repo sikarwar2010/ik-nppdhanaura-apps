@@ -363,7 +363,7 @@ export default function TaxPolicyPage({ params }: { params: Promise<{ kind: stri
         }
       />
 
-      <nav aria-label="Rebate and penalty pages" className="-mb-px flex flex-wrap gap-1 overflow-x-auto border-b">
+      <nav aria-label="Rebate and penalty pages" className="-mb-px flex flex-wrap gap-1 relative overflow-x-auto border-b">
         {tabs.map((t) => {
           const active = t.href === `/tax-admin/${kind}/${rawTax}`
           return (
@@ -415,7 +415,7 @@ export default function TaxPolicyPage({ params }: { params: Promise<{ kind: stri
         </Notice>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_28rem]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_28rem] [&>*]:min-w-0">
         <div className="space-y-6">
           <Panel title={`${tax.en} ${noun} rules`} description="Click a rule to see its history.">
             {policies.isLoading || years.isLoading ? (
@@ -431,7 +431,7 @@ export default function TaxPolicyPage({ params }: { params: Promise<{ kind: stri
                     : `No penalty is charged on ${taxLower}.`}
               </EmptyBlock>
             ) : (
-              <div className="-mx-4 overflow-x-auto sm:mx-0">
+              <div className="-mx-4 relative overflow-x-auto sm:mx-0">
                 <table className="w-full min-w-[42rem] text-sm">
                   <thead className="border-b bg-muted/50 text-left text-xs tracking-wide text-muted-foreground uppercase">
                     <tr>

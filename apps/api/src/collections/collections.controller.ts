@@ -18,7 +18,12 @@ import {
 import {
   CollectTaxDto,
   CollectionListQueryDto,
+  CollectionPreviewDto,
+  LedgerQueryDto,
+  ReceiptCopyQueryDto,
   ReceiptListQueryDto,
+  YearEndCloseDto,
+  YearEndQueryDto,
 } from "./collections.dto"
 import { CollectionsService } from "./collections.service"
 
@@ -34,8 +39,12 @@ export class CollectionsController {
 
   @Get("properties/search")
   @RequirePermission("demand:read")
-  async search(@Query("q") q = "", @CurrentUser() user: AuthUser) {
-    return { success: true, data: await this.collections.search(q, user) }
+  async search(
+    @Query("q") q = "",
+    @CurrentUser() user: AuthUser,
+    @Query("wardId") wardId?: string
+  ) {
+    return { success: true, data: await this.collections.search(q, user, wardId || undefined) }
   }
 
   @Get("properties")
@@ -83,8 +92,12 @@ export class CollectionsController {
 
   @Get("receipts/:id")
   @RequirePermission("demand:read")
-  async receipt(@Param("id") id: string) {
-    const html = await this.collections.receiptHtml(id)
+  async receipt(
+    @Param("id") id: string,
+    @Query() query: ReceiptCopyQueryDto,
+    @CurrentUser() user: AuthUser
+  ) {
+    const html = await this.collections.receiptHtml(id, query.copy ?? "both", user)
     return { success: true, data: { html } }
   }
 
@@ -92,9 +105,40 @@ export class CollectionsController {
   @RequirePermission("demand:read")
   @Header("Content-Type", "application/pdf")
   @Header("Content-Disposition", 'inline; filename="payment-receipt.pdf"')
-  async receiptPdf(@Param("id") id: string) {
-    const buffer = await this.collections.receiptPdf(id)
+  async receiptPdf(
+    @Param("id") id: string,
+    @Query() query: ReceiptCopyQueryDto,
+    @CurrentUser() user: AuthUser
+  ) {
+    const buffer = await this.collections.receiptPdf(id, query.copy ?? "both", user)
     return new StreamableFile(buffer)
+  }
+
+  @Get("ledger")
+  @RequirePermission("demand:read")
+  async ledger(@Query() query: LedgerQueryDto, @CurrentUser() user: AuthUser) {
+    return { success: true, data: await this.collections.ledger(query, user) }
+  }
+
+  @Post("preview")
+  @RequirePermission("payment:collect")
+  async preview(@Body() dto: CollectionPreviewDto) {
+    return { success: true, data: await this.collections.previewCollection(dto) }
+  }
+
+  @Get("year-end")
+  @RequirePermission("demand:read")
+  async yearEnd(@Query() query: YearEndQueryDto) {
+    return {
+      success: true,
+      data: await this.collections.yearEndPreview(query.assessmentYearId),
+    }
+  }
+
+  @Post("year-end/close")
+  @RequirePermission("settings:update")
+  async closeYear(@Body() dto: YearEndCloseDto, @CurrentUser() user: AuthUser) {
+    return { success: true, data: await this.collections.yearEndClose(dto, user) }
   }
 
   @Post()

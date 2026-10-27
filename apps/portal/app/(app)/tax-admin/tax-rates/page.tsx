@@ -24,7 +24,7 @@ import {
 } from "@/components/admin/admin-ui"
 import { AuditHistory } from "@/components/admin/audit-history"
 import { useCan } from "@/hooks/use-permission"
-import { api } from "@/lib/api"
+import { ApiError, api } from "@/lib/api"
 import { formatApiError } from "@/lib/format-api-error"
 
 type RefEntry = { id: string; code: string; name: string }
@@ -54,6 +54,8 @@ type Config = {
   penaltyPct: string | null
   assessablePct: string | null
   commercialAssessablePct: string | null
+  publishedAt?: string | null
+  previouslyPublished?: boolean
   cells: Array<{ roadWidthEntryId: string; constructionEntryId: string; annualRatePerSqFt: string | null }>
 }
 type Preview = {
@@ -92,6 +94,7 @@ export default function TaxRatesPage() {
   const [cells, setCells] = React.useState<Record<string, string>>({})
   const [loadedFor, setLoadedFor] = React.useState("")
   const [confirm, setConfirm] = React.useState<null | "publish" | "copy">(null)
+  const [reasonFor, setReasonFor] = React.useState<string | null>(null)
   const [preview, setPreview] = React.useState({ area: "1000", road: "", construction: "", use: "R" })
 
   const years = useQuery({
@@ -144,6 +147,14 @@ export default function TaxRatesPage() {
   }
 
   const editable = canEdit && !yearLocked && Boolean(cfg)
+  const republish = Boolean(
+    cfg &&
+      (cfg.previouslyPublished ||
+        cfg.publishedAt ||
+        ward?.publishedAt ||
+        cfg.version > 1 ||
+        reasonFor === cfg.id)
+  )
   const paramErrors = Object.fromEntries(
     PARAMS.map(([k]) => {
       const v = params?.[k] ?? ""
@@ -204,12 +215,15 @@ export default function TaxRatesPage() {
     mutationFn: (reason: string) => api.post(`/api/v1/tax-configs/${cfg!.id}/publish`, { reason: reason || undefined }),
     onSuccess: () => {
       toast.success("Rates published. Demands already published keep their original figures.")
+      setReasonFor(null)
       setConfirm(null)
       setLoadedFor("")
       refresh()
     },
     onError: (e) => {
-      setConfirm(null)
+      if (e instanceof ApiError && e.code === "TAX_RATE_CHANGE_REASON_REQUIRED" && cfg) {
+        setReasonFor(cfg.id)
+      }
       onError(e)
     },
   })
@@ -279,8 +293,8 @@ export default function TaxRatesPage() {
         <Notice tone="warning">This year&apos;s dates are not set. Set them on the Assessment Years page before publishing rates.</Notice>
       ) : null}
 
-      <div className="grid gap-6 2xl:grid-cols-[1fr_28rem]">
-        <div className="space-y-6">
+      <div className="grid gap-6 2xl:grid-cols-[1fr_28rem] [&>*]:min-w-0">
+        <div className="min-w-0 space-y-6">
           <Panel
             title={ward ? `Ward ${ward.wardNumber} — ${ward.wardName}` : "Ward rates"}
             description={
@@ -359,7 +373,7 @@ export default function TaxRatesPage() {
                     Annual value = area × this rate × 12 (commercial use × 2). Leave blank where no rate applies.
                   </p>
                   {cellErrors.length ? <p className="mb-2 text-xs font-medium text-destructive">Rates must be numbers with up to 4 decimals.</p> : null}
-                  <div className="-mx-4 overflow-x-auto sm:mx-0">
+                  <div className="-mx-4 relative overflow-x-auto sm:mx-0">
                     <table className="w-full min-w-[36rem] border-collapse text-sm">
                       <thead>
                         <tr className="bg-muted/50 text-left text-xs">
@@ -415,7 +429,7 @@ export default function TaxRatesPage() {
             ) : overview.isError ? (
               <ErrorBlock error={overview.error} onRetry={() => void overview.refetch()} />
             ) : (
-              <div className="-mx-4 overflow-x-auto sm:mx-0">
+              <div className="-mx-4 relative overflow-x-auto sm:mx-0">
                 <table className="w-full min-w-[40rem] text-sm">
                   <thead className="border-b bg-muted/50 text-left text-xs tracking-wide text-muted-foreground uppercase">
                     <tr>
@@ -454,7 +468,7 @@ export default function TaxRatesPage() {
           </Panel>
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <Panel
             title="Calculation preview"
             description={cfg?.status === "DRAFT" ? "Uses this ward's draft rates as saved." : "Uses this ward's published rates."}
@@ -516,11 +530,14 @@ export default function TaxRatesPage() {
         description={
           <span>
             New demands for this ward will be calculated with these rates. Demands, receipts and notices already published keep their original figures.
-            {cfg && cfg.version > 1 ? " These rates replace a previously published version, so a reason is required." : ""}
+            {republish
+              ? " These rates were published before, so enter the reason for the change (for example the board resolution number)."
+              : ""}
           </span>
         }
         confirmLabel="Publish rates"
-        requireReason={Boolean(cfg && (cfg.version > 1 || ward?.publishedAt))}
+        requireReason={republish}
+        reasonLabel="Reason for the change"
         pending={publish.isPending}
         onConfirm={(reason) => publish.mutate(reason)}
       />
