@@ -10,6 +10,7 @@ const TABS = [
   { label: "Receipts / रसीद", href: "/collections/receipts" },
   { label: "Ledger / खाता", href: "/collections/ledger" },
   { label: "Outstanding / बकाया", href: "/collections/dues" },
+  { label: "Year-end / वर्षांत", href: "/collections/year-end" },
 ] as const
 
 export default function CollectionsLayout({
@@ -28,7 +29,7 @@ export default function CollectionsLayout({
           Offline Tax Collection / ऑफलाइन कर संग्रह
         </h1>
         <p className="text-sm text-muted-foreground">
-          Collect against the published demand. Amounts come from the ledger.
+          Collect against the published demand. Amounts, allocation and receipts come from the server ledger.
         </p>
       </div>
       <nav className="flex flex-wrap gap-1 border-b">

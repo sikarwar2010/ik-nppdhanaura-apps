@@ -18,7 +18,8 @@ import { Textarea } from "@workspace/ui/components/textarea"
 
 import { api } from "@/lib/api"
 import { usePermission } from "@/hooks/use-permission"
-import { inr, StatusBadge, useCollectionLookups } from "../collection-shared"
+import { Field, selectClass } from "@/components/admin/admin-ui"
+import { inr, ReceiptActions, StatusBadge, useCollectionLookups } from "../collection-shared"
 
 type ReceiptRow = {
   id: string
@@ -34,19 +35,6 @@ type ReceiptRow = {
   remarks: string | null
   reversedAt?: string | null
   reversalReason?: string | null
-}
-
-async function printReceipt(id: string) {
-  const printed = await api.get<{ html: string }>(`/api/v1/collections/receipts/${id}`)
-  const popup = window.open("", "_blank", "noopener,noreferrer")
-  if (!popup) {
-    toast.error("Allow pop-ups to print the receipt")
-    return
-  }
-  popup.document.write(printed.data.html)
-  popup.document.close()
-  popup.focus()
-  popup.print()
 }
 
 export default function ReceiptsPage() {
@@ -106,27 +94,43 @@ export default function ReceiptsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Property or payer" />
-        <Input value={receiptNumber} onChange={(event) => setReceiptNumber(event.target.value)} placeholder="Receipt number" />
-        <select className="h-9 rounded-md border bg-background px-2" value={assessmentYearId} onChange={(event) => setAssessmentYearId(event.target.value)}>
-          <option value="">All years</option>
-          {years.map((year) => (
-            <option key={year.id} value={year.id}>{year.name}</option>
-          ))}
-        </select>
-        <select className="h-9 rounded-md border bg-background px-2" value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="">All statuses</option>
-          <option value="SUCCESS">Settled</option>
-          <option value="PENDING">Pending</option>
-          <option value="REFUNDED">Reversed</option>
-          <option value="CANCELLED">Cancelled</option>
-        </select>
-        <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
-        <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Field id="rcpt-search" label="Property, owner or payer">
+          {(props) => <Input {...props} value={search} onChange={(event) => { setSearch(event.target.value); setPage(1) }} />}
+        </Field>
+        <Field id="rcpt-number" label="Receipt number">
+          {(props) => <Input {...props} value={receiptNumber} onChange={(event) => { setReceiptNumber(event.target.value); setPage(1) }} />}
+        </Field>
+        <Field id="rcpt-year" label="Assessment year">
+          {(props) => (
+            <select {...props} className={selectClass} value={assessmentYearId} onChange={(event) => { setAssessmentYearId(event.target.value); setPage(1) }}>
+              <option value="">All years</option>
+              {years.map((year) => (
+                <option key={year.id} value={year.id}>{year.name}</option>
+              ))}
+            </select>
+          )}
+        </Field>
+        <Field id="rcpt-status" label="Status">
+          {(props) => (
+            <select {...props} className={selectClass} value={status} onChange={(event) => { setStatus(event.target.value); setPage(1) }}>
+              <option value="">All statuses</option>
+              <option value="SUCCESS">Settled</option>
+              <option value="PENDING">Pending</option>
+              <option value="REFUNDED">Reversed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          )}
+        </Field>
+        <Field id="rcpt-from" label="From">
+          {(props) => <Input {...props} type="date" value={dateFrom} onChange={(event) => { setDateFrom(event.target.value); setPage(1) }} />}
+        </Field>
+        <Field id="rcpt-to" label="To">
+          {(props) => <Input {...props} type="date" value={dateTo} onChange={(event) => { setDateTo(event.target.value); setPage(1) }} />}
+        </Field>
       </div>
-      <div className="overflow-x-auto rounded-md border">
-        <table className="w-full text-sm">
+      <div className="relative overflow-x-auto rounded-md border">
+        <table className="w-full min-w-[900px] text-sm">
           <thead className="bg-muted/50">
             <tr>
               <th className="p-2 text-left">Receipt</th>
@@ -157,11 +161,10 @@ export default function ReceiptsPage() {
                     <p className="mt-1 max-w-48 text-xs text-muted-foreground">Reason: {row.reversalReason}</p>
                   ) : null}
                 </td>
-                <td className="p-2 space-x-2">
+                <td className="p-2">
+                  <div className="flex flex-wrap gap-1.5">
                   {row.receiptNumber ? (
-                    <Button type="button" size="sm" variant="outline" className="cursor-pointer" onClick={() => void printReceipt(row.id).catch((error: Error) => toast.error(error.message))}>
-                      Reprint
-                    </Button>
+                    <ReceiptActions paymentId={row.id} receiptNumber={row.receiptNumber} />
                   ) : null}
                   {row.status === "PENDING" && hasPermission("payment:collect") ? (
                     <Button type="button" size="sm" className="cursor-pointer" disabled={confirm.isPending} onClick={() => confirm.mutate(row.id)}>
@@ -182,6 +185,7 @@ export default function ReceiptsPage() {
                       Reverse…
                     </Button>
                   ) : null}
+                  </div>
                 </td>
               </tr>
             ))}

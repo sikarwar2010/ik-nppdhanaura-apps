@@ -50,6 +50,7 @@ import {
   type OutstandingBreakdown,
   type SuccessPaymentFact,
   type UnreconciledYear,
+  type YearComponentsInput,
 } from "./outstanding"
 import {
   type CategoryCharges,
@@ -1206,7 +1207,13 @@ export class DemandsService {
       assessmentDemandId: string
       assessmentYearId: string
       assessmentYearCode: string
+      assessmentYearName: string
+      demandReference: string
       unpaid: string
+      /** Components and what already settled them; used for the per-tax split. */
+      components: YearComponentsInput
+      appliedBefore: string
+      balanceKind: "COMPONENTS" | "CLOSING_ONLY"
     }>
   > {
     const rows = await tx.assessmentDemand.findMany({
@@ -1217,7 +1224,9 @@ export class DemandsService {
       },
       select: {
         id: true,
-        assessmentYear: { select: { id: true, code: true } },
+        demandReference: true,
+        balanceKind: true,
+        assessmentYear: { select: { id: true, code: true, name: true } },
       },
     })
     const eligible = rows.filter(
@@ -1234,7 +1243,12 @@ export class DemandsService {
         assessmentDemandId: row.id,
         assessmentYearId: row.assessmentYear.id,
         assessmentYearCode: row.assessmentYear.code,
+        assessmentYearName: row.assessmentYear.name,
+        demandReference: row.demandReference,
         unpaid: balance.outstanding,
+        components: balance.components,
+        appliedBefore: balance.appliedBefore,
+        balanceKind: row.balanceKind,
       })
     }
     unpaid.sort((a, b) =>
@@ -1250,6 +1264,8 @@ export class DemandsService {
     outstanding: string
     surveyId: string
     assessmentYearId: string
+    components: YearComponentsInput
+    appliedBefore: string
   }> {
     const demand = await tx.assessmentDemand.findFirst({
       where: { id: demandId, status: "PUBLISHED" },
@@ -1310,6 +1326,16 @@ export class DemandsService {
       }),
       surveyId: demand.surveyId,
       assessmentYearId: demand.assessmentYearId,
+      components: {
+        propertyTax: moneyString(demand.propertyTax),
+        waterTax: moneyString(demand.waterTax),
+        drainageTax: moneyString(demand.drainageTax),
+        penalty: moneyString(demand.penalty),
+        interest: moneyString(sumMoney([demand.interest.toString(), debits])),
+      },
+      appliedBefore: moneyString(
+        sumMoney([payments, credits, demand.rebateAmount.toString()])
+      ),
     }
   }
 

@@ -25,6 +25,8 @@ export type TaxConfigRecord = {
   cells: TaxConfigCellRecord[]
   ward?: unknown
   assessmentYear?: unknown
+  publishedAt?: Date | string | null
+  _count?: { versions?: number }
 }
 
 export type TaxConfigView = {
@@ -40,6 +42,9 @@ export type TaxConfigView = {
   penaltyPct: string | null
   assessablePct: string | null
   commercialAssessablePct: string | null
+  publishedAt: string | null
+  /** True when a prior publish exists, so the next publish must record a reason. */
+  previouslyPublished: boolean
   cells: Array<{
     roadWidthEntryId: string
     constructionEntryId: string
@@ -86,7 +91,14 @@ export function missingTaxConfig(
   return { configured: false, wardId, assessmentYearId }
 }
 
+function publishedAtIso(value: Date | string | null | undefined): string | null {
+  if (value == null || value === "") return null
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
 export function serializeTaxConfig(config: TaxConfigRecord): TaxConfigView {
+  const publishedAt = publishedAtIso(config.publishedAt)
   return {
     configured: true,
     id: config.id,
@@ -100,6 +112,8 @@ export function serializeTaxConfig(config: TaxConfigRecord): TaxConfigView {
     penaltyPct: decimalToString(config.penaltyPct),
     assessablePct: decimalToString(config.assessablePct),
     commercialAssessablePct: decimalToString(config.commercialAssessablePct),
+    publishedAt,
+    previouslyPublished: (config._count?.versions ?? 0) > 0 || publishedAt != null,
     cells: config.cells.map((cell) => ({
       roadWidthEntryId: cell.roadWidthEntryId,
       constructionEntryId: cell.constructionEntryId,

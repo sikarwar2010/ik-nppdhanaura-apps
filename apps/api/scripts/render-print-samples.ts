@@ -54,22 +54,58 @@ const receipt: ReceiptSnapshot = {
   houseNo: "154",
   locality: "सुभाष नगर",
   mobileMasked: "98****3210",
+  paymentId: "cmsamplepayment000000000001",
+  collectorId: "cmsamplecollector000000001",
+  allocations: [
+    {
+      assessmentYearCode: "2024-2025",
+      assessmentYearName: "2024-2025",
+      closingBalanceOnly: true,
+      amount: "300.00",
+      outstandingAfter: "0.00",
+      parts: { propertyTax: "300.00", waterTax: "0.00", drainageTax: "0.00", penalty: "0.00", interest: "0.00" },
+    },
+    {
+      assessmentYearCode: "2025-2026",
+      assessmentYearName: "2025-2026",
+      closingBalanceOnly: false,
+      amount: "2200.00",
+      outstandingAfter: "2000.00",
+      parts: { propertyTax: "400.00", waterTax: "1800.00", drainageTax: "0.00", penalty: "0.00", interest: "0.00" },
+    },
+  ],
 }
 
+const office = {
+  paymentStatus: "SUCCESS",
+  printedBy: "Sample Supervisor",
+  printedAt: "26 Oct 2026, 10:31 am",
+}
+
+/** Four years cleared at once: copies go on separate pages instead of being squeezed. */
+const longAllocation: ReceiptSnapshot = {
+  ...receipt,
+  allocations: ["2021-2022", "2022-2023", "2023-2024", "2024-2025"].map((code) => ({
+    ...receipt.allocations![1]!,
+    assessmentYearCode: code,
+    assessmentYearName: code,
+  })),
+}
+
+/**
+ * Carry-forward example: ₹5,000 demand for 2025-26 with ₹3,000 paid, then a
+ * ₹4,000 demand for 2026-27. The notice must show ₹2,000 arrears separately.
+ */
 function noticeHtml(): string {
+  const zero = { drainageTax: "0.00", penalty: "0.00", interest: "0.00", credits: "0.00", debits: "0.00" }
   const breakdown = calculateOutstanding({
-    selectedYear: { id: "2025-2026", code: "2025-2026", name: "2025-2026" },
-    demands: [],
+    selectedYear: { id: "2026-2027", code: "2026-2027", name: "2026-2027" },
+    demands: [
+      { id: "d1", assessmentYearId: "2025-2026", assessmentYearCode: "2025-2026", assessmentYearName: "2025-2026", propertyTax: "3000.00", waterTax: "2000.00", currentYearDemand: "5000.00", payments: "3000.00", ...zero },
+      { id: "d2", assessmentYearId: "2026-2027", assessmentYearCode: "2026-2027", assessmentYearName: "2026-2027", propertyTax: "2400.00", waterTax: "1600.00", currentYearDemand: "4000.00", payments: "0.00", ...zero },
+    ],
     payments: [],
-    calculatedCurrent: {
-      propertyTax: "2400.00",
-      waterTax: "1800.00",
-      drainageTax: "0.00",
-      penalty: "0.00",
-      interest: "0.00",
-      currentYearDemand: "4200.00",
-    },
-    lockedRebate: { amount: "420.00", scope: "property tax, water tax" },
+    calculatedCurrent: null,
   })
   const figures = outstandingToNoticeLedger(breakdown)
   const vm = duesPayloadToNoticeViewModel(
@@ -92,7 +128,7 @@ function noticeHtml(): string {
       propertyUse: "सामाजिक",
       taxRateZone: "BELOW_9M",
       roadType: null,
-      assessmentYear: { id: "2025-2026", code: "2025-2026", name: "2025-2026" },
+      assessmentYear: { id: "2026-2027", code: "2026-2027", name: "2026-2027" },
       taxConfig: { id: "cfg", version: 1 },
       floors: [
         {
@@ -129,7 +165,9 @@ function noticeHtml(): string {
 
 async function main() {
   const docs: Array<[string, string, string]> = [
-    ["receipt-partial", renderReceiptHtml(receipt), ".copy"],
+    ["receipt-partial", renderReceiptHtml(receipt, { office }), ".copy"],
+    ["receipt-consumer", renderReceiptHtml(receipt, { copy: "consumer" }), ".copy"],
+    ["receipt-office", renderReceiptHtml(receipt, { copy: "office", office }), ".copy"],
     [
       "receipt-full",
       renderReceiptHtml({ ...receipt, amountReceived: "4500.00", remaining: "0.00" }),
@@ -147,6 +185,8 @@ async function main() {
     ],
     ["demand-notice", noticeHtml(), "table, .card, section"],
   ]
+  const expectedPages: Record<string, number> = { "receipt-long": 2 }
+  docs.push(["receipt-long", renderReceiptHtml(longAllocation, { office }), ".copy"])
   const browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: 794, height: 1123 } })
   let failed = false
@@ -156,8 +196,9 @@ async function main() {
     fs.writeFileSync(path.join(out, `${name}.pdf`), pdf)
     // Page-tree root of a Chromium PDF: "/Type /Pages ... /Count N".
     const pages = Number(/\/Count (\d+)/.exec(pdf.toString("latin1"))?.[1] ?? 0)
-    if (pages !== 1) {
-      console.log(`${name}: expected 1 A4 page, got ${pages}`)
+    const expected = expectedPages[name] ?? 1
+    if (pages !== expected) {
+      console.log(`${name}: expected ${expected} A4 page(s), got ${pages}`)
       failed = true
     }
     await page.setContent(html, { waitUntil: "load" })

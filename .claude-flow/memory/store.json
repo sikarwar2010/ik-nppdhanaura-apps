@@ -2627,6 +2627,1437 @@
       "lastAccessed": "2026-10-26T04:36:11.626Z",
       "accessCount": 0,
       "expiresAt": "2026-11-25T04:36:11.626Z"
+    },
+    "cmd-1793067086256": {
+      "key": "cmd-1793067086256",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && git log --oneline -5 && git status --short | wc -l && git branch --show-current\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:11:26.256Z",
+      "lastAccessed": "2026-10-27T02:11:26.256Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:11:26.256Z"
+    },
+    "cmd-1793067086376": {
+      "key": "cmd-1793067086376",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && git status --short | head -80 && ls apps/api/src apps/api/src/collections apps/api/src/demands apps/api/src/reports apps/api/src/payments \\\"apps/portal/app/(app)\\\" \\\"apps/portal/app/(app)/collections\\\" && wc -l apps/api/src/collections/*.ts apps/api/src/demands/*.ts apps/api/prisma/schema.prisma\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:11:26.376Z",
+      "lastAccessed": "2026-10-27T02:11:26.376Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:11:26.376Z"
+    },
+    "cmd-1793067091650": {
+      "key": "cmd-1793067091650",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/prisma && grep -n \\\"^model \\\\|^enum \\\" schema.prisma\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:11:31.650Z",
+      "lastAccessed": "2026-10-27T02:11:31.650Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:11:31.650Z"
+    },
+    "cmd-1793067119584": {
+      "key": "cmd-1793067119584",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && cat apps/api/src/collections/collection-rules.ts apps/api/src/collections/collections.controller.ts && wc -l \\\"apps/portal/app/(app)/collections/\\\"*.tsx \\\"apps/portal/app/(app)/collections/\\\"*/*.tsx \\\"apps/portal/app/(app)/collections/\\\"*/*/*.tsx 2>/dev/null; ls -R \\\"apps/portal/app/(app)/collections\\\" apps/api/src/reports/demand-notice\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:11:59.584Z",
+      "lastAccessed": "2026-10-27T02:11:59.584Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:11:59.584Z"
+    },
+    "cmd-1793067127020": {
+      "key": "cmd-1793067127020",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && cat \\\"apps/portal/app/(app)/collections/ledger/page.tsx\\\" \\\"apps/portal/app/(app)/collections/collection-shared.tsx\\\" \\\"apps/portal/app/(app)/collections/layout.tsx\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:12:07.020Z",
+      "lastAccessed": "2026-10-27T02:12:07.020Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:12:07.020Z"
+    },
+    "cmd-1793067132456": {
+      "key": "cmd-1793067132456",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -n 1,80p collections/receipt-html.ts && grep -n \\\"copy\\\\|Copy\\\\|प्रति\\\" collections/receipt-html.ts | head -30\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:12:12.456Z",
+      "lastAccessed": "2026-10-27T02:12:12.456Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:12:12.456Z"
+    },
+    "cmd-1793067141968": {
+      "key": "cmd-1793067141968",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/reports/demand-notice && wc -l *.ts && grep -n \\\"export\\\\|previousYears\\\\|arrears\\\\|Arrears\\\\|unverified\\\\|UNVERIFIED\\\\|authoritative\\\\|outstanding(\\\" demand-notice-view-model.ts | head -60\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:12:21.968Z",
+      "lastAccessed": "2026-10-27T02:12:21.968Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:12:21.968Z"
+    },
+    "cmd-1793067156754": {
+      "key": "cmd-1793067156754",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && grep -n \\\"async \\\\|RequirePermission\\\\|@Post\\\\|@Get\\\" demands/demands.service.ts demands/demands.controller.ts | head -80\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:12:36.754Z",
+      "lastAccessed": "2026-10-27T02:12:36.754Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:12:36.754Z"
+    },
+    "cmd-1793067187565": {
+      "key": "cmd-1793067187565",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -n 1700,1725p demands/demands.service.ts; grep -n \\\"assertYearWritable\\\\|chargeBreakdown\\\" demands/demands.service.ts | head; grep -rn \\\"payment:collect\\\\|payment:reverse\\\\|demand:adjust\\\" rbac/*.ts prisma/*.ts ../prisma/seed* 2>/dev/null | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:13:07.565Z",
+      "lastAccessed": "2026-10-27T02:13:07.565Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:13:07.565Z"
+    },
+    "cmd-1793067194527": {
+      "key": "cmd-1793067194527",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && sed -n 30,70p packages/types/src/index.ts; sed -n 90,200p apps/api/src/db/seed-database.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:13:14.527Z",
+      "lastAccessed": "2026-10-27T02:13:14.527Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:13:14.527Z"
+    },
+    "cmd-1793067200224": {
+      "key": "cmd-1793067200224",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -n 1,60p collections/collections.spec.ts; sed -n 1,50p demands/financial-scenarios.spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:13:20.224Z",
+      "lastAccessed": "2026-10-27T02:13:20.224Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:13:20.224Z"
+    },
+    "cmd-1793067246865": {
+      "key": "cmd-1793067246865",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && cat package.json | sed -n 1,60p; cat src/demands/money.ts | head -60; sed -n 1,60p src/prisma/prisma.service.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:14:06.865Z",
+      "lastAccessed": "2026-10-27T02:14:06.865Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:14:06.865Z"
+    },
+    "cmd-1793067251772": {
+      "key": "cmd-1793067251772",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && ls test; cat test/jest-e2e.json; sed -n 60,120p package.json; cat src/prisma/prisma.client.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:14:11.772Z",
+      "lastAccessed": "2026-10-27T02:14:11.772Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:14:11.772Z"
+    },
+    "cmd-1793067257240": {
+      "key": "cmd-1793067257240",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/test && cat setup-env.ts; ls helpers security; sed -n 1,80p helpers/*.ts | head -150; sed -n 1,60p auth.e2e-spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:14:17.240Z",
+      "lastAccessed": "2026-10-27T02:14:17.240Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:14:17.240Z"
+    },
+    "cmd-1793067294763": {
+      "key": "cmd-1793067294763",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/demands && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:14:54.763Z",
+      "lastAccessed": "2026-10-27T02:14:54.763Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:14:54.763Z"
+    },
+    "cmd-1793067310869": {
+      "key": "cmd-1793067310869",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/demands && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:15:10.869Z",
+      "lastAccessed": "2026-10-27T02:15:10.869Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:15:10.869Z"
+    },
+    "cmd-1793067314308": {
+      "key": "cmd-1793067314308",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/demands && sed -n 43,53p demands.service.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:15:14.308Z",
+      "lastAccessed": "2026-10-27T02:15:14.308Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:15:14.308Z"
+    },
+    "cmd-1793067323002": {
+      "key": "cmd-1793067323002",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/demands && sed -n 193,300p demands.service.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:15:23.002Z",
+      "lastAccessed": "2026-10-27T02:15:23.002Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:15:23.002Z"
+    },
+    "cmd-1793067338733": {
+      "key": "cmd-1793067338733",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:15:38.733Z",
+      "lastAccessed": "2026-10-27T02:15:38.733Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:15:38.733Z"
+    },
+    "cmd-1793067345584": {
+      "key": "cmd-1793067345584",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:15:45.584Z",
+      "lastAccessed": "2026-10-27T02:15:45.584Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:15:45.584Z"
+    },
+    "cmd-1793067443714": {
+      "key": "cmd-1793067443714",
+      "value": "{\"command\":\"T=\\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools\\\"; cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python -I \\\"$T/patch_receipt.py\\\" receipt-html.ts \\\"$T/receipt_copy.ts.txt\\\" \\\"$T/receipt_render.ts.txt\\\" && cd ../.. && npx tsc --noEmit -p tsconfig.build.json 2>&1 | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:17:23.714Z",
+      "lastAccessed": "2026-10-27T02:17:23.714Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:17:23.714Z"
+    },
+    "cmd-1793067574751": {
+      "key": "cmd-1793067574751",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:19:34.751Z",
+      "lastAccessed": "2026-10-27T02:19:34.751Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:19:34.751Z"
+    },
+    "cmd-1793067605471": {
+      "key": "cmd-1793067605471",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && grep -n \\\"cashierName: user.name\\\\|const survey = await tx.survey.findUnique\\\\|collectorId: user.id\\\" collections.service.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:20:05.471Z",
+      "lastAccessed": "2026-10-27T02:20:05.471Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:20:05.471Z"
+    },
+    "cmd-1793067613927": {
+      "key": "cmd-1793067613927",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:20:13.927Z",
+      "lastAccessed": "2026-10-27T02:20:13.927Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:20:13.927Z"
+    },
+    "cmd-1793067624025": {
+      "key": "cmd-1793067624025",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && grep -n \\\"async receiptHtml\\\\|async receiptPdf\\\\|private async settleInTransaction\\\\|private paymentResult\\\" collections.service.ts && sed -n '/async receiptHtml/,/^  private async settleInTransaction/p' collections.service.ts | head -50\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:20:24.025Z",
+      "lastAccessed": "2026-10-27T02:20:24.025Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:20:24.025Z"
+    },
+    "cmd-1793067696177": {
+      "key": "cmd-1793067696177",
+      "value": "{\"command\":\"T=\\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools\\\"; cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python -I \\\"$T/patch_service.py\\\" collections.service.ts \\\"$T/service_methods.ts.txt\\\" && cat collections.dto.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:21:36.177Z",
+      "lastAccessed": "2026-10-27T02:21:36.177Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:21:36.177Z"
+    },
+    "cmd-1793067705507": {
+      "key": "cmd-1793067705507",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && cat >> collections.dto.ts <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:21:45.507Z",
+      "lastAccessed": "2026-10-27T02:21:45.507Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:21:45.507Z"
+    },
+    "cmd-1793067723216": {
+      "key": "cmd-1793067723216",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/collections && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:22:03.216Z",
+      "lastAccessed": "2026-10-27T02:22:03.216Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:22:03.216Z"
+    },
+    "cmd-1793067764320": {
+      "key": "cmd-1793067764320",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && npx tsc --noEmit -p tsconfig.build.json 2>&1 | head; npx eslint src/collections src/demands/outstanding.ts src/demands/demands.service.ts 2>&1 | tail -20; npx jest src/collections src/demands 2>&1 | grep -E \\\"^Tests:|✕|●\\\" | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:22:44.320Z",
+      "lastAccessed": "2026-10-27T02:22:44.320Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:22:44.320Z"
+    },
+    "cmd-1793067772034": {
+      "key": "cmd-1793067772034",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && sed -i '/^  subMoney,$/d' src/collections/collections.service.ts && npx jest src/collections src/demands 2>&1 | grep -B5 -A25 \\\"● \\\" | head -90\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:22:52.034Z",
+      "lastAccessed": "2026-10-27T02:22:52.034Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:22:52.034Z"
+    },
+    "cmd-1793067776976": {
+      "key": "cmd-1793067776976",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && grep -n \\\"CUSTOMER COPY\\\\|PART PAYMENT\\\" collections/collections.spec.ts demands/financial-scenarios.spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:22:56.976Z",
+      "lastAccessed": "2026-10-27T02:22:56.976Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:22:56.976Z"
+    },
+    "cmd-1793067785037": {
+      "key": "cmd-1793067785037",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -i 's#\\\"CUSTOMER COPY / ग्राहक प्रति\\\"#\\\"CONSUMER COPY / उपभोक्ता प्रति\\\"#' collections/collections.spec.ts && sed -i 's#\\\"PART PAYMENT\\\"#\\\"PARTIAL PAYMENT RECEIVED\\\"#g' demands/financial-scenarios.spec.ts && cd .. && npx jest src/collections src/demands 2>&1 | grep -E \\\"^Tests:|●\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:23:05.037Z",
+      "lastAccessed": "2026-10-27T02:23:05.037Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:23:05.037Z"
+    },
+    "cmd-1793067790914": {
+      "key": "cmd-1793067790914",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && sed -n 135,160p src/collections/collections.spec.ts; npx jest src/collections/collections.spec.ts 2>&1 | grep -A6 \\\"Expected\\\\|expect(\\\" | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:23:10.914Z",
+      "lastAccessed": "2026-10-27T02:23:10.914Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:23:10.914Z"
+    },
+    "cmd-1793067803725": {
+      "key": "cmd-1793067803725",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:23:23.725Z",
+      "lastAccessed": "2026-10-27T02:23:23.725Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:23:23.725Z"
+    },
+    "cmd-1793067814947": {
+      "key": "cmd-1793067814947",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -n 50,140p demands/financial-scenarios.spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:23:34.947Z",
+      "lastAccessed": "2026-10-27T02:23:34.947Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:23:34.947Z"
+    },
+    "cmd-1793067885385": {
+      "key": "cmd-1793067885385",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && npx jest src/collections/offline-collection.spec.ts 2>&1 | grep -E \\\"^Tests:|●|Expected|Received\\\" | head -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:24:45.385Z",
+      "lastAccessed": "2026-10-27T02:24:45.385Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:24:45.385Z"
+    },
+    "cmd-1793067894527": {
+      "key": "cmd-1793067894527",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && grep -n \\\"constructor\\\" -A8 demands/demands.service.ts audit/audit.service.ts | head -40; grep -n \\\"class PermissionGuard\\\\|canActivate\\\\|constructor\\\" -A6 auth/permission.guard.ts | head -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:24:54.527Z",
+      "lastAccessed": "2026-10-27T02:24:54.527Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:24:54.527Z"
+    },
+    "cmd-1793067898886": {
+      "key": "cmd-1793067898886",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -n 16,60p auth/permission.guard.ts; grep -n \\\"constructor\\\" -A6 tax-configs/tax-configs.service.ts | head; sed -n 104,112p demands/demands.service.ts; grep -n \\\"type AuthUser\\\" -A12 auth/auth.decorators.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:24:58.886Z",
+      "lastAccessed": "2026-10-27T02:24:58.886Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:24:58.886Z"
+    },
+    "cmd-1793067906979": {
+      "key": "cmd-1793067906979",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && sed -n '/private async missingHistory/,/^  }/p' demands/demands.service.ts; sed -n '/private async loadBreakdown/,/^  }/p' demands/demands.service.ts | head -120\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:25:06.979Z",
+      "lastAccessed": "2026-10-27T02:25:06.979Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:25:06.979Z"
+    },
+    "cmd-1793067929536": {
+      "key": "cmd-1793067929536",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src && cat reports/demand-notice/demand-notice-pdf.ts | head -74; grep -n \\\"outstandingToNoticeLedger\\\" -B3 -A3 reports/demand-notice/demand-notice.service.ts | head -30\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:25:29.536Z",
+      "lastAccessed": "2026-10-27T02:25:29.536Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:25:29.536Z"
+    },
+    "cmd-1793067935908": {
+      "key": "cmd-1793067935908",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/reports/demand-notice && grep -n \\\"ledger.years\\\\|\\\\.years\\\\b\\\\|selectedYearCode\\\" demand-notice-html.ts demand-notice.service.ts demand-notice-view-model.ts | head -20; sed -n 783,800p demand-notice.service.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:25:35.908Z",
+      "lastAccessed": "2026-10-27T02:25:35.908Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:25:35.908Z"
+    },
+    "cmd-1793067948086": {
+      "key": "cmd-1793067948086",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && grep -rn \\\"outstandingToNoticeLedger(\\\" src --include=*.ts | grep -v \\\"export function\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:25:48.086Z",
+      "lastAccessed": "2026-10-27T02:25:48.086Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:25:48.086Z"
+    },
+    "cmd-1793067957208": {
+      "key": "cmd-1793067957208",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && git diff --stat src/reports\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:25:57.208Z",
+      "lastAccessed": "2026-10-27T02:25:57.208Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:25:57.208Z"
+    },
+    "cmd-1793067967476": {
+      "key": "cmd-1793067967476",
+      "value": "{\"command\":\"D=\\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/db-backup\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:26:07.476Z",
+      "lastAccessed": "2026-10-27T02:26:07.476Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:26:07.476Z"
+    },
+    "cmd-1793067972622": {
+      "key": "cmd-1793067972622",
+      "value": "{\"command\":\"ls -la \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/\\\" 2>&1 | head; ls \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/\\\" | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:26:12.622Z",
+      "lastAccessed": "2026-10-27T02:26:12.622Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:26:12.622Z"
+    },
+    "cmd-1793067984235": {
+      "key": "cmd-1793067984235",
+      "value": "{\"command\":\"D=\\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/db-backup\\\"; mkdir -p \\\"$D\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:26:24.235Z",
+      "lastAccessed": "2026-10-27T02:26:24.235Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:26:24.235Z"
+    },
+    "cmd-1793068041623": {
+      "key": "cmd-1793068041623",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && sed -n '/^model ReferenceEntry/,/^}/p' prisma/schema.prisma; sed -n '/^model Survey {/,/^}/p' prisma/schema.prisma | grep -n \\\"\\\\[\\\\]\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:27:21.623Z",
+      "lastAccessed": "2026-10-27T02:27:21.623Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:27:21.623Z"
+    },
+    "cmd-1793068056831": {
+      "key": "cmd-1793068056831",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && export COLLECTIONS_IT_DATABASE_URL=\\\"$(grep '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\\\"'\\\"'\\\"'' | sed -E 's#/nppdhanaura([?]|$)#/npdh_it\\\\1#')\\\" && case \\\"$COLLECTIONS_IT_DATABASE_URL\\\" in *npdh_it*) echo \\\"url points at scratch db\\\";; *) echo \\\"URL not rewritten - abort\\\"; exit 1;; esac && npx jest --config ./test/jest-e2e.json test/offline-collection.e2e-spec.ts 2>&1 | grep -vE \\\"^\\\\s+at |prisma:|^$\\\" | tail -60\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:27:36.831Z",
+      "lastAccessed": "2026-10-27T02:27:36.831Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:27:36.831Z"
+    },
+    "cmd-1793068072487": {
+      "key": "cmd-1793068072487",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:27:52.487Z",
+      "lastAccessed": "2026-10-27T02:27:52.487Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:27:52.487Z"
+    },
+    "cmd-1793068095660": {
+      "key": "cmd-1793068095660",
+      "value": "{\"command\":\"bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" 2>&1 | grep -vE \\\"^\\\\s+at |prisma:|^$\\\" | tail -50\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:28:15.660Z",
+      "lastAccessed": "2026-10-27T02:28:15.660Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:28:15.660Z"
+    },
+    "cmd-1793068107946": {
+      "key": "cmd-1793068107946",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:28:27.946Z",
+      "lastAccessed": "2026-10-27T02:28:27.946Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:28:27.946Z"
+    },
+    "cmd-1793068132143": {
+      "key": "cmd-1793068132143",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && npx tsx scripts/render-receipt-sample.ts \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/receipts\\\" 2>&1 | tail -5\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:28:52.143Z",
+      "lastAccessed": "2026-10-27T02:28:52.143Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:28:52.143Z"
+    },
+    "cmd-1793068152253": {
+      "key": "cmd-1793068152253",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:29:12.253Z",
+      "lastAccessed": "2026-10-27T02:29:12.253Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:29:12.253Z"
+    },
+    "cmd-1793068174662": {
+      "key": "cmd-1793068174662",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:29:34.662Z",
+      "lastAccessed": "2026-10-27T02:29:34.662Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:29:34.662Z"
+    },
+    "cmd-1793068200140": {
+      "key": "cmd-1793068200140",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:30:00.140Z",
+      "lastAccessed": "2026-10-27T02:30:00.140Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:30:00.140Z"
+    },
+    "cmd-1793068208456": {
+      "key": "cmd-1793068208456",
+      "value": "{\"command\":\"R=\\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/receipts\\\"; for f in receipt-both receipt-consumer; do printf \\\"%s pages=\\\" $f; grep -a -c \\\"/Type /Page$\\\\|/Type /Page\\\\b[^s]\\\" \\\"$R/$f.pdf\\\"; done; python -I -c \\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:30:08.456Z",
+      "lastAccessed": "2026-10-27T02:30:08.456Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:30:08.456Z"
+    },
+    "cmd-1793068228686": {
+      "key": "cmd-1793068228686",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && npx jest src/collections src/demands 2>&1 | grep -E \\\"^Tests:|●\\\"; bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" 2>&1 | grep -vE \\\"^\\\\s+at |prisma:|^$\\\" | grep -E \\\"✓|✕|●|Tests:|Expected|Received\\\" | head -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:30:28.686Z",
+      "lastAccessed": "2026-10-27T02:30:28.686Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:30:28.686Z"
+    },
+    "cmd-1793068235784": {
+      "key": "cmd-1793068235784",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && ls scripts; grep -n \\\"outstandingToNoticeLedger\\\\|duesPayloadToNoticeViewModel\\\\|generateDemandNoticeDocumentHtml\\\\|function\\\\|writeFile\\\" scripts/render-print-samples.ts | head -30\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:30:35.784Z",
+      "lastAccessed": "2026-10-27T02:30:35.784Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:30:35.784Z"
+    },
+    "cmd-1793068272645": {
+      "key": "cmd-1793068272645",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && rm scripts/render-receipt-sample.ts && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:31:12.645Z",
+      "lastAccessed": "2026-10-27T02:31:12.645Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:31:12.645Z"
+    },
+    "cmd-1793068283807": {
+      "key": "cmd-1793068283807",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && cat > /tmp/measure.mjs <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:31:23.807Z",
+      "lastAccessed": "2026-10-27T02:31:23.807Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:31:23.807Z"
+    },
+    "cmd-1793068311907": {
+      "key": "cmd-1793068311907",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:31:51.907Z",
+      "lastAccessed": "2026-10-27T02:31:51.907Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:31:51.907Z"
+    },
+    "cmd-1793068324972": {
+      "key": "cmd-1793068324972",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/reports/demand-notice && grep -n \\\"paymentsAllocated\\\\|paymentsAndCreditsApplied\\\\|grossEligibleDemand\\\\|totalPayable\\\\|netOutstanding\\\\|TOTAL DEMAND\\\\|otherCharges\\\\|approvedCredits\\\" demand-notice-html.ts | head -30\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:32:04.972Z",
+      "lastAccessed": "2026-10-27T02:32:04.972Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:32:04.972Z"
+    },
+    "cmd-1793068338692": {
+      "key": "cmd-1793068338692",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/reports/demand-notice && grep -n \\\"\\\\.tax-grid\\\\|\\\\.tax-box\\\\|\\\\.tax-amt\\\\|\\\\.tax-lbl\\\\|\\\\.arrears {\\\" demand-notice-html.ts | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:32:18.692Z",
+      "lastAccessed": "2026-10-27T02:32:18.692Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:32:18.692Z"
+    },
+    "cmd-1793068362764": {
+      "key": "cmd-1793068362764",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/reports/demand-notice && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:32:42.764Z",
+      "lastAccessed": "2026-10-27T02:32:42.764Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:32:42.764Z"
+    },
+    "cmd-1793068366070": {
+      "key": "cmd-1793068366070",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api/src/reports/demand-notice && sed -n 1,10p demand-notice-view-model.ts; grep -n \\\"let arithmeticWarning\\\\|const warning = \\\" demand-notice-view-model.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:32:46.070Z",
+      "lastAccessed": "2026-10-27T02:32:46.070Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:32:46.070Z"
+    },
+    "cmd-1793068391964": {
+      "key": "cmd-1793068391964",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && sed -i 's#^import { MUNICIPALITY } from \\\"../../common/municipality\\\"$#import { MUNICIPALITY } from \\\"../../common/municipality\\\"\\\\nimport { dec } from \\\"../../demands/money\\\"#' src/reports/demand-notice/demand-notice-view-model.ts && npx tsc --noEmit -p tsconfig.build.json 2>&1 | head && npx jest src/reports src/collections src/demands 2>&1 | grep -E \\\"^Tests:|●\\\" && npx tsx scripts/render-print-samples.ts \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/print\\\" 2>&1 | tail -9\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:33:11.964Z",
+      "lastAccessed": "2026-10-27T02:33:11.964Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:33:11.964Z"
+    },
+    "cmd-1793068400856": {
+      "key": "cmd-1793068400856",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && sed -n 1,80p \\\"app/(app)/collections/receipts/page.tsx\\\"; sed -n 1,60p components/admin/admin-ui.tsx; grep -n \\\"export function\\\\|export const\\\" components/admin/admin-ui.tsx; cat hooks/use-permission.ts* 2>/dev/null | head -30; ls hooks lib\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:33:20.856Z",
+      "lastAccessed": "2026-10-27T02:33:20.856Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:33:20.856Z"
+    },
+    "cmd-1793068406077": {
+      "key": "cmd-1793068406077",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -n \\\"collections\\\" lib/route-permissions.ts components/app-nav.ts; sed -n 60,330p components/admin/admin-ui.tsx\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:33:26.077Z",
+      "lastAccessed": "2026-10-27T02:33:26.077Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:33:26.077Z"
+    },
+    "cmd-1793068411859": {
+      "key": "cmd-1793068411859",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && sed -n 100,140p components/app-nav.ts; sed -n 1,40p lib/route-permissions.ts; grep -n \\\"collect\\\\|yearEnd\\\\|ledger\\\\|receipts\\\\|outstanding\\\" ../../packages/i18n/src/messages/en.ts | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:33:31.859Z",
+      "lastAccessed": "2026-10-27T02:33:31.859Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:33:31.859Z"
+    },
+    "cmd-1793068417667": {
+      "key": "cmd-1793068417667",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -n \\\"Outstanding Dues\\\\|Customer Ledger\\\\|NAV_TITLE_KEYS\\\" components/app-nav.ts; grep -n \\\"nav.customerLedger\\\\|nav.outstandingDues\\\" ../../packages/i18n/src/messages/*.ts; sed -n 1,60p lib/app-nav.test.ts | grep -n \\\"Tax Collection\\\\|collections\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:33:37.667Z",
+      "lastAccessed": "2026-10-27T02:33:37.667Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:33:37.667Z"
+    },
+    "cmd-1793068426146": {
+      "key": "cmd-1793068426146",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:33:46.146Z",
+      "lastAccessed": "2026-10-27T02:33:46.146Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:33:46.146Z"
+    },
+    "cmd-1793068445229": {
+      "key": "cmd-1793068445229",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -n \\\"export\\\\|async function\\\\|headers\\\" lib/api.ts | head -40; cat lib/download-blob.ts | head -40; sed -n 80,239p \\\"app/(app)/collections/receipts/page.tsx\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:34:05.229Z",
+      "lastAccessed": "2026-10-27T02:34:05.229Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:34:05.229Z"
+    },
+    "cmd-1793068590004": {
+      "key": "cmd-1793068590004",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -rn \\\"render={<Link\\\" app components | head -3; grep -n \\\"\\\\\\\"target\\\\\\\"\\\\|\\\\\\\"lib\\\\\\\"\\\" tsconfig.json ../../packages/typescript-config/*.json\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:36:30.004Z",
+      "lastAccessed": "2026-10-27T02:36:30.004Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:36:30.004Z"
+    },
+    "cmd-1793068594814": {
+      "key": "cmd-1793068594814",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && sed -n 305,315p \\\"app/(app)/dashboard/page.tsx\\\"; wc -l \\\"app/(app)/collections/page.tsx\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:36:34.814Z",
+      "lastAccessed": "2026-10-27T02:36:34.814Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:36:34.814Z"
+    },
+    "cmd-1793068601582": {
+      "key": "cmd-1793068601582",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -c \\\"export default function\\\" \\\"app/(app)/collections/page.tsx\\\"; file \\\"app/(app)/collections/page.tsx\\\"; awk 'NR<=3' \\\"app/(app)/collections/page.tsx\\\" | od -c | head -3\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:36:41.582Z",
+      "lastAccessed": "2026-10-27T02:36:41.582Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:36:41.582Z"
+    },
+    "cmd-1793068755819": {
+      "key": "cmd-1793068755819",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && npx eslint \\\"app/(app)/collections\\\" components/app-nav.ts 2>&1 | tail -30 && pnpm test 2>&1 | grep -E \\\"^# (pass|fail)|✖|not ok|failed\\\" | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:39:15.819Z",
+      "lastAccessed": "2026-10-27T02:39:15.819Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:39:15.819Z"
+    },
+    "cmd-1793068761358": {
+      "key": "cmd-1793068761358",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && pnpm test 2>&1 | tail -15\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:39:21.358Z",
+      "lastAccessed": "2026-10-27T02:39:21.358Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:39:21.358Z"
+    },
+    "cmd-1793068769689": {
+      "key": "cmd-1793068769689",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && pnpm test 2>&1 | grep -E \\\"^ℹ (pass|fail)|ERR|Error\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:39:29.689Z",
+      "lastAccessed": "2026-10-27T02:39:29.689Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:39:29.689Z"
+    },
+    "cmd-1793068809844": {
+      "key": "cmd-1793068809844",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" 2>&1 | grep -E \\\"^Tests:\\\" ; IT=\\\"$(grep '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\\\"'\\\"'\\\"'' | sed -E 's#/nppdhanaura([?]|$)#/npdh_it\\\\1#')\\\"; DATABASE_URL=\\\"$IT\\\" npx tsx test/fixtures/seed-collection-e2e.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:40:09.844Z",
+      "lastAccessed": "2026-10-27T02:40:09.844Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:40:09.844Z"
+    },
+    "cmd-1793068882458": {
+      "key": "cmd-1793068882458",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && netstat -ano | grep -E \\\":(3100|4100) .*LISTEN\\\"; pnpm --filter api build 2>&1 | tail -2; pnpm --filter portal build 2>&1 | grep -E \\\"error|Error|collections|✓ Compiled|Failed\\\" | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:41:22.458Z",
+      "lastAccessed": "2026-10-27T02:41:22.458Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:41:22.458Z"
+    },
+    "cmd-1793068888456": {
+      "key": "cmd-1793068888456",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api\\\" && export DATABASE_URL=\\\"$(grep '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\\\"'\\\"'\\\"'' | sed -E 's#/nppdhanaura([?]|$)#/npdh_it\\\\1#')\\\" && case \\\"$DATABASE_URL\\\" in *npdh_it*) ;; *) exit 1;; esac && PORT=4100 PUBLIC_APP_URL=http://localhost:3100 CORS_ORIGIN=http://localhost:3100 node dist/main\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:41:28.456Z",
+      "lastAccessed": "2026-10-27T02:41:28.456Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:41:28.456Z"
+    },
+    "cmd-1793068889033": {
+      "key": "cmd-1793068889033",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal\\\" && API_INTERNAL_URL=http://127.0.0.1:4100 npx next start -p 3100\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:41:29.033Z",
+      "lastAccessed": "2026-10-27T02:41:29.033Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:41:29.033Z"
+    },
+    "cmd-1793068961248": {
+      "key": "cmd-1793068961248",
+      "value": "{\"command\":\"for i in $(seq 1 40); do a=$(curl -s -o /dev/null -w \\\"%{http_code}\\\" http://localhost:4100/api/v1/health); b=$(curl -s -o /dev/null -w \\\"%{http_code}\\\" http://localhost:3100/login); [ \\\"$b\\\" = 200 ] && [ \\\"$a\\\" = 200 ] && break; sleep 2; done; echo api=$a portal=$b; cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && E2E_COLLECTION_PROPERTY=800698-001-000003-001-R PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/collections.spec.ts --reporter=line 2>&1 | grep -vE \\\"^\\\\s+at \\\" | tail -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:42:41.248Z",
+      "lastAccessed": "2026-10-27T02:42:41.248Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:42:41.248Z"
+    },
+    "cmd-1793068965963": {
+      "key": "cmd-1793068965963",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -n -i \\\"ledger\\\\|new collection\\\" test-results/collections-A-*/error-context.md | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:42:45.963Z",
+      "lastAccessed": "2026-10-27T02:42:45.963Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:42:45.963Z"
+    },
+    "cmd-1793068970871": {
+      "key": "cmd-1793068970871",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && grep -n \\\"export\\\" packages/ui/src/components/button.tsx | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:42:50.871Z",
+      "lastAccessed": "2026-10-27T02:42:50.871Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:42:50.871Z"
+    },
+    "cmd-1793068988012": {
+      "key": "cmd-1793068988012",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal/app/(app)/collections\\\" && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:43:08.012Z",
+      "lastAccessed": "2026-10-27T02:43:08.012Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:43:08.012Z"
+    },
+    "cmd-1793069024453": {
+      "key": "cmd-1793069024453",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && pnpm --filter portal build 2>&1 | grep -E \\\"Compiled|rror\\\" | head -5; cd apps/api && IT=\\\"$(grep '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\\\"'\\\"'\\\"'' | sed -E 's#/nppdhanaura([?]|$)#/npdh_it\\\\1#')\\\"; DATABASE_URL=\\\"$IT\\\" npx tsx test/fixtures/seed-collection-e2e.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:43:44.453Z",
+      "lastAccessed": "2026-10-27T02:43:44.453Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:43:44.453Z"
+    },
+    "cmd-1793069033878": {
+      "key": "cmd-1793069033878",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal\\\" && API_INTERNAL_URL=http://127.0.0.1:4100 npx next start -p 3100\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:43:53.878Z",
+      "lastAccessed": "2026-10-27T02:43:53.878Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:43:53.878Z"
+    },
+    "cmd-1793069046694": {
+      "key": "cmd-1793069046694",
+      "value": "{\"command\":\"for i in $(seq 1 40); do b=$(curl -s -o /dev/null -w \\\"%{http_code}\\\" http://localhost:3100/login); [ \\\"$b\\\" = 200 ] && break; sleep 2; done; echo portal=$b; cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && E2E_COLLECTION_PROPERTY=800698-001-000004-001-R PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/collections.spec.ts --reporter=line 2>&1 | grep -vE \\\"^\\\\s+at \\\" | tail -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:44:06.694Z",
+      "lastAccessed": "2026-10-27T02:44:06.694Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:44:06.694Z"
+    },
+    "cmd-1793069063717": {
+      "key": "cmd-1793069063717",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && cat > e2e/_probe.spec.ts <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:44:23.717Z",
+      "lastAccessed": "2026-10-27T02:44:23.717Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:44:23.717Z"
+    },
+    "cmd-1793069087951": {
+      "key": "cmd-1793069087951",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && cat > e2e/_probe.spec.ts <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:44:47.951Z",
+      "lastAccessed": "2026-10-27T02:44:47.951Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:44:47.951Z"
+    },
+    "cmd-1793069106159": {
+      "key": "cmd-1793069106159",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && cat > e2e/_probe.spec.ts <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:45:06.159Z",
+      "lastAccessed": "2026-10-27T02:45:06.159Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:45:06.159Z"
+    },
+    "cmd-1793069123711": {
+      "key": "cmd-1793069123711",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && cat > e2e/_probe.spec.ts <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:45:23.711Z",
+      "lastAccessed": "2026-10-27T02:45:23.711Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:45:23.711Z"
+    },
+    "cmd-1793069135619": {
+      "key": "cmd-1793069135619",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -rn \\\"overflow-x-auto\\\" \\\"app/(app)/collections\\\" \\\"app/(app)/tax-admin\\\" components/admin | grep -v relative | wc -l; grep -n \\\"grid gap-6 2xl:grid-cols\\\" -A2 \\\"app/(app)/tax-admin/tax-rates/page.tsx\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:45:35.619Z",
+      "lastAccessed": "2026-10-27T02:45:35.619Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:45:35.619Z"
+    },
+    "cmd-1793069141925": {
+      "key": "cmd-1793069141925",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && for f in $(grep -rl \\\"overflow-x-auto\\\" \\\"app/(app)/collections\\\" \\\"app/(app)/tax-admin\\\" components/admin); do sed -i -E 's/className=\\\"([^\\\"]*)overflow-x-auto/className=\\\"\\\\1relative overflow-x-auto/' \\\"$f\\\"; done; grep -rn \\\"overflow-x-auto\\\" \\\"app/(app)/collections\\\" \\\"app/(app)/tax-admin\\\" components/admin | grep -vc \\\"relative overflow-x-auto\\\"; grep -n \\\"space-y-6\\\\\\\">\\\" \\\"app/(app)/tax-admin/tax-rates/page.tsx\\\" | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:45:41.925Z",
+      "lastAccessed": "2026-10-27T02:45:41.925Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:45:41.925Z"
+    },
+    "cmd-1793069148334": {
+      "key": "cmd-1793069148334",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && sed -n 455,458p \\\"app/(app)/tax-admin/tax-rates/page.tsx\\\" && sed -i -e '283s/<div className=\\\"space-y-6\\\">/<div className=\\\"min-w-0 space-y-6\\\">/' -e '457s/<div className=\\\"space-y-6\\\">/<div className=\\\"min-w-0 space-y-6\\\">/' \\\"app/(app)/tax-admin/tax-rates/page.tsx\\\" && grep -n \\\"min-w-0 space-y-6\\\" \\\"app/(app)/tax-admin/tax-rates/page.tsx\\\"; grep -rn \\\"grid-cols-\\\\[\\\" \\\"app/(app)/tax-admin\\\" \\\"app/(app)/collections\\\" | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:45:48.334Z",
+      "lastAccessed": "2026-10-27T02:45:48.334Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:45:48.334Z"
+    },
+    "cmd-1793069169326": {
+      "key": "cmd-1793069169326",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && sed -i -E 's/<div className=\\\"grid gap-6 (xl|2xl):grid-cols-\\\\[1fr_(26|28)rem\\\\]\\\">/<div className=\\\"grid gap-6 \\\\1:grid-cols-[1fr_\\\\2rem] [\\\\&>*]:min-w-0\\\">/' \\\"app/(app)/tax-admin/assessment-years/page.tsx\\\" \\\"app/(app)/tax-admin/tax-rates/page.tsx\\\" \\\"app/(app)/tax-admin/[kind]/[tax]/page.tsx\\\" && grep -rn \\\"min-w-0\\\\\\\">\\\" \\\"app/(app)/tax-admin\\\" | head; cd ../.. && pnpm --filter portal build 2>&1 | grep -E \\\"Compiled|rror\\\" | head -3\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:46:09.326Z",
+      "lastAccessed": "2026-10-27T02:46:09.326Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:46:09.326Z"
+    },
+    "cmd-1793069185902": {
+      "key": "cmd-1793069185902",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal\\\" && API_INTERNAL_URL=http://127.0.0.1:4100 npx next start -p 3100\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:46:25.902Z",
+      "lastAccessed": "2026-10-27T02:46:25.902Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:46:25.902Z"
+    },
+    "cmd-1793069214984": {
+      "key": "cmd-1793069214984",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && IT=\\\"$(grep '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\\\"'\\\"'\\\"'' | sed -E 's#/nppdhanaura([?]|$)#/npdh_it\\\\1#')\\\"; P=$(DATABASE_URL=\\\"$IT\\\" npx tsx test/fixtures/seed-collection-e2e.ts); echo fixture=$P; for i in $(seq 1 40); do b=$(curl -s -o /dev/null -w \\\"%{http_code}\\\" http://localhost:3100/login); [ \\\"$b\\\" = 200 ] && break; sleep 2; done; cd ../portal && E2E_COLLECTION_PROPERTY=$P PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/collections.spec.ts --reporter=line 2>&1 | grep -vE \\\"^\\\\s+at \\\" | tail -25; PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/tax-admin.spec.ts --grep \\\"13:|15:|accessibility\\\" --reporter=line 2>&1 | grep -vE \\\"^\\\\s+at \\\" | tail -15\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:46:54.984Z",
+      "lastAccessed": "2026-10-27T02:46:54.984Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:46:54.984Z"
+    },
+    "cmd-1793069236296": {
+      "key": "cmd-1793069236296",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/tax-admin.spec.ts --grep \\\"accessibility\\\" --reporter=line 2>&1 | grep -E \\\"^\\\\s+[-+] |Array|Expected|Received|route|/tax\\\" | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:47:16.296Z",
+      "lastAccessed": "2026-10-27T02:47:16.296Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:47:16.296Z"
+    },
+    "cmd-1793069253944": {
+      "key": "cmd-1793069253944",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && grep -rn \\\"SidebarInset\\\" app components --include=*.tsx | grep -v \\\"^.*import\\\" | head; grep -n \\\"Collapsible\\\\|SidebarMenuItem\\\\|tracking-wider\\\\|rounded-l-md\\\\|avatar\\\" components/app-sidebar.tsx | head -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:47:33.944Z",
+      "lastAccessed": "2026-10-27T02:47:33.944Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:47:33.944Z"
+    },
+    "cmd-1793069268868": {
+      "key": "cmd-1793069268868",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:47:48.868Z",
+      "lastAccessed": "2026-10-27T02:47:48.868Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:47:48.868Z"
+    },
+    "cmd-1793069294517": {
+      "key": "cmd-1793069294517",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal && sed -i 's#<SidebarInset>#<SidebarInset className=\\\"min-w-0\\\">#g' \\\"app/(app)/layout.tsx\\\" && grep -c 'SidebarInset className=\\\"min-w-0\\\"' \\\"app/(app)/layout.tsx\\\" && npx tsc --noEmit -p tsconfig.json && echo tsc-ok\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:48:14.517Z",
+      "lastAccessed": "2026-10-27T02:48:14.517Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:48:14.517Z"
+    },
+    "cmd-1793069305526": {
+      "key": "cmd-1793069305526",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && grep -n \\\"^\\\\s*--primary\\\\|^\\\\s*--destructive\\\\|^\\\\s*--ring:\\\" packages/ui/src/styles/globals.css; grep -rn \\\"55784F\\\" apps/portal --include=*.tsx | head -3; git diff main --stat -- packages/ui/src/styles/globals.css | tail -1; git log -1 --format=%h -- packages/ui/src/styles/globals.css\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:48:25.526Z",
+      "lastAccessed": "2026-10-27T02:48:25.526Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:48:25.526Z"
+    },
+    "cmd-1793069309479": {
+      "key": "cmd-1793069309479",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && grep -rln \\\"55784F\\\" packages apps/portal --include=*.tsx --include=*.ts 2>/dev/null | grep -v node_modules | head;\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:48:29.479Z",
+      "lastAccessed": "2026-10-27T02:48:29.479Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:48:29.479Z"
+    },
+    "cmd-1793069314407": {
+      "key": "cmd-1793069314407",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && grep -n \\\"55784F\\\" -B3 -A3 packages/i18n/src/provider.tsx | head -40; grep -rn \\\"@source\\\\|i18n\\\" packages/ui/src/styles/globals.css | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:48:34.407Z",
+      "lastAccessed": "2026-10-27T02:48:34.407Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:48:34.407Z"
+    },
+    "cmd-1793069324789": {
+      "key": "cmd-1793069324789",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && grep -rn \\\"packages/ui/src/styles/globals.css\\\\|@workspace/ui/globals.css\\\\|ui/src/styles/globals\\\" apps/web apps/portal --include=*.ts --include=*.tsx --include=*.css --include=*.mjs 2>/dev/null | grep -v node_modules | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:48:44.789Z",
+      "lastAccessed": "2026-10-27T02:48:44.789Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:48:44.789Z"
+    },
+    "cmd-1793069332494": {
+      "key": "cmd-1793069332494",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:48:52.494Z",
+      "lastAccessed": "2026-10-27T02:48:52.494Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:48:52.494Z"
+    },
+    "cmd-1793069362829": {
+      "key": "cmd-1793069362829",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && pnpm --filter portal build 2>&1 | grep -E \\\"Compiled|rror\\\" | head -3; grep -l \\\"55784F\\\" apps/portal/.next/static/chunks/*.css 2>/dev/null | head -2; grep -o \\\"bg-\\\\\\\\\\\\\\\\\\\\[\\\\\\\\\\\\\\\\#55784F\\\\\\\\\\\\\\\\\\\\]\\\" apps/portal/.next/static/chunks/*.css | head -1\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:49:22.829Z",
+      "lastAccessed": "2026-10-27T02:49:22.829Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:49:22.829Z"
+    },
+    "cmd-1793069371708": {
+      "key": "cmd-1793069371708",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/portal\\\" && API_INTERNAL_URL=http://127.0.0.1:4100 npx next start -p 3100\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:49:31.708Z",
+      "lastAccessed": "2026-10-27T02:49:31.708Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:49:31.708Z"
+    },
+    "cmd-1793069428106": {
+      "key": "cmd-1793069428106",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api && IT=\\\"$(grep '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | tr -d '\\\"'\\\"'\\\"'' | sed -E 's#/nppdhanaura([?]|$)#/npdh_it\\\\1#')\\\"; P=$(DATABASE_URL=\\\"$IT\\\" npx tsx test/fixtures/seed-collection-e2e.ts); echo fixture=$P; for i in $(seq 1 40); do b=$(curl -s -o /dev/null -w \\\"%{http_code}\\\" http://localhost:3100/login); [ \\\"$b\\\" = 200 ] && break; sleep 2; done; cd ../portal && E2E_COLLECTION_PROPERTY=$P PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/collections.spec.ts --reporter=line 2>&1 | grep -vE \\\"^\\\\s+at \\\" | grep -E \\\"passed|failed|Error|[-+]  \\\" | head -20; PLAYWRIGHT_BASE_URL=http://localhost:3100 npx playwright test e2e/tax-admin.spec.ts --grep \\\"13:|15:|accessibility\\\" --reporter=line 2>&1 | grep -vE \\\"^\\\\s+at \\\" | grep -E \\\"passed|failed|Error|[-+]  \\\" | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:50:28.106Z",
+      "lastAccessed": "2026-10-27T02:50:28.106Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:50:28.106Z"
+    },
+    "cmd-1793069445599": {
+      "key": "cmd-1793069445599",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && git status --short apps/web | head; echo \\\"web-diff-lines=$(git diff --stat -- apps/web | wc -l)\\\"; cd apps/api && npx jest 2>&1 | grep -E \\\"^Tests:|^Test Suites:|● .* ›\\\" | sort -u | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:50:45.599Z",
+      "lastAccessed": "2026-10-27T02:50:45.599Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:50:45.599Z"
+    },
+    "cmd-1793069474613": {
+      "key": "cmd-1793069474613",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && (cd apps/api && npx eslint src test scripts/render-print-samples.ts 2>&1 | tail -8); (cd apps/portal && npx eslint . 2>&1 | tail -8); (cd apps/portal && pnpm test 2>&1 | grep -E \\\"^ℹ (pass|fail)\\\")\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:51:14.613Z",
+      "lastAccessed": "2026-10-27T02:51:14.613Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:51:14.613Z"
+    },
+    "cmd-1793069500764": {
+      "key": "cmd-1793069500764",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && grep -n \\\"E2E_PORT\\\\|globalEnv\\\\|globalPassThroughEnv\\\\|passThroughEnv\\\" turbo.json | head; (cd apps/api && npx eslint src test 2>&1 | grep -c \\\"COLLECTIONS_IT\\\\|E2E_COLLECTION\\\"); (cd apps/portal && npx eslint . 2>&1 | grep \\\"E2E_COLLECTION\\\\|E2E_ADMIN\\\" | head -4)\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:51:40.764Z",
+      "lastAccessed": "2026-10-27T02:51:40.764Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:51:40.764Z"
+    },
+    "cmd-1793069504102": {
+      "key": "cmd-1793069504102",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && sed -n 55,66p turbo.json\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:51:44.102Z",
+      "lastAccessed": "2026-10-27T02:51:44.102Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:51:44.102Z"
+    },
+    "cmd-1793069529519": {
+      "key": "cmd-1793069529519",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:52:09.519Z",
+      "lastAccessed": "2026-10-27T02:52:09.519Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:52:09.519Z"
+    },
+    "cmd-1793069554076": {
+      "key": "cmd-1793069554076",
+      "value": "{\"command\":\"cd C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps && (cd apps/api && npx eslint src test 2>&1; cd ../portal && npx eslint . 2>&1) | grep -E \\\"^C:\\\" | sed 's#.*ik-nppdhanaura-apps\\\\\\\\##' | sort -u; git diff --name-only main | head -50; git status --short | grep \\\"^??\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:52:34.076Z",
+      "lastAccessed": "2026-10-27T02:52:34.076Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:52:34.076Z"
+    },
+    "cmd-1793069577429": {
+      "key": "cmd-1793069577429",
+      "value": "{\"command\":\"docker exec nppdhanaura-postgres sh -c 'psql -q -U \\\"$POSTGRES_USER\\\" -d postgres -c \\\"DROP DATABASE IF EXISTS npdh_it WITH (FORCE)\\\"' && docker exec nppdhanaura-postgres sh -c 'psql -U \\\"$POSTGRES_USER\\\" -d postgres -tAc \\\"select datname from pg_database order by 1\\\"'; ls C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/docs/tax-portal/\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T02:52:57.429Z",
+      "lastAccessed": "2026-10-27T02:52:57.429Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T02:52:57.429Z"
+    },
+    "cmd-1793073404266": {
+      "key": "cmd-1793073404266",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && wc -l \\\"apps/portal/app/(app)/collections/page.tsx\\\" && grep -n \\\"remarks\\\\|houseNo\\\\|instrument\\\\|collectedAt\\\\|paymentDate\\\\|search\\\\|placeholder\\\\|taxCategory\\\\|cashier\\\\|Collected by\\\" \\\"apps/portal/app/(app)/collections/page.tsx\\\" | head -80\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:56:44.266Z",
+      "lastAccessed": "2026-10-27T03:56:44.266Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:56:44.266Z"
+    },
+    "cmd-1793073409185": {
+      "key": "cmd-1793073409185",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -n \\\"searchProperties\\\\|async search\\\" -A40 apps/api/src/collections/collections.service.ts | head -70; echo ----; grep -n \\\"houseNo\\\\|address\\\\|rebate\\\\|penalty\\\\|interest\\\\|totalPayable\\\\|currentDemand\\\\|arrears\\\\|collectedBy\\\\|cashier\\\" apps/api/src/collections/receipt-html.ts | head -60\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:56:49.185Z",
+      "lastAccessed": "2026-10-27T03:56:49.185Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:56:49.185Z"
+    },
+    "cmd-1793073427081": {
+      "key": "cmd-1793073427081",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -n \\\"floor\\\" -i apps/api/src/reports/demand-notice/demand-notice-html.ts | head -5; echo ---; grep -n \\\"export function ConfirmDialog\\\" -A40 apps/portal/components/admin/admin-ui.tsx | head -60; echo ---; grep -n \\\"properties/search\\\\|search(\\\" -B3 -A6 apps/api/src/collections/collections.controller.ts; echo ---; grep -n \\\"collectionInstant\\\" -A20 apps/api/src/collections/collections.service.ts | head -30; grep -n \\\"paymentDate\\\" -B2 -A4 apps/api/src/collections/collections.dto.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:57:07.081Z",
+      "lastAccessed": "2026-10-27T03:57:07.081Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:57:07.081Z"
+    },
+    "cmd-1793073431705": {
+      "key": "cmd-1793073431705",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -n 1405,1440p apps/api/src/collections/collections.service.ts; sed -n 60,130p apps/api/src/collections/collections.dto.ts; grep -n \\\"collectionInstant\\\\|kolkataDay\\\" apps/api/src/collections/*.ts | head; grep -rn \\\"properties/search\\\" apps/api/src apps/api/test apps/portal --include=*.ts --include=*.tsx | grep -v node_modules\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:57:11.705Z",
+      "lastAccessed": "2026-10-27T03:57:11.705Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:57:11.705Z"
+    },
+    "cmd-1793073444820": {
+      "key": "cmd-1793073444820",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -n 70,95p apps/api/src/collections/collections.service.ts; grep -n \\\"^export\\\\|^import\\\" apps/api/src/collections/collection-rules.ts; grep -n \\\"Confirm and post\\\\|Review allocation\\\\|collect-search\\\\|Search property\\\\|getByLabel\\\\|getByRole\\\" apps/portal/e2e/collections.spec.ts | head -30; grep -n \\\"^import\\\\|collectionInstant\\\\|describe(\\\" apps/api/src/collections/offline-collection.spec.ts | head -30\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:57:24.820Z",
+      "lastAccessed": "2026-10-27T03:57:24.820Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:57:24.820Z"
+    },
+    "cmd-1793073449710": {
+      "key": "cmd-1793073449710",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -n 1,35p apps/api/src/collections/collection-rules.ts; grep -n \\\"CollectionRuleError\\\" apps/api/src/collections/collections.service.ts | head -5; sed -n 9,20p apps/api/src/collections/offline-collection.spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:57:29.710Z",
+      "lastAccessed": "2026-10-27T03:57:29.710Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:57:29.710Z"
+    },
+    "cmd-1793073458795": {
+      "key": "cmd-1793073458795",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && cat >> apps/api/src/collections/collection-rules.ts <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:57:38.795Z",
+      "lastAccessed": "2026-10-27T03:57:38.795Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:57:38.795Z"
+    },
+    "cmd-1793073470864": {
+      "key": "cmd-1793073470864",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:57:50.864Z",
+      "lastAccessed": "2026-10-27T03:57:50.864Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:57:50.864Z"
+    },
+    "cmd-1793073483195": {
+      "key": "cmd-1793073483195",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:58:03.195Z",
+      "lastAccessed": "2026-10-27T03:58:03.195Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:58:03.195Z"
+    },
+    "cmd-1793073499773": {
+      "key": "cmd-1793073499773",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && python - <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:58:19.773Z",
+      "lastAccessed": "2026-10-27T03:58:19.773Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:58:19.773Z"
+    },
+    "cmd-1793073546598": {
+      "key": "cmd-1793073546598",
+      "value": "{\"command\":\"ls \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/\\\" 2>&1 | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:59:06.598Z",
+      "lastAccessed": "2026-10-27T03:59:06.598Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:59:06.598Z"
+    },
+    "cmd-1793073585791": {
+      "key": "cmd-1793073585791",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && python \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/counter_edits.py\\\" \\\"apps/portal/app/(app)/collections/page.tsx\\\" && grep -n \\\"addMoneyStrings\\\" \\\"apps/portal/app/(app)/collections/page.tsx\\\" | head -3\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:59:45.791Z",
+      "lastAccessed": "2026-10-27T03:59:45.791Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:59:45.791Z"
+    },
+    "cmd-1793073590778": {
+      "key": "cmd-1793073590778",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -n 50,90p apps/portal/e2e/collections.spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T03:59:50.778Z",
+      "lastAccessed": "2026-10-27T03:59:50.778Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T03:59:50.778Z"
+    },
+    "cmd-1793073631731": {
+      "key": "cmd-1793073631731",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && cat > \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/e2e_edit.py\\\" <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:00:31.731Z",
+      "lastAccessed": "2026-10-27T04:00:31.731Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:00:31.731Z"
+    },
+    "cmd-1793073667818": {
+      "key": "cmd-1793073667818",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -i '1i /// <reference lib=\\\"dom\\\" />' apps/api/test/offline-collection.e2e-spec.ts && echo PORTAL; (cd apps/portal && npx tsc --noEmit -p . 2>&1 | tail -5); echo API; (cd apps/api && npx tsc --noEmit -p tsconfig.json 2>&1 | grep -E \\\"^(src|test/offline|test/fixtures)\\\" | head)\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:01:07.818Z",
+      "lastAccessed": "2026-10-27T04:01:07.818Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:01:07.818Z"
+    },
+    "cmd-1793073690181": {
+      "key": "cmd-1793073690181",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && git diff --stat apps/api/src/demands/financial-scenarios.spec.ts; git diff apps/api/src/demands/financial-scenarios.spec.ts | grep \\\"^[+-]\\\" | head; (cd apps/api && npx tsc --noEmit -p tsconfig.json 2>&1 | grep -E \\\"^src\\\" | grep -v \\\"\\\\.spec\\\\.ts\\\" | head -5; npx tsc --noEmit -p tsconfig.json 2>&1 | grep -c \\\"error TS\\\")\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:01:30.181Z",
+      "lastAccessed": "2026-10-27T04:01:30.181Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:01:30.181Z"
+    },
+    "cmd-1793073699103": {
+      "key": "cmd-1793073699103",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && ls \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/\\\"; cat \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" 2>/dev/null | sed 's/PASSWORD=[^ ]*/PASSWORD=***/'; grep -n \\\"it(\\\\|service\\\\.\\\\(collect\\\\|search\\\\)\\\\|const service\\\\|wardId\\\" apps/api/test/offline-collection.e2e-spec.ts | head -40\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:01:39.103Z",
+      "lastAccessed": "2026-10-27T04:01:39.103Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:01:39.103Z"
+    },
+    "cmd-1793073703108": {
+      "key": "cmd-1793073703108",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -n 140,200p apps/api/test/offline-collection.e2e-spec.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:01:43.108Z",
+      "lastAccessed": "2026-10-27T04:01:43.108Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:01:43.108Z"
+    },
+    "cmd-1793073707867": {
+      "key": "cmd-1793073707867",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -n \\\"function collect\\\\|const collect = \\\\|async function collect\\\" -A14 apps/api/test/offline-collection.e2e-spec.ts | head -20; grep -n \\\"houseNo\\\\|ram = \\\" apps/api/test/offline-collection.e2e-spec.ts | head\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:01:47.867Z",
+      "lastAccessed": "2026-10-27T04:01:47.867Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:01:47.867Z"
+    },
+    "cmd-1793073720436": {
+      "key": "cmd-1793073720436",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && cat > \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/it_edit.py\\\" <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:02:00.436Z",
+      "lastAccessed": "2026-10-27T04:02:00.436Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:02:00.436Z"
+    },
+    "cmd-1793073724794": {
+      "key": "cmd-1793073724794",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -rn \\\"collectedAt\\\" apps/api/src/collections/collections.service.ts | head -5; ls apps/api/prisma/\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:02:04.794Z",
+      "lastAccessed": "2026-10-27T04:02:04.794Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:02:04.794Z"
+    },
+    "cmd-1793073747178": {
+      "key": "cmd-1793073747178",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -i 's/posted.collectedAt!.getTime()/posted.collectionDate!.getTime()/' apps/api/test/offline-collection.e2e-spec.ts && grep -n \\\"collectionDate\\\" apps/api/prisma/schema.prisma | head -2 && bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" 2>&1 | tail -25\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:02:27.178Z",
+      "lastAccessed": "2026-10-27T04:02:27.178Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:02:27.178Z"
+    },
+    "cmd-1793073774155": {
+      "key": "cmd-1793073774155",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && cat > \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/it_fix.py\\\" <<'EOF'\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:02:54.155Z",
+      "lastAccessed": "2026-10-27T04:02:54.155Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:02:54.155Z"
+    },
+    "cmd-1793073847347": {
+      "key": "cmd-1793073847347",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && (cd apps/api && npx jest 2>&1 | grep -E \\\"^Tests:|^Test Suites:|✕\\\" | head -20); pnpm --filter api build 2>&1 | tail -3; pnpm --filter portal build 2>&1 | tail -5\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:04:07.347Z",
+      "lastAccessed": "2026-10-27T04:04:07.347Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:04:07.347Z"
+    },
+    "cmd-1793073866045": {
+      "key": "cmd-1793073866045",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps/apps/api\\\" && npx jest 2>&1 | grep -E \\\"^FAIL\\\" ; ls dist/main.js 2>/dev/null; ls dist/src/main.js 2>/dev/null; grep -n \\\"PLAYWRIGHT_BASE_URL\\\\|webServer\\\\|baseURL\\\" ../portal/playwright.config.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:04:26.045Z",
+      "lastAccessed": "2026-10-27T04:04:26.045Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:04:26.045Z"
+    },
+    "cmd-1793073872635": {
+      "key": "cmd-1793073872635",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -rhoE \\\"process\\\\.env\\\\.[A-Z_]*API[A-Z_]*\\\" apps/portal/lib apps/portal/next.config.* apps/portal/proxy.ts 2>/dev/null | sort -u; grep -n \\\"PORT\\\\|CORS\\\\|ORIGIN\\\" apps/api/src/main.ts | head; grep -oE \\\"^(PORT|CORS_ORIGIN|PORTAL_URL|FRONTEND_URL)[^=]*\\\" apps/api/.env\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:04:32.635Z",
+      "lastAccessed": "2026-10-27T04:04:32.635Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:04:32.635Z"
+    },
+    "cmd-1793073879310": {
+      "key": "cmd-1793073879310",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -rn \\\"NEXT_PUBLIC_API_URL\\\\|API_INTERNAL_URL\\\" apps/portal --include=*.ts --include=*.tsx --include=*.mjs -l | grep -v node_modules; grep -rn \\\"NEXT_PUBLIC_API_URL\\\" apps/portal/lib/api.ts apps/portal/next.config.* 2>/dev/null | head -5\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:04:39.310Z",
+      "lastAccessed": "2026-10-27T04:04:39.310Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:04:39.310Z"
+    },
+    "cmd-1793073883800": {
+      "key": "cmd-1793073883800",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && grep -n \\\"NEXT_PUBLIC_API_URL\\\\|API_INTERNAL_URL\\\" -B2 -A4 apps/portal/lib/portal-api-fetch.ts | head -20\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:04:43.800Z",
+      "lastAccessed": "2026-10-27T04:04:43.800Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:04:43.800Z"
+    },
+    "cmd-1793073928771": {
+      "key": "cmd-1793073928771",
+      "value": "{\"command\":\"bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" -t \\\"^$\\\" >/dev/null 2>&1; bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_e2e.sh\\\" 2>&1 | tail -30\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:05:28.771Z",
+      "lastAccessed": "2026-10-27T04:05:28.771Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:05:28.771Z"
+    },
+    "cmd-1793074028946": {
+      "key": "cmd-1793074028946",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && sed -i 's|<Field id=\\\"collect-ward\\\" label=\\\"Ward / वार्ड\\\">|<Field id=\\\"collect-ward\\\" label=\\\"Search in ward / वार्ड में खोजें\\\">|' \\\"apps/portal/app/(app)/collections/page.tsx\\\" && sed -i 's|page.getByLabel(\\\"Ward / वार्ड\\\")).toBeVisible()|page.getByLabel(\\\"Search in ward / वार्ड में खोजें\\\")).toBeVisible()|' apps/portal/e2e/collections.spec.ts && grep -c \\\"Search in ward\\\" \\\"apps/portal/app/(app)/collections/page.tsx\\\" apps/portal/e2e/collections.spec.ts && pnpm --filter portal build 2>&1 | grep -iE \\\"error|Compiled\\\" | head -3; bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_it.sh\\\" -t \\\"^$\\\" >/dev/null 2>&1; bash \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/run_e2e.sh\\\" 2>&1 | tail -25\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:07:08.946Z",
+      "lastAccessed": "2026-10-27T04:07:08.946Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:07:08.946Z"
+    },
+    "cmd-1793074062109": {
+      "key": "cmd-1793074062109",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && netstat -ano | grep LISTENING | grep -E \\\":(3100|4100) \\\" ; docker exec nppdhanaura-postgres sh -c 'psql -q -U \\\"$POSTGRES_USER\\\" -d postgres -c \\\"DROP DATABASE IF EXISTS npdh_it WITH (FORCE)\\\"' && echo dropped; pnpm --filter portal lint 2>&1 | grep -E \\\"error|✖\\\" | head -5; pnpm --filter api lint 2>&1 | grep -E \\\" error |✖\\\" | head -5; git diff --stat -- apps/web | tail -1\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:07:42.109Z",
+      "lastAccessed": "2026-10-27T04:07:42.109Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:07:42.109Z"
+    },
+    "cmd-1793074075142": {
+      "key": "cmd-1793074075142",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && pnpm --filter api lint 2>&1 | grep -B8 \\\"preserve-caught-error\\\" | grep -E \\\"\\\\.ts$|preserve\\\" | head -12\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:07:55.142Z",
+      "lastAccessed": "2026-10-27T04:07:55.142Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:07:55.142Z"
+    },
+    "cmd-1793074092819": {
+      "key": "cmd-1793074092819",
+      "value": "{\"command\":\"cd \\\"C:/ringerlabs-books/project/moradabad-project/ik-nppdhanaura-apps\\\" && python \\\"C:/Users/sikar/AppData/Local/Temp/claude/C--ringerlabs-books-project-moradabad-project-ik-nppdhanaura-apps/872a37eb-b1bb-4811-b2cb-8b05089aea29/scratchpad/tools/report_edit.py\\\" docs/tax-portal/OFFLINE-COLLECTION-REPORT.md && git status --short | grep -v \\\"^ M .claude-flow\\\\|^ M .swarm\\\"\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T04:08:12.819Z",
+      "lastAccessed": "2026-10-27T04:08:12.819Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T04:08:12.819Z"
+    },
+    "cmd-1793079590606": {
+      "key": "cmd-1793079590606",
+      "value": "{\"command\":\"pnpm exec jest src/tax-configs/tax-configs.service.spec.ts --no-coverage\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:39:50.606Z",
+      "lastAccessed": "2026-10-27T05:39:50.606Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:39:50.606Z"
+    },
+    "cmd-1793079611359": {
+      "key": "cmd-1793079611359",
+      "value": "{\"command\":\"Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 3000,3001,4000,8080 } | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -AutoSize\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:40:11.359Z",
+      "lastAccessed": "2026-10-27T05:40:11.359Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:40:11.359Z"
+    },
+    "cmd-1793080206828": {
+      "key": "cmd-1793080206828",
+      "value": "{\"command\":\"node tmp-demand-lookup.mjs\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:50:06.828Z",
+      "lastAccessed": "2026-10-27T05:50:06.828Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:50:06.828Z"
+    },
+    "cmd-1793080268916": {
+      "key": "cmd-1793080268916",
+      "value": "{\"command\":\"node tmp-demand-lookup.mjs\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:51:08.916Z",
+      "lastAccessed": "2026-10-27T05:51:08.916Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:51:08.916Z"
+    },
+    "cmd-1793080421350": {
+      "key": "cmd-1793080421350",
+      "value": "{\"command\":\"pnpm --filter api exec tsx --test ../portal/lib/collection-eligibility.test.ts\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:53:41.350Z",
+      "lastAccessed": "2026-10-27T05:53:41.350Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:53:41.350Z"
+    },
+    "cmd-1793080432169": {
+      "key": "cmd-1793080432169",
+      "value": "{\"command\":\"pnpm --filter portal test\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:53:52.169Z",
+      "lastAccessed": "2026-10-27T05:53:52.169Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:53:52.169Z"
+    },
+    "cmd-1793080442193": {
+      "key": "cmd-1793080442193",
+      "value": "{\"command\":\"pnpm --filter portal typecheck\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:54:02.193Z",
+      "lastAccessed": "2026-10-27T05:54:02.193Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:54:02.193Z"
+    },
+    "cmd-1793080482589": {
+      "key": "cmd-1793080482589",
+      "value": "{\"command\":\"pnpm --filter portal build\",\"exitCode\":0,\"success\":true}",
+      "namespace": "commands",
+      "storedAt": "2026-10-27T05:54:42.589Z",
+      "lastAccessed": "2026-10-27T05:54:42.589Z",
+      "accessCount": 0,
+      "expiresAt": "2026-11-26T05:54:42.589Z"
     }
   },
   "version": "3.0.0"

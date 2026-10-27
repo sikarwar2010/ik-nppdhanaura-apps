@@ -1,5 +1,6 @@
 import type { computePublicDuesPayload } from "../../public-property-tax/dues.util"
 import { MUNICIPALITY } from "../../common/municipality"
+import { dec } from "../../demands/money"
 import {
   DemandArithmeticError,
   reconcileComponentTotal,
@@ -305,6 +306,19 @@ export function outstandingToNoticeLedger(input: {
           ? `Verified historical balances are missing for: ${missing.map((year) => year.name).join(", ")}. They are not treated as zero.`
           : "Successful payments without an assessment year are not reconciled. Outstanding balance is not treated as complete."
       : null
+  // The notice prints gross − rebate/credits − paid = net; refuse to call it
+  // confirmed if those printed figures do not add up.
+  if (!arithmeticWarning && input.grossEligibleDemand != null) {
+    const net = dec(input.grossEligibleDemand)
+      .minus(input.rebateAmount ?? 0)
+      .minus(input.approvedCredits)
+      .minus(input.paymentsAllocated)
+    if (!net.toDecimalPlaces(2).eq(dec(input.netOutstanding).toDecimalPlaces(2))) {
+      arithmeticWarning =
+        "Gross demand, rebate, credits and payments do not add up to the net amount. The notice is not confirmed."
+    }
+  }
+  const warningText = arithmeticWarning ?? warning
   const applied =
     Number(input.approvedCredits) + Number(input.paymentsAllocated)
   const authoritative = input.authoritative && arithmeticWarning == null
@@ -372,7 +386,7 @@ export function outstandingToNoticeLedger(input: {
       paymentsAndCreditsApplied: applied,
       netOutstanding: Number(input.netOutstanding),
       authoritative,
-      warning,
+      warning: warningText,
     },
   }
 }

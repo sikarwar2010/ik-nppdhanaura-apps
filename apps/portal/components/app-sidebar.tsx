@@ -86,12 +86,13 @@ function NavCollapsibleGroup({
   }
 
   return (
+    // The collapsible is the <li> itself, so the menu list contains only list items.
     <Collapsible
       open={open}
       onOpenChange={setOpen}
       className="group/collapsible"
+      render={<SidebarMenuItem />}
     >
-      <SidebarMenuItem>
         <SidebarMenuButton
           render={<CollapsibleTrigger />}
           tooltip={label(item.title)}
@@ -120,7 +121,6 @@ function NavCollapsibleGroup({
             ))}
           </SidebarMenuSub>
         </CollapsibleContent>
-      </SidebarMenuItem>
     </Collapsible>
   )
 }

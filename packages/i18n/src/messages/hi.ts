@@ -38,6 +38,7 @@ export const hi: Record<MessageKey, string> = {
   "nav.paymentReceipts": "भुगतान रसीद",
   "nav.customerLedger": "ग्राहक खाता",
   "nav.outstandingDues": "बकाया देय",
+  "nav.yearEndClosing": "वर्षांत समापन",
   "nav.settings": "सेटिंग्स",
   "nav.users": "उपयोगकर्ता",
   "nav.roles": "भूमिकाएँ",

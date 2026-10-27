@@ -129,6 +129,11 @@ export const NAV_ITEMS: NavItem[] = [
         href: "/collections/dues",
         permission: "demand:read",
       },
+      {
+        title: "Year-End Closing",
+        href: "/collections/year-end",
+        permission: "demand:read",
+      },
     ],
   },
   {
@@ -215,6 +220,7 @@ const NAV_TITLE_KEYS: Record<string, MessageKey> = {
   "Payment Receipts": "nav.paymentReceipts",
   "Customer Ledger": "nav.customerLedger",
   "Outstanding Dues": "nav.outstandingDues",
+  "Year-End Closing": "nav.yearEndClosing",
   Settings: "nav.settings",
   Users: "nav.users",
   Roles: "nav.roles",

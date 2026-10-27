@@ -144,12 +144,12 @@ describe("receipt document", () => {
   it("prints both copies with the same figures on one A4 page", () => {
     const html = renderReceiptHtml(snapshot)
     expect(html).toContain("OFFICE COPY / कार्यालय प्रति")
-    expect(html).toContain("CUSTOMER COPY / ग्राहक प्रति")
-    expect(html.match(/RCP-20252026-000001/g)).toHaveLength(3)
+    expect(html).toContain("CONSUMER COPY / उपभोक्ता प्रति")
+    expect(html.match(/data-receipt="RCP-20252026-000001"/g)).toHaveLength(2)
     expect(html.match(/4940\.00|4,940\.00/g)?.length).toBeGreaterThanOrEqual(2)
     expect(html).toContain("size: A4 portrait")
-    expect(html.match(/class="sheet"/g)).toHaveLength(1)
-    expect(html).not.toContain("page-break-after: always")
+    expect(html.match(/class="sheet shared"/g)).toHaveLength(1)
+    expect(html).not.toContain('<div class="page-break">')
   })
 
   it("spells the example payable amount in rupees", () => {

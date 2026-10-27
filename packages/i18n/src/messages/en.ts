@@ -36,6 +36,7 @@ export const en = {
   "nav.paymentReceipts": "Payment Receipts",
   "nav.customerLedger": "Customer Ledger",
   "nav.outstandingDues": "Outstanding Dues",
+  "nav.yearEndClosing": "Year-End Closing",
   "nav.settings": "Settings",
   "nav.users": "Users",
   "nav.roles": "Roles",
