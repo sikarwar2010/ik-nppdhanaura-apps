@@ -10,6 +10,14 @@ import {
   type MoneyInput,
 } from "./money"
 import { calculateRebate, type RebateRule } from "./rebate"
+import {
+  buildTaxPosition,
+  yearTaxLedger,
+  type PartialBuckets,
+  type TaxPosition,
+  type TaxPositionYear,
+  type YearTaxLedger,
+} from "./tax-ledger"
 
 export type LedgerDemand = {
   id: string
@@ -28,6 +36,12 @@ export type LedgerDemand = {
   rebate?: string
   verificationStatus?: "UNVERIFIED" | "VERIFIED"
   balanceKind?: "COMPONENTS" | "CLOSING_ONLY"
+  /** Per-tax rebate and penalty recorded when the demand was published. */
+  chargeBreakdown?: unknown
+  /** The part of credits, debits and payments that named a tax. */
+  taggedCredits?: PartialBuckets
+  taggedDebits?: PartialBuckets
+  taggedPayments?: PartialBuckets
 }
 
 export type SuccessPaymentFact = {
@@ -101,6 +115,8 @@ export type OutstandingBreakdown = {
   missingHistoryYears: UnreconciledYear[]
   historyComplete: boolean
   authoritative: boolean
+  /** The same balances per tax. Its total always equals netOutstanding. */
+  taxPosition: TaxPosition
 }
 
 export function allocationCounts(
@@ -108,6 +124,26 @@ export function allocationCounts(
   paymentStatus: string
 ): boolean {
   return allocationStatus === "ACTIVE" && paymentStatus === "SUCCESS"
+}
+
+export function ledgerOfDemand(demand: LedgerDemand): YearTaxLedger {
+  return yearTaxLedger({
+    propertyTax: demand.propertyTax,
+    waterTax: demand.waterTax,
+    drainageTax: demand.drainageTax,
+    penalty: demand.penalty,
+    interest: demand.interest,
+    currentYearDemand: demand.currentYearDemand,
+    rebate: demand.rebate ?? 0,
+    credits: demand.credits,
+    debits: demand.debits,
+    payments: demand.payments,
+    balanceKind: demand.balanceKind ?? "COMPONENTS",
+    chargeBreakdown: demand.chargeBreakdown,
+    taggedCredits: demand.taggedCredits,
+    taggedDebits: demand.taggedDebits,
+    taggedPayments: demand.taggedPayments,
+  })
 }
 
 /** This year's own unpaid demand. Opening arrears are not included. */
@@ -252,7 +288,36 @@ export function calculateOutstanding(input: {
   )
   years.sort((a, b) => a.assessmentYearCode.localeCompare(b.assessmentYearCode))
   applyCarryForward(years)
-  const previous = previousYearFigures(years, input.selectedYear.code)
+
+  const positionYears: TaxPositionYear[] = input.demands.map((demand) => ({
+    assessmentYearId: demand.assessmentYearId,
+    assessmentYearCode: demand.assessmentYearCode,
+    assessmentYearName: demand.assessmentYearName,
+    verified: (demand.verificationStatus ?? "VERIFIED") === "VERIFIED",
+    assessmentDemandId: demand.id,
+    ledger: ledgerOfDemand(demand),
+  }))
+  if (!selected) {
+    positionYears.push({
+      assessmentYearId: input.selectedYear.id,
+      assessmentYearCode: input.selectedYear.code,
+      assessmentYearName: input.selectedYear.name,
+      verified: true,
+      assessmentDemandId: null,
+      ledger: yearTaxLedger({
+        ...components,
+        rebate: previewRebate.amount,
+        payments: "0.00",
+        balanceKind: "COMPONENTS",
+      }),
+    })
+  }
+  const taxPosition = buildTaxPosition(positionYears, input.selectedYear.code)
+  const previous = previousYearFigures(
+    years,
+    positionYears,
+    input.selectedYear.code
+  )
 
   const grossEligibleDemand = sumMoney([
     openingArrears,
@@ -333,6 +398,7 @@ export function calculateOutstanding(input: {
     missingHistoryYears,
     historyComplete: missingHistoryYears.length === 0,
     authoritative,
+    taxPosition,
   }
 }
 
@@ -444,7 +510,11 @@ export function splitPaymentByComponent(
   return { parts, unapplied: moneyString(left) }
 }
 
-function previousYearFigures(years: YearBreakdown[], selectedYearCode: string) {
+function previousYearFigures(
+  years: YearBreakdown[],
+  ledgers: TaxPositionYear[],
+  selectedYearCode: string
+) {
   const prior = years.filter(
     (year) =>
       year.assessmentYearCode < selectedYearCode &&
@@ -457,6 +527,7 @@ function previousYearFigures(years: YearBreakdown[], selectedYearCode: string) {
   let rebates = money(0)
   let payments = money(0)
   let historical = money(0)
+  const positive = (value: MoneyInput) => (dec(value).gt(0) ? dec(value) : dec(0))
   for (const year of prior) {
     rebates = money(dec(rebates).plus(year.rebate).plus(year.credits))
     payments = money(dec(payments).plus(year.payments))
@@ -464,21 +535,21 @@ function previousYearFigures(years: YearBreakdown[], selectedYearCode: string) {
       historical = money(dec(historical).plus(year.outstanding))
       continue
     }
-    const unpaid = componentBalances(
-      {
-        propertyTax: year.propertyTax,
-        waterTax: year.waterTax,
-        drainageTax: year.drainageTax,
-        penalty: year.penalty,
-        interest: dec(year.interest).plus(year.debits),
-      },
-      dec(year.payments).plus(year.credits).plus(year.rebate)
-    )
-    property = money(dec(property).plus(unpaid.propertyTax))
-    water = money(dec(water).plus(unpaid.waterTax))
-    drainage = money(dec(drainage).plus(unpaid.drainageTax))
+    const ledger = ledgers.find(
+      (row) => row.assessmentYearCode === year.assessmentYearCode
+    )?.ledger
+    if (!ledger) continue
+    const taxOnly = (key: "propertyTax" | "waterTax" | "drainageTax") =>
+      positive(dec(ledger.balance[key]).minus(ledger.unpaidPenalty[key]))
+    property = money(dec(property).plus(taxOnly("propertyTax")))
+    water = money(dec(water).plus(taxOnly("waterTax")))
+    drainage = money(dec(drainage).plus(taxOnly("drainageTax")))
     penaltyInterest = money(
-      dec(penaltyInterest).plus(unpaid.penalty).plus(unpaid.interest)
+      dec(penaltyInterest)
+        .plus(positive(ledger.balance.charges))
+        .plus(ledger.unpaidPenalty.propertyTax)
+        .plus(ledger.unpaidPenalty.waterTax)
+        .plus(ledger.unpaidPenalty.drainageTax)
     )
   }
   return {

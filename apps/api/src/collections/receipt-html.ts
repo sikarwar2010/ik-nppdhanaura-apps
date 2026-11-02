@@ -48,6 +48,33 @@ export type ReceiptSnapshot = {
   confirmedBy?: string
   /** Year-wise, tax-wise split of the amount received, as posted. */
   allocations?: ReceiptAllocation[]
+  /** Added with separate tax accounting. Which tax the payment was for. */
+  taxKind?: "PROPERTY_TAX" | "WATER_TAX" | "COMBINED"
+  /** Each tax before and after this payment, from the posting itself. */
+  taxSummary?: ReceiptTaxLine[]
+  /** Gateway money that fitted no balance; flagged for reconciliation. */
+  unallocated?: string
+}
+
+export type ReceiptTaxLine = {
+  label: string
+  labelHi: string
+  before: string
+  paid: string
+  after: string
+  status: "PAID" | "PARTIALLY_PAID" | "UNPAID"
+}
+
+const RECEIPT_TITLE: Record<NonNullable<ReceiptSnapshot["taxKind"]>, string> = {
+  PROPERTY_TAX: "संपत्ति कर रसीद <span>/ Property Tax Receipt</span>",
+  WATER_TAX: "जल कर रसीद <span>/ Water Tax Receipt</span>",
+  COMBINED: "संपत्ति कर एवं जल कर रसीद <span>/ Combined Tax Receipt</span>",
+}
+
+const TAX_STATUS: Record<ReceiptTaxLine["status"], string> = {
+  PAID: "Paid / भुगतान",
+  PARTIALLY_PAID: "Partially paid / आंशिक",
+  UNPAID: "Unpaid / अवैतनिक",
 }
 
 export type ReceiptAllocation = {
@@ -152,6 +179,32 @@ function allocationTable(s: ReceiptSnapshot): string {
     </table>`
 }
 
+function taxSummaryTable(s: ReceiptSnapshot): string {
+  const lines = s.taxSummary ?? []
+  if (lines.length === 0) return ""
+  return `<table class="alloc-table tax-summary">
+      <caption>Tax-wise position / कर-वार स्थिति</caption>
+      <tr>
+        <th>Tax<br/><span class="hi">कर</span></th>
+        <th>Due before<br/><span class="hi">पूर्व देय</span></th>
+        <th>Paid now<br/><span class="hi">अभी भुगतान</span></th>
+        <th>Balance<br/><span class="hi">शेष</span></th>
+        <th>Status<br/><span class="hi">स्थिति</span></th>
+      </tr>
+      ${lines
+        .map(
+          (line) => `<tr>
+        <td>${esc(line.label)} / ${esc(line.labelHi)}</td>
+        <td>${inr(line.before)}</td>
+        <td class="strong">${inr(line.paid)}</td>
+        <td>${inr(line.after)}</td>
+        <td>${esc(TAX_STATUS[line.status])}</td>
+      </tr>`
+        )
+        .join("")}
+    </table>`
+}
+
 function copy(
   s: ReceiptSnapshot,
   kind: "consumer" | "office",
@@ -191,7 +244,7 @@ function copy(
       <div class="title">
         <p class="muni-hi">${esc(MUNICIPALITY.nameHi)}</p>
         <p class="muni-en">${esc(s.municipality || MUNICIPALITY.nameEn)}, ${esc(MUNICIPALITY.districtEn)}</p>
-        <h1>संपत्ति कर रसीद <span>/ Property Tax Receipt</span></h1>
+        <h1>${s.taxKind ? RECEIPT_TITLE[s.taxKind] : "संपत्ति कर रसीद <span>/ Property Tax Receipt</span>"}</h1>
       </div>
       <p class="copy-title">${esc(title)}</p>
     </header>
@@ -246,7 +299,9 @@ function copy(
     </table>
     ${status}
     <p class="words"><strong>Amount received in words / प्राप्त राशि शब्दों में:</strong> ${esc(s.amountInWords || rupeesInWords(s.amountReceived))}</p>
-    ${allocationTable(s)}
+    ${taxSummaryTable(s)}
+    ${(s.taxSummary?.length ?? 0) > 0 && (s.allocations?.length ?? 0) <= 1 ? "" : allocationTable(s)}
+    ${s.unallocated ? `<p class="reversal">${inr(s.unallocated)} of this payment is held for reconciliation and has not reduced any tax. / यह राशि मिलान हेतु रोकी गई है।</p>` : ""}
     ${officeBlock}
     ${
       reversal
@@ -277,8 +332,11 @@ export function renderReceiptHtml(
   const reversal = snapshot.reversal ?? null
   const which = options.copy ?? "both"
   const office = options.office ?? null
+  // A receipt with tax lines and several years needs both tables, so each copy gets its own page.
   const sharedSheet =
-    which === "both" && (snapshot.allocations?.length ?? 0) <= COPIES_PER_SHEET_MAX_LINES
+    which === "both" &&
+    (snapshot.allocations?.length ?? 0) <=
+      ((snapshot.taxSummary?.length ?? 0) > 0 ? 1 : COPIES_PER_SHEET_MAX_LINES)
   const copies =
     which === "consumer"
       ? copy(snapshot, "consumer", reversal, null)

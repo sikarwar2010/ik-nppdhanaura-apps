@@ -37,6 +37,12 @@ export class CollectionsController {
     return { success: true, data: await this.collections.summary(query) }
   }
 
+  @Get("online")
+  @RequirePermission("demand:read")
+  async online(@Query() query: ReceiptListQueryDto) {
+    return { success: true, data: await this.collections.onlineTransactions(query) }
+  }
+
   @Get("properties/search")
   @RequirePermission("demand:read")
   async search(

@@ -32,13 +32,20 @@ import {
 import { formatApiError } from "@/lib/format-api-error"
 import {
   AllocationTable,
+  BUCKET_LABELS,
   inr,
   ReceiptActions,
   StatusBadge,
+  TAX_BUCKETS,
+  TaxPositionTable,
+  TaxSummaryTable,
   toPaise,
   useCollectionLookups,
   useSelectedAssessmentYear,
   type AllocationLine,
+  type TaxBucket,
+  type TaxPosition,
+  type TaxSummaryLine,
 } from "./collection-shared"
 
 type Summary = {
@@ -105,6 +112,7 @@ type Quote = {
   paymentsAllocated: string
   authoritative: boolean
   warning: string | null
+  taxPosition: TaxPosition
   years: Array<{
     assessmentYearId: string
     assessmentYearName: string
@@ -118,6 +126,8 @@ type Preview = {
   outstandingBefore: string
   outstandingAfter: string
   paymentStatus: "PARTIALLY_PAID" | "PAID"
+  taxKind: TaxKind
+  taxSummary: TaxSummaryLine[]
   lines: AllocationLine[]
   rule: string
 }
@@ -131,7 +141,28 @@ type Posted = {
   remaining: string | null
   outstandingBefore: string | null
   allocations: AllocationLine[] | null
+  taxSummary: TaxSummaryLine[] | null
   created: boolean
+}
+
+type TaxKind = "PROPERTY_TAX" | "WATER_TAX" | "COMBINED"
+
+const TAX_KINDS: Array<{ value: TaxKind; title: string; description: string }> = [
+  { value: "PROPERTY_TAX", title: "Property tax payment / संपत्ति कर", description: "Only property tax is reduced. Water tax stays as it is." },
+  { value: "WATER_TAX", title: "Water tax payment / जल कर", description: "Only water tax is reduced. Property tax stays as it is." },
+  { value: "COMBINED", title: "Combined payment / संयुक्त", description: "Enter the amount for each tax. One receipt shows both." },
+]
+
+const emptyParts = (): Record<TaxBucket, string> => ({
+  propertyTax: "",
+  waterTax: "",
+  drainageTax: "",
+  charges: "",
+  historical: "",
+})
+
+function paiseToString(paise: bigint): string {
+  return `${paise / 100n}.${String(paise % 100n).padStart(2, "0")}`
 }
 
 const MODES = [
@@ -142,7 +173,7 @@ const MODES = [
   { value: "OTHER", label: "Bank transfer / बैंक अंतरण" },
 ] as const
 
-const STEPS = ["Find property", "Confirm dues", "Enter payment", "Review & post", "Receipt"] as const
+const STEPS = ["Find consumer", "Confirm dues", "Choose tax", "Enter payment", "Review & post", "Receipt"] as const
 
 function istToday(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date())
@@ -153,21 +184,9 @@ function istNowTime(): string {
   return new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date())
 }
 
-/** Taxes that make up the amount due, in the words used on the demand notice. */
-function taxCategories(quote: Quote): string[] {
-  const has = (...values: string[]) => values.some((value) => (toPaise(value.replace("-", "")) ?? 0n) > 0n)
-  return [
-    has(quote.propertyTax) && "Property tax / गृहकर",
-    has(quote.waterTax) && "Water tax / जलकर",
-    has(quote.drainageTax) && "Drainage tax / जल निकासी कर",
-    has(quote.penalty, quote.interest, quote.approvedDebits) && "Penalty & interest / शास्ति व ब्याज",
-    has(quote.previousDues) && "Previous-year arrears / पूर्व बकाया",
-  ].filter((label): label is string => Boolean(label))
-}
-
 function Stepper({ current }: { current: number }) {
   return (
-    <ol aria-label="Collection progress" className="grid grid-cols-5 gap-1.5">
+    <ol aria-label="Collection progress" className="grid grid-cols-6 gap-1.5">
       {STEPS.map((label, index) => {
         const state = index < current ? "done" : index === current ? "current" : "todo"
         return (
@@ -224,7 +243,6 @@ export default function OfflineCollectionPage() {
   const [debouncedTerm, setDebouncedTerm] = React.useState("")
   const [surveyId, setSurveyId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState({
-    amount: "",
     paymentMode: "CASH",
     paymentDate: istToday(),
     paymentTime: "",
@@ -233,6 +251,8 @@ export default function OfflineCollectionPage() {
     counterCode: "",
   })
   const [confirming, setConfirming] = React.useState(false)
+  const [taxKind, setTaxKind] = React.useState<TaxKind>("PROPERTY_TAX")
+  const [parts, setParts] = React.useState(emptyParts)
   const [touched, setTouched] = React.useState(false)
   const idempotencyKey = React.useRef("")
   const [posted, setPosted] = React.useState<Posted | null>(null)
@@ -287,18 +307,41 @@ export default function OfflineCollectionPage() {
     canOpenLedger: hasPermission("report:read"),
   })
 
-  const outstanding = quote.data?.netOutstanding ?? "0.00"
-  const amountPaise = toPaise(form.amount)
-  const outstandingPaise = toPaise(outstanding) ?? 0n
+  const position = quote.data?.taxPosition
+  const owedOn = (key: TaxBucket) => position?.outstanding[key] ?? "0.00"
+  const owedPaise = (key: TaxBucket) => {
+    const value = owedOn(key)
+    return value.startsWith("-") ? 0n : (toPaise(value) ?? 0n)
+  }
+  // Only the fields this kind of payment can use; a tax with nothing due has no field.
+  const fieldBuckets: TaxBucket[] =
+    taxKind === "PROPERTY_TAX"
+      ? ["propertyTax"]
+      : taxKind === "WATER_TAX"
+        ? ["waterTax"]
+        : TAX_BUCKETS.filter((key) => owedPaise(key) > 0n)
+  const partErrors: Partial<Record<TaxBucket, string>> = {}
+  let totalPaise = 0n
+  for (const key of fieldBuckets) {
+    const raw = parts[key].trim()
+    if (!raw) continue
+    const value = toPaise(raw)
+    if (value === null) {
+      partErrors[key] = "Enter an amount, e.g. 3000 or 3000.50"
+    } else if (value > owedPaise(key)) {
+      partErrors[key] = `Above the ${inr(owedOn(key))} outstanding for this tax. Amounts are not moved between taxes.`
+    } else {
+      totalPaise += value
+    }
+  }
+  const amount = paiseToString(totalPaise)
+  const hasPartError = Object.keys(partErrors).length > 0
+  const sentParts = Object.fromEntries(
+    fieldBuckets.filter((key) => parts[key].trim()).map((key) => [key, parts[key].trim()])
+  )
   const errors = {
     amount:
-      amountPaise === null
-        ? "Enter the amount received, e.g. 3000 or 3000.50"
-        : amountPaise <= 0n
-          ? "The amount must be more than zero"
-          : amountPaise > outstandingPaise
-            ? `Above the outstanding ${inr(outstanding)}. Advance payment is not configured.`
-            : null,
+      !hasPartError && totalPaise <= 0n ? "Enter the amount received" : null,
     reference:
       form.paymentMode !== "CASH" && !form.reference.trim()
         ? "A cheque, draft, UPI or transfer reference is required"
@@ -313,17 +356,19 @@ export default function OfflineCollectionPage() {
         ? "The payment time cannot be later than now"
         : null,
   }
-  const formValid = !errors.amount && !errors.reference && !errors.paymentDate && !errors.paymentTime
+  const formValid = !hasPartError && !errors.amount && !errors.reference && !errors.paymentDate && !errors.paymentTime
 
   const preview = useQuery({
-    queryKey: ["collection-preview", surveyId, assessmentYearId, form.amount],
-    enabled: step === 3 && Boolean(surveyId) && formValid,
+    queryKey: ["collection-preview", surveyId, assessmentYearId, taxKind, sentParts],
+    enabled: step === 4 && Boolean(surveyId) && formValid,
     queryFn: () =>
       api
         .post<Preview>("/api/v1/collections/preview", {
           surveyId,
           assessmentYearId,
-          amount: form.amount.trim(),
+          amount,
+          taxKind,
+          parts: sentParts,
         })
         .then((res) => res.data),
   })
@@ -333,7 +378,9 @@ export default function OfflineCollectionPage() {
       api.post<Posted>("/api/v1/collections", {
         surveyId,
         assessmentYearId,
-        amount: form.amount.trim(),
+        amount,
+        taxKind,
+        parts: sentParts,
         paymentMode: form.paymentMode,
         paymentDate: form.paymentDate || undefined,
         paymentTime: form.paymentTime || undefined,
@@ -345,7 +392,7 @@ export default function OfflineCollectionPage() {
     onSuccess: (res) => {
       setPosted(res.data)
       setConfirming(false)
-      setStep(4)
+      setStep(5)
       toast.success(
         res.data.status === "SUCCESS"
           ? `Payment posted. Receipt ${res.data.receiptNumber}`
@@ -367,14 +414,16 @@ export default function OfflineCollectionPage() {
     setPosted(null)
     setTouched(false)
     setTerm("")
-    setForm({ amount: "", paymentMode: "CASH", paymentDate: istToday(), paymentTime: "", reference: "", remarks: "", counterCode: form.counterCode })
+    setParts(emptyParts())
+    setForm({ paymentMode: "CASH", paymentDate: istToday(), paymentTime: "", reference: "", remarks: "", counterCode: form.counterCode })
   }
 
   function pickProperty(id: string) {
     setSurveyId(id)
     setPosted(null)
     setTouched(false)
-    setForm((current) => ({ ...current, amount: "", paymentTime: "", reference: "", remarks: "" }))
+    setParts(emptyParts())
+    setForm((current) => ({ ...current, paymentTime: "", reference: "", remarks: "" }))
     setStep(1)
   }
 
@@ -408,7 +457,7 @@ export default function OfflineCollectionPage() {
     paymentStepPending.current = true
     // One key per reviewed request: a retry after a network error cannot post twice.
     idempotencyKey.current = crypto.randomUUID()
-    setStep(3)
+    setStep(4)
   }
 
   const yearSelect = (
@@ -418,7 +467,7 @@ export default function OfflineCollectionPage() {
           {...props}
           className={cn(selectClass, "sm:w-48")}
           value={assessmentYearId}
-          disabled={step >= 3}
+          disabled={step >= 4}
           onChange={(event) => setAssessmentYearId(event.target.value)}
         >
           {[...years]
@@ -516,12 +565,12 @@ export default function OfflineCollectionPage() {
               </div>
             ) : null}
 
-            {step >= 1 && step <= 3 && quote.isLoading ? <LoadingBlock rows={4} /> : null}
-            {step >= 1 && step <= 3 && quote.isError ? (
+            {step >= 1 && step <= 4 && quote.isLoading ? <LoadingBlock rows={4} /> : null}
+            {step >= 1 && step <= 4 && quote.isError ? (
               <ErrorBlock error={quote.error} onRetry={() => void quote.refetch()} />
             ) : null}
 
-            {step >= 1 && step <= 3 && quote.data ? (
+            {step >= 1 && step <= 4 && quote.data ? (
               <PropertySummary quote={quote.data} compact={step > 1} />
             ) : null}
 
@@ -584,13 +633,77 @@ export default function OfflineCollectionPage() {
                     aria-describedby={advance.ok ? undefined : "collect-step-block"}
                     onClick={continueToPayment}
                   >
-                    Details are correct — enter payment <ArrowRight aria-hidden className="size-4" />
+                    Details are correct — choose tax <ArrowRight aria-hidden className="size-4" />
                   </Button>
                 </div>
               </div>
             ) : null}
 
             {step === 2 && quote.data ? (
+              <fieldset className="space-y-3">
+                <legend className="text-sm font-medium">What is the consumer paying? / भुगतान किस कर का है?</legend>
+                <div className="grid gap-3 md:grid-cols-3">
+                  {TAX_KINDS.map((option) => {
+                    const owed =
+                      option.value === "PROPERTY_TAX"
+                        ? owedPaise("propertyTax")
+                        : option.value === "WATER_TAX"
+                          ? owedPaise("waterTax")
+                          : TAX_BUCKETS.reduce((sum, key) => sum + owedPaise(key), 0n)
+                    const none = owed <= 0n
+                    return (
+                      <label
+                        key={option.value}
+                        className={cn(
+                          "flex cursor-pointer flex-col gap-1 rounded-lg border p-3 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+                          taxKind === option.value && !none && "border-primary bg-primary/5",
+                          none && "cursor-not-allowed opacity-60"
+                        )}
+                      >
+                        <span className="flex items-center gap-2 font-medium">
+                          <input
+                            type="radio"
+                            name="tax-kind"
+                            className="size-4"
+                            value={option.value}
+                            disabled={none}
+                            checked={taxKind === option.value}
+                            onChange={() => {
+                              setTaxKind(option.value)
+                              setParts(emptyParts())
+                              setTouched(false)
+                            }}
+                          />
+                          {option.title}
+                        </span>
+                        <span className="text-muted-foreground">{option.description}</span>
+                        <span className="font-semibold tabular-nums">
+                          {none ? "Nothing outstanding" : `${inr(paiseToString(owed))} outstanding`}
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+                <div className="flex flex-wrap justify-between gap-2">
+                  <Button type="button" variant="outline" className="cursor-pointer" onClick={() => setStep(1)}>
+                    <ArrowLeft aria-hidden className="size-4" /> Back
+                  </Button>
+                  <Button
+                    type="button"
+                    className="cursor-pointer"
+                    disabled={
+                      (taxKind === "PROPERTY_TAX" && owedPaise("propertyTax") <= 0n) ||
+                      (taxKind === "WATER_TAX" && owedPaise("waterTax") <= 0n)
+                    }
+                    onClick={() => setStep(3)}
+                  >
+                    Enter payment <ArrowRight aria-hidden className="size-4" />
+                  </Button>
+                </div>
+              </fieldset>
+            ) : null}
+
+            {step === 3 && quote.data ? (
               <form
                 className="space-y-4"
                 noValidate
@@ -599,48 +712,46 @@ export default function OfflineCollectionPage() {
                   goToReview()
                 }}
               >
-                <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-                  <p className="text-xs text-muted-foreground">
-                    Tax categories due up to {quote.data.assessmentYear.name}. The amount is applied in the approved order shown on the
-                    next step.
-                  </p>
-                  <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Tax categories due">
-                    {taxCategories(quote.data).map((label) => (
-                      <li key={label} className="rounded-md border bg-background px-2 py-0.5 text-xs font-medium">
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field
-                    id="collect-amount"
-                    label="Amount received (₹) / प्राप्त राशि"
-                    required
-                    hint={`Outstanding up to ${quote.data.assessmentYear.name}: ${inr(outstanding)}. Part payment is allowed.`}
-                    error={touched ? errors.amount : null}
-                  >
-                    {(props) => (
-                      <div className="flex gap-2">
-                        <Input
-                          {...props}
-                          inputMode="decimal"
-                          autoComplete="off"
-                          value={form.amount}
-                          onChange={(event) => setForm((c) => ({ ...c, amount: event.target.value }))}
-                          placeholder="0.00"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="shrink-0 cursor-pointer"
-                          onClick={() => setForm((c) => ({ ...c, amount: outstanding }))}
-                        >
-                          Full amount
-                        </Button>
-                      </div>
-                    )}
-                  </Field>
+                  {fieldBuckets.map((key) => (
+                    <Field
+                      key={key}
+                      id={`collect-${key}`}
+                      label={`${BUCKET_LABELS[key]} (₹)`}
+                      required={taxKind !== "COMBINED"}
+                      hint={`Outstanding, oldest year first: ${inr(owedOn(key))}. Part payment is allowed.`}
+                      error={touched ? (partErrors[key] ?? null) : null}
+                    >
+                      {(props) => (
+                        <div className="flex gap-2">
+                          <Input
+                            {...props}
+                            inputMode="decimal"
+                            autoComplete="off"
+                            value={parts[key]}
+                            onChange={(event) => setParts((c) => ({ ...c, [key]: event.target.value }))}
+                            placeholder="0.00"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="shrink-0 cursor-pointer"
+                            aria-label={`Fill the full outstanding for ${BUCKET_LABELS[key]}`}
+                            onClick={() => setParts((c) => ({ ...c, [key]: owedOn(key) }))}
+                          >
+                            Full
+                          </Button>
+                        </div>
+                      )}
+                    </Field>
+                  ))}
+                  <div className="rounded-lg border bg-muted/30 p-3" aria-live="polite">
+                    <p className="text-xs text-muted-foreground">
+                      {taxKind === "COMBINED" ? "Combined payment total / कुल प्राप्त राशि" : "Amount received / प्राप्त राशि"}
+                    </p>
+                    <p className="text-lg font-semibold tabular-nums">{inr(amount)}</p>
+                    {touched && errors.amount ? <p className="text-sm text-destructive">{errors.amount}</p> : null}
+                  </div>
                   <Field id="collect-mode" label="Payment mode / भुगतान का प्रकार" required>
                     {(props) => (
                       <select
@@ -740,7 +851,7 @@ export default function OfflineCollectionPage() {
                   </Notice>
                 ) : null}
                 <div className="flex flex-wrap justify-between gap-2">
-                  <Button type="button" variant="outline" className="cursor-pointer" onClick={() => setStep(1)}>
+                  <Button type="button" variant="outline" className="cursor-pointer" onClick={() => setStep(2)}>
                     <ArrowLeft aria-hidden className="size-4" /> Back
                   </Button>
                   <Button type="submit" className="cursor-pointer" disabled={Boolean(advance && !advance.ok)}>
@@ -750,7 +861,7 @@ export default function OfflineCollectionPage() {
               </form>
             ) : null}
 
-            {step === 3 ? (
+            {step === 4 ? (
               <div className="space-y-4">
                 {preview.isLoading ? <LoadingBlock rows={3} /> : null}
                 {preview.isError ? <ErrorBlock error={preview.error} onRetry={() => void preview.refetch()} /> : null}
@@ -769,12 +880,13 @@ export default function OfflineCollectionPage() {
                         {form.paymentTime ? ` ${form.paymentTime}` : ""}
                       </span>
                     </p>
+                    <TaxSummaryTable lines={preview.data.taxSummary} caption="Each tax before and after this payment" />
                     <AllocationTable lines={preview.data.lines} caption="How the amount will be applied" />
-                    <p className="text-xs text-muted-foreground">Allocation order: {preview.data.rule}</p>
+                    <p className="text-xs text-muted-foreground">{preview.data.rule}</p>
                   </>
                 ) : null}
                 <div className="flex flex-wrap justify-between gap-2">
-                  <Button type="button" variant="outline" className="cursor-pointer" disabled={collect.isPending} onClick={() => setStep(2)}>
+                  <Button type="button" variant="outline" className="cursor-pointer" disabled={collect.isPending} onClick={() => setStep(3)}>
                     <ArrowLeft aria-hidden className="size-4" /> Change payment
                   </Button>
                   <Button
@@ -790,7 +902,7 @@ export default function OfflineCollectionPage() {
               </div>
             ) : null}
 
-            {step === 4 && posted ? (
+            {step === 5 && posted ? (
               <div className="space-y-4" aria-live="polite">
                 {posted.status === "SUCCESS" ? (
                   <Notice tone="success">
@@ -812,6 +924,9 @@ export default function OfflineCollectionPage() {
                     emphasis={posted.remaining && toPaise(posted.remaining)! > 0n ? "due" : "total"}
                   />
                 </dl>
+                {posted.taxSummary?.length ? (
+                  <TaxSummaryTable lines={posted.taxSummary} caption="Each tax after this payment" />
+                ) : null}
                 {posted.allocations?.length ? (
                   <AllocationTable lines={posted.allocations} caption="How the payment was applied" />
                 ) : null}
@@ -854,8 +969,16 @@ export default function OfflineCollectionPage() {
               </dd>
               <dt className="text-muted-foreground">Assessment year</dt>
               <dd>{quote.data.assessmentYear.name}</dd>
-              <dt className="text-muted-foreground">Tax categories</dt>
-              <dd>{taxCategories(quote.data).map((label) => label.split(" / ")[0]).join(", ")}</dd>
+              <dt className="text-muted-foreground">Payment for</dt>
+              <dd>{TAX_KINDS.find((option) => option.value === preview.data?.taxKind)?.title}</dd>
+              {preview.data.taxSummary.map((line) => (
+                <React.Fragment key={line.bucket}>
+                  <dt className="text-muted-foreground">{line.label}</dt>
+                  <dd className="tabular-nums">
+                    {inr(line.paid)} paid · {inr(line.after)} left
+                  </dd>
+                </React.Fragment>
+              ))}
               <dt className="text-muted-foreground">Applied to</dt>
               <dd>{preview.data.lines.map((line) => `${line.assessmentYearName} ${inr(line.amount)}`).join(" · ")}</dd>
               <dt className="text-muted-foreground">Mode</dt>
@@ -913,11 +1036,8 @@ function PropertySummary({ quote, compact }: { quote: Quote; compact: boolean })
       </dl>
       {!compact ? (
         <>
+          <TaxPositionTable position={quote.taxPosition} caption="Dues for each tax" />
           <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Figure label="Property tax (current)" value={inr(quote.propertyTax)} />
-            <Figure label="Water tax (current)" value={inr(quote.waterTax)} />
-            <Figure label="Drainage tax (current)" value={inr(quote.drainageTax)} />
-            <Figure label="Previous-year arrears" value={inr(quote.previousDues)} />
             <Figure label="Penalty & interest" value={inr(String(addMoneyStrings(quote.penalty, quote.interest, quote.approvedDebits)))} />
             <Figure label="Rebate & credits (less)" value={inr(String(addMoneyStrings(quote.rebate, quote.approvedCredits)))} />
             <Figure label="Posted payments (this year)" value={inr(quote.paymentsAllocated)} emphasis="paid" />

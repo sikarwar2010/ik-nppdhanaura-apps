@@ -7,12 +7,20 @@ import {
   subMoney,
   sumMoney,
 } from "../demands/money"
+import { ownOutstanding, type ComponentAmounts } from "../demands/outstanding"
 import {
-  ownOutstanding,
-  splitPaymentByComponent,
-  type ComponentAmounts,
-  type YearComponentsInput,
-} from "../demands/outstanding"
+  bucketsOf,
+  bucketTotal,
+  TAX_BUCKETS,
+  taxPaymentStatus,
+  zeroBuckets,
+  BUCKET_LABELS,
+  type BucketAmounts,
+  type PartialBuckets,
+  type TaxBucket,
+  type TaxPaymentKind,
+  type TaxPlan,
+} from "../demands/tax-ledger"
 
 export type YearUnpaid = {
   assessmentDemandId: string
@@ -79,8 +87,7 @@ export function allocateOldestFirst(
 export type CollectableYear = YearUnpaid & {
   assessmentYearName?: string
   demandReference?: string
-  components: YearComponentsInput
-  appliedBefore: string
+  balances: BucketAmounts
   balanceKind?: "COMPONENTS" | "CLOSING_ONLY"
 }
 
@@ -95,45 +102,223 @@ export type AllocationLine = {
   amount: string
   outstandingAfter: string
   parts: ComponentAmounts
+  buckets: BucketAmounts
+}
+
+/** One tax on a payment: what was owed, what this payment paid, what is left. */
+export type TaxSummaryLine = {
+  bucket: TaxBucket
+  label: string
+  labelHi: string
+  before: string
+  paid: string
+  after: string
+  status: "PAID" | "PARTIALLY_PAID" | "UNPAID"
+}
+
+export type TaxAllocation = {
+  kind: TaxPaymentKind
+  lines: AllocationLine[]
+  taxSummary: TaxSummaryLine[]
+  outstandingBefore: string
+  outstandingAfter: string
+  /** Money that fitted nowhere. Only ever non-zero for a gateway payment, and flagged. */
+  unallocated: string
+}
+
+function totalsByBucket(years: CollectableYear[]): BucketAmounts {
+  const out = zeroBuckets()
+  for (const year of years) {
+    for (const key of TAX_BUCKETS) {
+      const value = money(year.balances[key])
+      if (value.gt(0)) out[key] = moneyString(money(out[key]).plus(value))
+    }
+  }
+  return out
+}
+
+const KIND_BUCKET: Partial<Record<TaxPaymentKind, TaxBucket>> = {
+  PROPERTY_TAX: "propertyTax",
+  WATER_TAX: "waterTax",
 }
 
 /**
- * Oldest year first, then within each year in COMPONENT_ORDER. This is the
- * single allocation used for the preview, the posted payment, the receipt and
- * the ledger, so the split shown before saving is the split that is saved.
+ * Turns what the clerk or citizen asked for into a checked plan. A partial
+ * payment must say which tax it is for. Only a payment of the entire balance
+ * may leave the split out, because then there is nothing to decide.
  */
-export function allocateWithComponents(
-  amount: string,
+export function resolveTaxPlan(
+  input: {
+    amount: string
+    kind?: TaxPaymentKind | null
+    parts?: PartialBuckets | null
+  },
   years: CollectableYear[]
-): { lines: AllocationLine[]; outstandingBefore: string; outstandingAfter: string } {
-  const base = allocateOldestFirst(amount, years)
-  const byId = new Map(years.map((year) => [year.assessmentDemandId, year]))
-  const lines: AllocationLine[] = base.map((line) => {
-    const year = byId.get(line.assessmentDemandId)!
-    const split = splitPaymentByComponent(year.components, year.appliedBefore, line.amount)
-    if (money(split.unapplied).gt(0)) {
+): TaxPlan {
+  if (!isPositiveMoney(input.amount)) {
+    throw new CollectionRuleError(
+      "INVALID_ALLOCATION",
+      "Amount must be greater than zero"
+    )
+  }
+  const owed = totalsByBucket(years)
+  if (!input.kind) {
+    if (money(input.amount).eq(money(bucketTotal(owed)))) {
+      return { kind: "COMBINED", parts: owed }
+    }
+    if (exceedsMoney(input.amount, bucketTotal(owed))) {
       throw new CollectionRuleError(
-        "ALLOCATION_MISMATCH",
-        `The tax-wise balance for ${year.assessmentYearCode} does not match its outstanding amount. Reconcile this year before collecting.`
+        "OVERPAYMENT",
+        "Allocated amount cannot be above the outstanding balance"
       )
     }
-    return {
-      assessmentDemandId: line.assessmentDemandId,
-      assessmentYearCode: line.assessmentYearCode,
-      assessmentYearName: year.assessmentYearName ?? line.assessmentYearCode,
+    throw new CollectionRuleError(
+      "TAX_SPLIT_REQUIRED",
+      "Choose Property Tax, Water Tax or Combined, and say how much goes to each tax."
+    )
+  }
+  const single = KIND_BUCKET[input.kind]
+  const parts = single && !input.parts
+    ? bucketsOf({ [single]: input.amount })
+    : bucketsOf(input.parts)
+  for (const key of TAX_BUCKETS) {
+    if (money(parts[key]).lt(0)) {
+      throw new CollectionRuleError("INVALID_ALLOCATION", "Tax amounts cannot be negative")
+    }
+    if (single && key !== single && money(parts[key]).gt(0)) {
+      throw new CollectionRuleError(
+        "TAX_KIND_MISMATCH",
+        `A ${BUCKET_LABELS[single].en.toLowerCase()} payment cannot include ${BUCKET_LABELS[key].en.toLowerCase()}. Use a combined payment.`
+      )
+    }
+  }
+  if (!money(bucketTotal(parts)).eq(money(input.amount))) {
+    throw new CollectionRuleError(
+      "TAX_SPLIT_MISMATCH",
+      "The tax amounts must add up exactly to the amount received."
+    )
+  }
+  return { kind: input.kind, parts }
+}
+
+/**
+ * For a payment accepted before tax-wise accounting (a pending cheque, or an
+ * online payment in flight): it carries no choice of tax, so the rule in force
+ * when it was accepted applies. Oldest year first, then charges, drainage, water,
+ * property, earlier balance. Filling year by year gives each tax's oldest years
+ * first, so allocateTaxPlan reproduces the same year-wise result.
+ */
+export function legacyTaxPlan(amount: string, years: CollectableYear[]): TaxPlan {
+  const ordered = [...years].sort((a, b) =>
+    a.assessmentYearCode.localeCompare(b.assessmentYearCode)
+  )
+  const parts = zeroBuckets()
+  let left = money(amount)
+  for (const year of ordered) {
+    for (const key of ["charges", "drainageTax", "waterTax", "propertyTax", "historical"] as const) {
+      const room = money(year.balances[key])
+      if (!left.gt(0) || !room.gt(0)) continue
+      const take = minMoney(left, room)
+      parts[key] = moneyString(money(parts[key]).plus(take))
+      left = money(left.minus(take))
+    }
+  }
+  return { kind: "COMBINED", parts }
+}
+
+/**
+ * Each tax is applied on its own, oldest year first. Nothing moves between
+ * taxes: an amount above one tax's balance is refused (`strict`), or, for money
+ * a gateway has already taken, left unallocated and flagged for reconciliation.
+ */
+export function allocateTaxPlan(
+  plan: TaxPlan,
+  years: CollectableYear[],
+  options: { strict: boolean } = { strict: true }
+): TaxAllocation {
+  const ordered = [...years].sort((a, b) =>
+    a.assessmentYearCode.localeCompare(b.assessmentYearCode)
+  )
+  const owed = totalsByBucket(ordered)
+  const applied = new Map<string, BucketAmounts>()
+  let unallocated = money(0)
+  for (const key of TAX_BUCKETS) {
+    let left = money(plan.parts[key])
+    if (!left.gt(0)) continue
+    for (const year of ordered) {
+      const room = money(year.balances[key])
+      if (!left.gt(0)) break
+      if (!room.gt(0)) continue
+      const take = minMoney(left, room)
+      const row = applied.get(year.assessmentDemandId) ?? zeroBuckets()
+      row[key] = moneyString(money(row[key]).plus(take))
+      applied.set(year.assessmentDemandId, row)
+      left = money(left.minus(take))
+    }
+    if (left.gt(0)) {
+      if (options.strict) {
+        throw new CollectionRuleError(
+          "TAX_OVERPAYMENT",
+          `${BUCKET_LABELS[key].en} of ₹${moneyString(plan.parts[key])} is above the outstanding ₹${owed[key]} for that tax. Amounts are not moved between taxes.`
+        )
+      }
+      unallocated = money(unallocated.plus(left))
+    }
+  }
+  const lines: AllocationLine[] = []
+  for (const year of ordered) {
+    const buckets = applied.get(year.assessmentDemandId)
+    if (!buckets) continue
+    const amount = bucketTotal(buckets)
+    lines.push({
+      assessmentDemandId: year.assessmentDemandId,
+      assessmentYearCode: year.assessmentYearCode,
+      assessmentYearName: year.assessmentYearName ?? year.assessmentYearCode,
       demandReference: year.demandReference ?? null,
       closingBalanceOnly: year.balanceKind === "CLOSING_ONLY",
       outstandingBefore: moneyString(year.unpaid),
-      amount: line.amount,
-      outstandingAfter: moneyString(subMoney(year.unpaid, line.amount)),
-      parts: split.parts,
+      amount,
+      outstandingAfter: moneyString(subMoney(year.unpaid, amount)),
+      buckets,
+      parts: {
+        interest: buckets.charges,
+        penalty: "0.00",
+        drainageTax: buckets.drainageTax,
+        waterTax: buckets.waterTax,
+        propertyTax: moneyString(money(buckets.propertyTax).plus(buckets.historical)),
+      },
+    })
+  }
+  const paid = zeroBuckets()
+  for (const line of lines) {
+    for (const key of TAX_BUCKETS) {
+      paid[key] = moneyString(money(paid[key]).plus(line.buckets[key]))
+    }
+  }
+  const taxSummary: TaxSummaryLine[] = TAX_BUCKETS.filter(
+    (key) => money(owed[key]).gt(0) || money(paid[key]).gt(0)
+  ).map((key) => {
+    const after = moneyString(subMoney(owed[key], paid[key]))
+    return {
+      bucket: key,
+      label: BUCKET_LABELS[key].en,
+      labelHi: BUCKET_LABELS[key].hi,
+      before: owed[key],
+      paid: paid[key],
+      after,
+      status: money(paid[key]).gt(0) || !money(owed[key]).gt(0)
+        ? taxPaymentStatus(after)
+        : "UNPAID",
     }
   })
-  const outstandingBefore = sumMoney(years.map((year) => year.unpaid))
+  const outstandingBefore = sumMoney(ordered.map((year) => year.unpaid))
   return {
+    kind: plan.kind,
     lines,
+    taxSummary,
     outstandingBefore: moneyString(outstandingBefore),
-    outstandingAfter: moneyString(subMoney(outstandingBefore, amount)),
+    outstandingAfter: moneyString(subMoney(outstandingBefore, bucketTotal(paid))),
+    unallocated: moneyString(unallocated),
   }
 }
 

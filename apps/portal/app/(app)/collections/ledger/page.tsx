@@ -10,7 +10,16 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { EmptyBlock, ErrorBlock, Field, LoadingBlock, Notice, Panel, selectClass } from "@/components/admin/admin-ui"
 import { api } from "@/lib/api"
-import { inr, ReceiptActions, StatusBadge, toPaise } from "../collection-shared"
+import {
+  activeBuckets,
+  BUCKET_LABELS,
+  inr,
+  ReceiptActions,
+  StatusBadge,
+  TaxPositionTable,
+  toPaise,
+  type TaxPosition,
+} from "../collection-shared"
 
 type SearchHit = {
   surveyId: string
@@ -69,6 +78,7 @@ type Ledger = {
     houseNo: string | null
     address: string
   }
+  taxPosition: TaxPosition | null
   header: {
     assessmentYearId: string
     assessmentYear: string
@@ -264,6 +274,48 @@ function LedgerPage() {
               )}
             </div>
           </Panel>
+
+          {data.taxPosition ? (
+            <Panel
+              title="Tax-wise position / कर-वार स्थिति"
+              description="Each tax has its own balance. Arrears stay under the tax and the assessment year they came from."
+            >
+              <div className="space-y-4">
+                <TaxPositionTable position={data.taxPosition} caption="Outstanding for each tax" />
+                <div className="relative overflow-x-auto rounded-lg border">
+                  <table className="w-full min-w-[760px] text-sm">
+                    <caption className="px-3 pt-2 text-left text-sm font-medium">How each tax's balance was calculated, year by year</caption>
+                    <thead className="bg-muted/50 text-xs text-muted-foreground">
+                      <tr>
+                        {["Year", "Tax", "Demand", "Rebate", "Credits", "Charges added", "Paid", "Balance"].map((label, index) => (
+                          <th key={label} scope="col" className={cn("p-2 font-medium", index < 2 ? "text-left" : "text-right")}>{label}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.taxPosition.years.flatMap((year) =>
+                        activeBuckets(data.taxPosition!).map((key) => (
+                          <tr key={`${year.assessmentYearCode}-${key}`} className="border-t">
+                            <th scope="row" className="p-2 text-left font-medium">
+                              {year.assessmentYearName}
+                              {year.verified ? "" : " (unverified)"}
+                            </th>
+                            <td className="p-2">{BUCKET_LABELS[key]}</td>
+                            <td className="p-2 text-right tabular-nums">{inr(year.ledger.demand[key])}</td>
+                            <td className="p-2 text-right tabular-nums">{inr(year.ledger.rebate[key])}</td>
+                            <td className="p-2 text-right tabular-nums">{inr(year.ledger.credits[key])}</td>
+                            <td className="p-2 text-right tabular-nums">{inr(year.ledger.debits[key])}</td>
+                            <td className="p-2 text-right tabular-nums">{inr(year.ledger.paid[key])}</td>
+                            <td className="p-2 text-right font-semibold tabular-nums">{inr(year.ledger.balance[key])}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </Panel>
+          ) : null}
 
           <Panel title="Year-wise balances / वर्षवार शेष" description="Each year opens with the verified closing balance of the year before.">
             <div className="relative overflow-x-auto rounded-lg border">

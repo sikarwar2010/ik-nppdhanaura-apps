@@ -21,6 +21,11 @@ export type PublicWardStat = {
   /** Present only when collection disclosure is approved. */
   collected?: string
   outstanding?: string
+  propertyTaxCollected?: string
+  waterTaxCollected?: string
+  drainageTaxCollected?: string
+  /** Interest and other charges, earlier balances, and receipts recorded without a tax split. */
+  otherCollected?: string
 }
 
 export type PublicWardStatsResponse = {
@@ -51,6 +56,9 @@ export type DemandSums = {
   /** currentYearDemand + interest + debits − credits − rebate (before payments). */
   netDemand: string
   collected: string
+  propertyTaxCollected: string
+  waterTaxCollected: string
+  drainageTaxCollected: string
 }
 
 function pct(part: number, whole: number): number | null {
@@ -87,6 +95,15 @@ export function buildPublicWardStats(input: {
         stat.outstanding = moneyString(
           sumMoney([sums?.netDemand ?? 0]).minus(sums?.collected ?? 0)
         )
+        stat.propertyTaxCollected = moneyString(sums?.propertyTaxCollected ?? 0)
+        stat.waterTaxCollected = moneyString(sums?.waterTaxCollected ?? 0)
+        stat.drainageTaxCollected = moneyString(sums?.drainageTaxCollected ?? 0)
+        stat.otherCollected = moneyString(
+          sumMoney([sums?.collected ?? 0])
+            .minus(sums?.propertyTaxCollected ?? 0)
+            .minus(sums?.waterTaxCollected ?? 0)
+            .minus(sums?.drainageTaxCollected ?? 0)
+        )
       }
       return stat
     })
@@ -111,6 +128,10 @@ export function buildPublicWardStats(input: {
   if (input.discloseCollections) {
     totals.collected = sum("collected")
     totals.outstanding = sum("outstanding")
+    totals.propertyTaxCollected = sum("propertyTaxCollected")
+    totals.waterTaxCollected = sum("waterTaxCollected")
+    totals.drainageTaxCollected = sum("drainageTaxCollected")
+    totals.otherCollected = sum("otherCollected")
   }
   return { wards, totals }
 }

@@ -7,10 +7,12 @@ import { cn } from "@workspace/ui/lib/utils"
 
 const TABS = [
   { label: "Collect / संग्रह", href: "/collections", exact: true },
+  { label: "Online / ऑनलाइन", href: "/collections/online" },
   { label: "Receipts / रसीद", href: "/collections/receipts" },
   { label: "Ledger / खाता", href: "/collections/ledger" },
   { label: "Outstanding / बकाया", href: "/collections/dues" },
   { label: "Year-end / वर्षांत", href: "/collections/year-end" },
+  { label: "Website sync / वेबसाइट", href: "/collections/website-sync" },
 ] as const
 
 export default function CollectionsLayout({

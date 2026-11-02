@@ -96,6 +96,7 @@ type DashboardSummary = {
   onlineCollection: number
   offlineCollection: number
   pendingCollection: number
+  collectionByTax?: { propertyTax: number; waterTax: number; drainageTax: number; other: number }
   pendingPayments: number
   successPayments: number
   failedPayments: number
@@ -352,8 +353,42 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      <section className="space-y-3" aria-labelledby="payments-received">
+        <SectionHeading id="payments-received" title="Payments Received" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <TaxStatCard
+            title="Property Tax Received"
+            value={data ? formatRs(data.collectionByTax?.propertyTax ?? 0) : undefined}
+            loading={loading}
+            icon={Home}
+            tone="green"
+          />
+          <TaxStatCard
+            title="Water Tax Received"
+            value={data ? formatRs(data.collectionByTax?.waterTax ?? 0) : undefined}
+            loading={loading}
+            icon={Wallet}
+            tone="purple"
+          />
+          <TaxStatCard
+            title="Counter (Offline)"
+            value={data ? formatRs(data.offlineCollection) : undefined}
+            loading={loading}
+            icon={IndianRupee}
+            tone="amber"
+          />
+          <TaxStatCard
+            title="Online"
+            value={data ? formatRs(data.onlineCollection) : undefined}
+            loading={loading}
+            icon={IndianRupee}
+            tone="blue"
+          />
+        </div>
+      </section>
+
       <section className="space-y-3" aria-labelledby="all-ward-tax">
-        <SectionHeading id="all-ward-tax" title="All Ward Tax Collection" />
+        <SectionHeading id="all-ward-tax" title="All Ward Tax Demand" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <TaxStatCard
             title={`Total Property Tax${propertyPct > 0 ? ` (${formatPct(propertyPct)})` : ""}`}
@@ -523,7 +558,7 @@ export default function DashboardPage() {
 
         <Card className="transition-shadow duration-200 hover:shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Ward Tax Collection</CardTitle>
+            <CardTitle className="text-base">Ward Tax Demand</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -604,7 +639,7 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-end justify-between gap-2">
           <SectionHeading
             id="ward-tax-cards"
-            title="Ward Wise Tax Collection"
+            title="Ward Wise Tax Demand"
           />
           <p className="text-sm text-muted-foreground">
             {data?.totalWards ?? "—"} wards mapped

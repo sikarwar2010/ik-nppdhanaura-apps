@@ -43,14 +43,16 @@ import {
 import {
   calculateOutstanding,
   componentsFromParts,
+  allocationMatchesHistoricalSource,
+  allocationCounts,
   countedPayments,
+  ledgerOfDemand,
   isPublishBlocked,
   ownOutstanding,
   type LedgerDemand,
   type OutstandingBreakdown,
   type SuccessPaymentFact,
   type UnreconciledYear,
-  type YearComponentsInput,
 } from "./outstanding"
 import {
   type CategoryCharges,
@@ -64,6 +66,83 @@ import {
 import { penaltyRuleFromPolicy } from "./penalty-policy"
 import { insertPublishedDemand } from "./persist"
 import { policyIsCurrent } from "./rebate"
+import { enqueuePublicSync } from "../public-ward-stats/public-sync-outbox"
+import {
+  addBuckets,
+  bucketsOf,
+  TAX_BUCKETS,
+  zeroBuckets,
+  type BucketAmounts,
+  type TaxBucket,
+  type YearTaxLedger,
+} from "./tax-ledger"
+
+type AllocationTaxColumns = {
+  propertyTaxAmount: Prisma.Decimal | null
+  waterTaxAmount: Prisma.Decimal | null
+  drainageTaxAmount: Prisma.Decimal | null
+  chargesAmount: Prisma.Decimal | null
+  historicalAmount: Prisma.Decimal | null
+}
+
+/** The tax split stored on an allocation, or null when it was made before tax-wise accounting. */
+export function allocationBuckets(row: AllocationTaxColumns): BucketAmounts | null {
+  const values = [
+    row.propertyTaxAmount,
+    row.waterTaxAmount,
+    row.drainageTaxAmount,
+    row.chargesAmount,
+    row.historicalAmount,
+  ]
+  if (values.every((value) => value === null)) return null
+  return bucketsOf({
+    propertyTax: row.propertyTaxAmount?.toString() ?? 0,
+    waterTax: row.waterTaxAmount?.toString() ?? 0,
+    drainageTax: row.drainageTaxAmount?.toString() ?? 0,
+    charges: row.chargesAmount?.toString() ?? 0,
+    historical: row.historicalAmount?.toString() ?? 0,
+  })
+}
+
+/** Reads the tax split that credits, debits and payments named, for the tax ledger. */
+function taggedAmounts(row: {
+  sourceReference: string | null
+  adjustments: Array<{ kind: DemandAdjustmentKind; amount: Prisma.Decimal; taxBucket: string | null }>
+  allocations: Array<
+    AllocationTaxColumns & {
+      amount: Prisma.Decimal
+      status: PaymentAllocationStatus
+      payment: {
+        status: PaymentStatus
+        paymentReference: string
+        receiptNumber: string | null
+        gatewayReference: string | null
+        remarks: string | null
+      }
+    }
+  >
+}) {
+  let taggedCredits = zeroBuckets()
+  let taggedDebits = zeroBuckets()
+  let taggedPayments = zeroBuckets()
+  for (const item of row.adjustments) {
+    if (!TAX_BUCKETS.includes(item.taxBucket as TaxBucket)) continue
+    const part = { [item.taxBucket as TaxBucket]: item.amount.toString() }
+    if (item.kind === DemandAdjustmentKind.CREDIT) {
+      taggedCredits = addBuckets(taggedCredits, part)
+    } else {
+      taggedDebits = addBuckets(taggedDebits, part)
+    }
+  }
+  for (const allocation of row.allocations) {
+    const parts = allocationBuckets(allocation)
+    if (!parts) continue
+    if (!allocationCounts(allocation.status, allocation.payment.status)) continue
+    if (allocationMatchesHistoricalSource(row.sourceReference, allocation.payment)) continue
+    taggedPayments = addBuckets(taggedPayments, parts)
+  }
+  return { taggedCredits, taggedDebits, taggedPayments }
+}
 
 const SUCCESS_PAYMENT_WHERE = {
   status: PaymentStatus.SUCCESS,
@@ -100,6 +179,45 @@ export class DemandsService {
     private readonly audit: AuditService,
     private readonly taxConfigs: TaxConfigsService
   ) {}
+
+  /**
+   * Verified unpaid balances per tax, for every property, up to a year. Each
+   * tax is summed on its own, so water arrears can never appear as property tax.
+   */
+  async taxCarryForward(yearCode: string): Promise<BucketAmounts> {
+    const rows = await this.prisma.assessmentDemand.findMany({
+      where: {
+        status: "PUBLISHED",
+        verificationStatus: "VERIFIED",
+        assessmentYear: { code: { lte: yearCode } },
+      },
+      include: {
+        assessmentYear: { select: { id: true, code: true, name: true } },
+        adjustments: true,
+        allocations: {
+          include: {
+            payment: {
+              select: {
+                id: true,
+                status: true,
+                amount: true,
+                assessmentYearId: true,
+                paymentReference: true,
+                receiptNumber: true,
+                gatewayReference: true,
+                remarks: true,
+              },
+            },
+          },
+        },
+      },
+    })
+    let total = zeroBuckets()
+    for (const row of rows) {
+      total = addBuckets(total, ledgerOfDemand(this.toLedgerDemand(row)).balance)
+    }
+    return total
+  }
 
   async outstanding(
     surveyId: string,
@@ -457,42 +575,6 @@ export class DemandsService {
     return { paymentId: result.id }
   }
 
-  async tryAllocateTaggedPayment(paymentId: string) {
-    await this.prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.findUnique({ where: { id: paymentId } })
-      if (!payment) return
-      if (payment.gateway === "sandbox") return
-      if (payment.status !== PaymentStatus.SUCCESS) return
-      if (!payment.surveyId || !payment.assessmentYearId) return
-      const demand = await tx.assessmentDemand.findFirst({
-        where: {
-          surveyId: payment.surveyId,
-          assessmentYearId: payment.assessmentYearId,
-          status: "PUBLISHED",
-        },
-      })
-      if (!demand) return
-      const existing = await tx.paymentAllocation.findMany({
-        where: { paymentId, status: PaymentAllocationStatus.ACTIVE },
-      })
-      if (existing.some((row) => row.assessmentDemandId === demand.id)) return
-      const already = sumMoney(existing.map((row) => row.amount.toString()))
-      const room = money(payment.amount).minus(already)
-      if (!room.gt(0)) return
-      const unpaid = await this.demandUnpaid(tx, demand.id)
-      const amount = minMoney(room, unpaid.outstanding)
-      if (!amount.gt(0)) return
-      await tx.paymentAllocation.create({
-        data: {
-          paymentId,
-          assessmentDemandId: demand.id,
-          amount: moneyString(amount),
-          status: PaymentAllocationStatus.ACTIVE,
-        },
-      })
-    })
-  }
-
   async adjust(demandId: string, dto: CreateAdjustmentDto, actorId: string) {
     if (!isPositiveMoney(dto.amount)) {
       throw new BadRequestException({
@@ -545,6 +627,7 @@ export class DemandsService {
           kind: dto.kind,
           amount: dto.amount,
           reason: dto.reason.trim(),
+          taxBucket: dto.taxBucket ?? null,
           createdById: actorId,
           reversesAdjustmentId: dto.reversesAdjustmentId,
         },
@@ -616,6 +699,11 @@ export class DemandsService {
           status: PaymentAllocationStatus.REVERSED,
           reversedAt: new Date(),
         },
+      })
+      await enqueuePublicSync(tx, {
+        eventType: "PAYMENT_REVERSED",
+        paymentId,
+        wardId: paymentRow.wardId,
       })
       return paymentRow
     })
@@ -1195,6 +1283,8 @@ export class DemandsService {
       rebate: moneyString(row.rebateAmount),
       verificationStatus: row.verificationStatus,
       balanceKind: row.balanceKind,
+      chargeBreakdown: row.chargeBreakdown,
+      ...taggedAmounts(row),
     }
   }
 
@@ -1210,9 +1300,8 @@ export class DemandsService {
       assessmentYearName: string
       demandReference: string
       unpaid: string
-      /** Components and what already settled them; used for the per-tax split. */
-      components: YearComponentsInput
-      appliedBefore: string
+      /** What is still unpaid on each tax in this year. */
+      balances: BucketAmounts
       balanceKind: "COMPONENTS" | "CLOSING_ONLY"
     }>
   > {
@@ -1246,8 +1335,7 @@ export class DemandsService {
         assessmentYearName: row.assessmentYear.name,
         demandReference: row.demandReference,
         unpaid: balance.outstanding,
-        components: balance.components,
-        appliedBefore: balance.appliedBefore,
+        balances: balance.ledger.balance,
         balanceKind: row.balanceKind,
       })
     }
@@ -1264,8 +1352,7 @@ export class DemandsService {
     outstanding: string
     surveyId: string
     assessmentYearId: string
-    components: YearComponentsInput
-    appliedBefore: string
+    ledger: YearTaxLedger
   }> {
     const demand = await tx.assessmentDemand.findFirst({
       where: { id: demandId, status: "PUBLISHED" },
@@ -1326,16 +1413,25 @@ export class DemandsService {
       }),
       surveyId: demand.surveyId,
       assessmentYearId: demand.assessmentYearId,
-      components: {
+      ledger: ledgerOfDemand({
+        id: demand.id,
+        assessmentYearId: demand.assessmentYearId,
+        assessmentYearCode: "",
+        assessmentYearName: "",
         propertyTax: moneyString(demand.propertyTax),
         waterTax: moneyString(demand.waterTax),
         drainageTax: moneyString(demand.drainageTax),
         penalty: moneyString(demand.penalty),
-        interest: moneyString(sumMoney([demand.interest.toString(), debits])),
-      },
-      appliedBefore: moneyString(
-        sumMoney([payments, credits, demand.rebateAmount.toString()])
-      ),
+        interest: moneyString(demand.interest),
+        currentYearDemand: moneyString(demand.currentYearDemand),
+        credits: moneyString(credits),
+        debits: moneyString(debits),
+        payments: moneyString(payments),
+        rebate: moneyString(demand.rebateAmount),
+        balanceKind: demand.balanceKind,
+        chargeBreakdown: demand.chargeBreakdown,
+        ...taggedAmounts(demand),
+      }),
     }
   }
 

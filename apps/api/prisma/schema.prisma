@@ -593,6 +593,8 @@ model Payment {
   counterCode       String?
   idempotencyKey    String?         @unique
   receiptSnapshot   Json?
+  /// What the clerk or citizen chose to pay ({ kind, parts }), applied when the payment settles.
+  taxPlan           Json?
   attachmentKey     String?
   refundableAmount  Decimal?        @db.Decimal(14, 2)
   /// Set when a successful payment is reversed. The receipt is kept and stamped.
@@ -909,6 +911,8 @@ model AssessmentDemand {
   @@index([surveyId, status])
   @@index([surveyId, assessmentYearId, status])
   @@index([wardId, assessmentYearId])
+  @@index([rebatePolicyId])
+  @@index([penaltyPolicyId])
   @@map("assessment_demand")
 }
 
@@ -934,6 +938,12 @@ model PaymentAllocation {
   assessmentDemandId String
   assessmentDemand   AssessmentDemand        @relation(fields: [assessmentDemandId], references: [id])
   amount             Decimal                 @db.Decimal(14, 2)
+  /// How much of `amount` went to each tax. All null on allocations made before tax-wise accounting.
+  propertyTaxAmount  Decimal?                @db.Decimal(14, 2)
+  waterTaxAmount     Decimal?                @db.Decimal(14, 2)
+  drainageTaxAmount  Decimal?                @db.Decimal(14, 2)
+  chargesAmount      Decimal?                @db.Decimal(14, 2)
+  historicalAmount   Decimal?                @db.Decimal(14, 2)
   status             PaymentAllocationStatus @default(ACTIVE)
   createdById        String?
   createdBy          User?                   @relation("AllocationCreatedBy", fields: [createdById], references: [id])
@@ -953,6 +963,8 @@ model DemandAdjustment {
   kind                 DemandAdjustmentKind
   amount               Decimal              @db.Decimal(14, 2)
   reason               String
+  /// Tax this credit or debit belongs to. Null applies the existing unattributed order.
+  taxBucket            String?
   createdById          String?
   createdBy            User?                @relation("AdjustmentCreatedBy", fields: [createdById], references: [id])
   reversesAdjustmentId String?
@@ -962,6 +974,71 @@ model DemandAdjustment {
 
   @@index([assessmentDemandId])
   @@map("demand_adjustment")
+}
+
+// ─── Public statistics outbox and production reset ─────────────
+
+enum PublicSyncStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+/// Written in the same transaction as the payment. Public figures are always read
+/// from the ledger, so sending an event twice can refresh a page but never count money twice.
+model PublicSyncEvent {
+  id            String           @id @default(cuid())
+  dedupeKey     String           @unique
+  eventType     String
+  paymentId     String?
+  wardId        String?
+  status        PublicSyncStatus @default(PENDING)
+  attempts      Int              @default(0)
+  nextAttemptAt DateTime         @default(now())
+  lastError     String?
+  sentAt        DateTime?
+  createdAt     DateTime         @default(now())
+
+  @@index([status, nextAttemptAt])
+  @@index([createdAt])
+  @@map("public_sync_event")
+}
+
+enum ProductionResetStatus {
+  PREPARED
+  BACKUP_VERIFIED
+  AWAITING_APPROVAL
+  APPROVED
+  EXECUTED
+  FAILED
+  CANCELLED
+}
+
+/// One attempt to clear approved test transactions. Never deleted, including by a reset.
+model ProductionResetRun {
+  id               String                @id @default(cuid())
+  status           ProductionResetStatus @default(PREPARED)
+  scope            Json
+  paymentIds       Json
+  counts           Json
+  scopeHash        String
+  backupKey        String?
+  backupSha256     String?
+  backupBytes      Int?
+  backupVerifiedAt DateTime?
+  reason           String?
+  requestedById    String
+  approvedById     String?
+  executedById     String?
+  executedAt       DateTime?
+  report           Json?
+  failure          String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("production_reset_run")
 }
 
 // ─── Audit ─────────────────────────────────────────────────────

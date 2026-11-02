@@ -16,6 +16,10 @@ export type WardStat = {
   totalDemand: string
   collected?: string
   outstanding?: string
+  propertyTaxCollected?: string
+  waterTaxCollected?: string
+  drainageTaxCollected?: string
+  otherCollected?: string
 }
 
 export type WardStatsResponse = {
@@ -33,13 +37,17 @@ export type WardStatsResult =
   | { ok: true; data: WardStatsResponse }
   | { ok: false; reason: "unavailable" | "not-found" }
 
+export const PUBLIC_STATS_TAG = "public-stats"
+
 const API = process.env.API_INTERNAL_URL?.replace(/\/$/, "") || "http://127.0.0.1:4000"
 
 export async function fetchWardStats(assessmentYear?: string): Promise<WardStatsResult> {
   const query = assessmentYear ? `?assessmentYear=${encodeURIComponent(assessmentYear)}` : ""
   try {
     const res = await fetch(`${API}/api/v1/public/ward-stats${query}`, {
-      next: { revalidate: 300 },
+      // Refreshed at once by /api/revalidate when a payment commits; the short
+      // interval is the fallback if that call cannot get through.
+      next: { revalidate: 60, tags: [PUBLIC_STATS_TAG] },
       signal: AbortSignal.timeout(8000),
     })
     if (res.status === 404) return { ok: false, reason: "not-found" }

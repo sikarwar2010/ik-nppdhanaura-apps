@@ -21,7 +21,15 @@ import {
 import { usePermission } from "@/hooks/use-permission"
 import { api } from "@/lib/api"
 import { formatApiError } from "@/lib/format-api-error"
-import { inr, useCollectionLookups, useSelectedAssessmentYear } from "../collection-shared"
+import {
+  BUCKET_LABELS,
+  inr,
+  TAX_BUCKETS,
+  toPaise,
+  useCollectionLookups,
+  useSelectedAssessmentYear,
+  type BucketAmounts,
+} from "../collection-shared"
 
 type Row = {
   yearCode: string
@@ -36,6 +44,7 @@ type Row = {
 }
 
 type Preview = {
+  taxCarryForward: BucketAmounts
   assessmentYear: { id: string; code: string; name: string }
   nextYear: { id: string; code: string; name: string } | null
   status: string
@@ -156,6 +165,22 @@ export default function YearEndPage() {
                 </div>
               ))}
             </dl>
+            <div>
+              <p className="mb-1.5 text-sm font-medium">
+                Carried forward per tax / कर-वार अग्रेषण
+                <span className="block text-xs font-normal text-muted-foreground">Each tax stays under its own name in the next year.</span>
+              </p>
+              <dl className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+                {TAX_BUCKETS.filter(
+                  (key) => key === "propertyTax" || key === "waterTax" || (toPaise(data.taxCarryForward[key].replace("-", "")) ?? 0n) > 0n
+                ).map((key) => (
+                  <div key={key} className="rounded-lg border p-3">
+                    <dt className="text-xs text-muted-foreground">{BUCKET_LABELS[key]}</dt>
+                    <dd className="mt-0.5 font-semibold tabular-nums">{inr(data.taxCarryForward[key])}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
             <p className="text-sm">{report.propertiesWithArrears} propert{report.propertiesWithArrears === 1 ? "y has" : "ies have"} an unpaid verified balance.</p>
 
             <div className="relative overflow-x-auto rounded-lg border">

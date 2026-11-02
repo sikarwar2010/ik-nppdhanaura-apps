@@ -8,7 +8,14 @@ import {
 import { PaymentStatus, Prisma } from "@prisma/client"
 
 import { DemandsService } from "../demands/demands.service"
-import { moneyToNumber } from "../demands/money"
+import { money, moneyToNumber } from "../demands/money"
+import {
+  bucketsOf,
+  bucketTotal,
+  type BucketAmounts,
+  type TaxPaymentKind,
+  type TaxPlan,
+} from "../demands/tax-ledger"
 import { PaymentsService } from "../payments/payments.service"
 import { PrismaService } from "../prisma/prisma.service"
 import type { CreatePublicPropertyTaxPaymentDto } from "./dto/create-public-payment.dto"
@@ -44,6 +51,33 @@ export type PublicPropertyTaxResultItem = {
   mobileMasked: string
   locality: string | null
   dueStatus: PublicPropertyTaxDueStatus
+}
+
+/**
+ * Online payments settle the whole balance of the chosen tax. Only that tax is
+ * ever reduced; a combined payment names each tax's own amount.
+ */
+export function onlineTaxPlan(
+  kind: TaxPaymentKind,
+  outstanding: BucketAmounts
+): TaxPlan {
+  const positive = (value: string) => (money(value).gt(0) ? value : "0.00")
+  if (kind === "PROPERTY_TAX") {
+    return { kind, parts: bucketsOf({ propertyTax: positive(outstanding.propertyTax) }) }
+  }
+  if (kind === "WATER_TAX") {
+    return { kind, parts: bucketsOf({ waterTax: positive(outstanding.waterTax) }) }
+  }
+  return {
+    kind,
+    parts: bucketsOf({
+      propertyTax: positive(outstanding.propertyTax),
+      waterTax: positive(outstanding.waterTax),
+      drainageTax: positive(outstanding.drainageTax),
+      charges: positive(outstanding.charges),
+      historical: positive(outstanding.historical),
+    }),
+  }
 }
 
 @Injectable()
@@ -191,9 +225,18 @@ export class PublicPropertyTaxService {
           "Outstanding balance cannot be confirmed because earlier assessment years are not reconciled.",
       })
     }
-    const amount = dues.ledger.publishedDemandId
-      ? moneyToNumber(dues.ledger.netOutstanding)
-      : Number(dues.tax.totalDemand)
+    if (!dues.ledger.publishedDemandId) {
+      throw new ConflictException({
+        code: "DEMAND_NOT_PUBLISHED",
+        message:
+          "The demand for this property has not been published yet. Please contact the municipal office.",
+      })
+    }
+    const taxPlan = onlineTaxPlan(
+      dto.taxKind ?? "COMBINED",
+      dues.ledger.taxPosition.outstanding
+    )
+    const amount = moneyToNumber(bucketTotal(taxPlan.parts))
     if (!Number.isFinite(amount) || amount <= 0) {
       throw new BadRequestException({
         code: "DUES_NOT_PAYABLE",
@@ -249,6 +292,7 @@ export class PublicPropertyTaxService {
       payerMobile: dto.payerMobile,
       payerEmail: dto.payerEmail?.trim() || undefined,
       assessmentYearId: dues.assessmentYear.id,
+      taxPlan,
     })
 
     const gatewayReturnUrl =

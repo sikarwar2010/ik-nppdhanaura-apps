@@ -1,5 +1,6 @@
 import {
   IsEmail,
+  IsIn,
   IsOptional,
   IsString,
   Matches,
@@ -16,6 +17,11 @@ export class CreatePublicPropertyTaxPaymentDto {
   @IsString()
   @Matches(/^\d{10}$/, { message: "payerMobile must be exactly 10 digits" })
   payerMobile!: string
+
+  /** Which tax to pay. Omitted means everything outstanding. */
+  @IsOptional()
+  @IsIn(["PROPERTY_TAX", "WATER_TAX", "COMBINED"])
+  taxKind?: "PROPERTY_TAX" | "WATER_TAX" | "COMBINED"
 
   @IsOptional()
   @IsEmail()

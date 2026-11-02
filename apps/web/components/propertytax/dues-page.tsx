@@ -43,6 +43,27 @@ declare global {
   }
 }
 
+type OnlineTaxKind = "PROPERTY_TAX" | "WATER_TAX" | "COMBINED"
+
+const TAX_KIND_LABEL: Record<OnlineTaxKind, string> = {
+  PROPERTY_TAX: "Property tax only / केवल संपत्ति कर",
+  WATER_TAX: "Water tax only / केवल जल कर",
+  COMBINED: "All taxes due / सभी देय कर",
+}
+
+/** The server recalculates this. It is shown so the citizen knows what they are about to pay. */
+function amountForKind(
+  kind: OnlineTaxKind,
+  outstanding: Record<string, string> | undefined,
+  total: number
+): number {
+  const owed = (key: string) => Math.max(0, Number(outstanding?.[key] ?? 0))
+  if (kind === "PROPERTY_TAX") return owed("propertyTax")
+  if (kind === "WATER_TAX") return owed("waterTax")
+  if (!outstanding) return total
+  return Object.keys(outstanding).reduce((sum, key) => sum + owed(key), 0)
+}
+
 function formatRupees(value: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -92,6 +113,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
     return optionLabel(locale, text)
   }
   const [payerMobile, setPayerMobile] = useState("")
+  const [taxKind, setTaxKind] = useState<OnlineTaxKind>("COMBINED")
   const [payerEmail, setPayerEmail] = useState("")
   const [paymentError, setPaymentError] = useState("")
   const dues = useQuery({
@@ -140,6 +162,7 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
       surveyId: dues.data.id,
       payerMobile,
       payerEmail: payerEmail.trim() || undefined,
+      taxKind,
     })
   }
 
@@ -434,6 +457,38 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                   </div>
                 ) : (
                   <form onSubmit={startPayment} className="mt-5 space-y-4">
+                    {dues.data.ledger?.publishedDemandId ? (
+                      <fieldset className="space-y-2">
+                        <legend className="mb-1.5 text-xs font-bold text-slate-700">
+                          What do you want to pay? / आप क्या भुगतान करना चाहते हैं?
+                        </legend>
+                        {(Object.keys(TAX_KIND_LABEL) as OnlineTaxKind[]).map((kind) => {
+                          const outstanding = dues.data.ledger?.taxPosition?.outstanding
+                          const value = amountForKind(kind, outstanding, Number(dues.data.ledger?.netOutstanding ?? 0))
+                          return (
+                            <label
+                              key={kind}
+                              className={`flex items-center justify-between gap-3 rounded-xl border bg-white p-3 text-sm ${
+                                value <= 0 ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                              } ${taxKind === kind ? "border-orange-500" : "border-slate-200"}`}
+                            >
+                              <span className="flex items-center gap-2 font-semibold text-slate-800">
+                                <input
+                                  type="radio"
+                                  name="tax-kind"
+                                  value={kind}
+                                  checked={taxKind === kind}
+                                  disabled={value <= 0}
+                                  onChange={() => setTaxKind(kind)}
+                                />
+                                {TAX_KIND_LABEL[kind]}
+                              </span>
+                              <span className="font-bold tabular-nums text-slate-900">{formatRupees(value)}</span>
+                            </label>
+                          )
+                        })}
+                      </fieldset>
+                    ) : null}
                     {!dues.data.onlinePaymentEnabled && (
                       <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
                         Online payment is not available yet because a live
@@ -491,10 +546,14 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                         payment.isPending ||
                         process.env.NODE_ENV === "production" ||
                         !dues.data.onlinePaymentEnabled ||
-                        (dues.data.ledger?.publishedDemandId
-                          ? Number(dues.data.ledger.netOutstanding) <= 0 ||
-                            !dues.data.ledger.authoritative
-                          : dues.data.tax.totalDemand <= 0)
+                        // Only a published demand can be paid; the server refuses anything else.
+                        !dues.data.ledger?.publishedDemandId ||
+                        !dues.data.ledger.authoritative ||
+                        amountForKind(
+                          taxKind,
+                          dues.data.ledger.taxPosition?.outstanding,
+                          Number(dues.data.ledger.netOutstanding)
+                        ) <= 0
                       }
                       className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-orange-500 to-amber-600 px-5 text-sm font-black text-white shadow-lg shadow-orange-200 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -503,9 +562,11 @@ export default function PropertyTaxDuesPage({ id }: { id: string }) {
                         ? "Connecting to payment gateway…"
                         : dues.data.onlinePaymentEnabled
                           ? `Pay Online · ${formatRupees(
-                              dues.data.ledger?.publishedDemandId
-                                ? Number(dues.data.ledger.netOutstanding)
-                                : dues.data.tax.totalDemand
+                              amountForKind(
+                                taxKind,
+                                dues.data.ledger?.taxPosition?.outstanding,
+                                Number(dues.data.ledger?.netOutstanding ?? 0)
+                              )
                             )}`
                           : "Payment gateway not configured"}
                     </button>
