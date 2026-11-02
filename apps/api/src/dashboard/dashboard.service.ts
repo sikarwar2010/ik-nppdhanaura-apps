@@ -307,6 +307,7 @@ export class DashboardService {
         pendingPayments,
         successPayments,
         failedPayments,
+        collectionByTax: await this.collectionByTax(wardId),
         propertyTaxDemand: taxDemand.propertyTaxDemand,
         waterTaxDemand: taxDemand.waterTaxDemand,
         drainageTaxDemand: taxDemand.drainageTaxDemand,
@@ -317,6 +318,37 @@ export class DashboardService {
         recentAttachments: attachmentsWithUrls,
         wardBreakdown,
       },
+    }
+  }
+
+  /** Successful payments per tax, from the allocations. Older unsplit payments show as "not split". */
+  private async collectionByTax(wardId?: string) {
+    const rows = await this.prisma.paymentAllocation.aggregate({
+      where: {
+        status: "ACTIVE",
+        payment: {
+          status: "SUCCESS",
+          OR: [{ gateway: null }, { gateway: { not: "sandbox" } }],
+          ...(wardId ? { wardId } : {}),
+        },
+      },
+      _sum: {
+        amount: true,
+        propertyTaxAmount: true,
+        waterTaxAmount: true,
+        drainageTaxAmount: true,
+      },
+    })
+    const value = (input: { toString(): string } | null) => Number(input?.toString() ?? 0)
+    const total = value(rows._sum.amount)
+    const propertyTax = value(rows._sum.propertyTaxAmount)
+    const waterTax = value(rows._sum.waterTaxAmount)
+    const drainageTax = value(rows._sum.drainageTaxAmount)
+    return {
+      propertyTax,
+      waterTax,
+      drainageTax,
+      other: Math.round((total - propertyTax - waterTax - drainageTax) * 100) / 100,
     }
   }
 }

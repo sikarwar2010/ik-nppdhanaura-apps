@@ -55,6 +55,7 @@ export const PERMISSIONS = [
   "role:delete",
   "permission:read",
   "settings:update",
+  "system:production-reset",
   "audit:read",
   "file:read",
   "file:create",

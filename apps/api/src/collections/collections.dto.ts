@@ -9,6 +9,7 @@ import {
   Max,
   Min,
   MinLength,
+  ValidateNested,
 } from "class-validator"
 
 const MONEY = /^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/
@@ -67,6 +68,36 @@ export class CollectionListQueryDto {
   sortOrder?: "asc" | "desc"
 }
 
+const TAX_KINDS = ["PROPERTY_TAX", "WATER_TAX", "COMBINED"] as const
+
+/** How much of the amount goes to each tax. Must add up exactly to the amount. */
+export class TaxPartsDto {
+  @IsOptional()
+  @IsString()
+  @Matches(MONEY)
+  propertyTax?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(MONEY)
+  waterTax?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(MONEY)
+  drainageTax?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(MONEY)
+  charges?: string
+
+  @IsOptional()
+  @IsString()
+  @Matches(MONEY)
+  historical?: string
+}
+
 export class CollectTaxDto {
   @IsString()
   @MinLength(1)
@@ -79,6 +110,15 @@ export class CollectTaxDto {
   @IsString()
   @Matches(MONEY)
   amount!: string
+
+  @IsOptional()
+  @IsIn(TAX_KINDS)
+  taxKind?: (typeof TAX_KINDS)[number]
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => TaxPartsDto)
+  parts?: TaxPartsDto
 
   @IsIn(["CASH", "CHEQUE", "DD", "UPI_MANUAL", "OTHER"])
   paymentMode!: "CASH" | "CHEQUE" | "DD" | "UPI_MANUAL" | "OTHER"
@@ -165,6 +205,15 @@ export class CollectionPreviewDto {
   @IsString()
   @Matches(MONEY)
   amount!: string
+
+  @IsOptional()
+  @IsIn(TAX_KINDS)
+  taxKind?: (typeof TAX_KINDS)[number]
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => TaxPartsDto)
+  parts?: TaxPartsDto
 }
 
 export class LedgerQueryDto {

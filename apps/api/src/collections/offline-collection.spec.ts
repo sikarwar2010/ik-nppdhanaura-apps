@@ -7,11 +7,13 @@ import { REQUIRE_PERMISSIONS_KEY } from "../auth/auth.decorators"
 import { calculateOutstanding, type LedgerDemand } from "../demands/outstanding"
 import { outstandingToNoticeLedger } from "../reports/demand-notice/demand-notice-view-model"
 import {
-  allocateWithComponents,
+  allocateTaxPlan,
   CollectionRuleError,
+  resolveTaxPlan,
   collectionInstant,
   type CollectableYear,
 } from "./collection-rules"
+import { bucketsOf, bucketTotal } from "../demands/tax-ledger"
 import { CollectionsController } from "./collections.controller"
 import {
   buildConsumerLedger,
@@ -25,20 +27,23 @@ import { buildYearEndReport, type YearEndFlags } from "./year-end"
 const Y1 = { id: "y2025", code: "2025-2026", name: "2025-2026" }
 const Y2 = { id: "y2026", code: "2026-2027", name: "2026-2027" }
 
+const pay = (
+  amount: string,
+  years: CollectableYear[],
+  parts?: Parameters<typeof bucketsOf>[0]
+) =>
+  allocateTaxPlan(
+    resolveTaxPlan({ amount, ...(parts ? { kind: "COMBINED" as const, parts } : {}) }, years),
+    years
+  )
+
 function year(over: Partial<CollectableYear> & { unpaid: string }): CollectableYear {
   return {
     assessmentDemandId: "d-2025",
     assessmentYearCode: Y1.code,
     assessmentYearName: Y1.name,
     demandReference: "DM-2025",
-    components: {
-      propertyTax: "3000.00",
-      waterTax: "2000.00",
-      drainageTax: "0.00",
-      penalty: "0.00",
-      interest: "0.00",
-    },
-    appliedBefore: "0.00",
+    balances: bucketsOf({ propertyTax: "3000.00", waterTax: "2000.00" }),
     balanceKind: "COMPONENTS",
     ...over,
   }
@@ -184,7 +189,10 @@ const noFlags: YearEndFlags = {
 }
 
 describe("Test A: Ram pays ₹3,000 of a ₹5,000 demand", () => {
-  const result = allocateWithComponents("3000.00", [year({ unpaid: "5000.00" })])
+  const result = pay("3000.00", [year({ unpaid: "5000.00" })], {
+    waterTax: "2000.00",
+    propertyTax: "1000.00",
+  })
 
   it("records ₹3,000 received and ₹2,000 still outstanding", () => {
     expect(result.outstandingBefore).toBe("5000.00")
@@ -194,7 +202,7 @@ describe("Test A: Ram pays ₹3,000 of a ₹5,000 demand", () => {
     expect(result.lines[0]!.outstandingAfter).toBe("2000.00")
   })
 
-  it("keeps the split between water tax and property tax (existing order)", () => {
+  it("keeps the split the clerk entered", () => {
     expect(result.lines[0]!.parts).toEqual({
       interest: "0.00",
       penalty: "0.00",
@@ -227,10 +235,8 @@ describe("Test A: Ram pays ₹3,000 of a ₹5,000 demand", () => {
   })
 
   it("rejects zero, negative-like and above-balance amounts", () => {
-    expect(() => allocateWithComponents("0.00", [year({ unpaid: "5000.00" })])).toThrow(
-      CollectionRuleError
-    )
-    expect(() => allocateWithComponents("5000.01", [year({ unpaid: "5000.00" })])).toThrow(
+    expect(() => pay("0.00", [year({ unpaid: "5000.00" })])).toThrow(CollectionRuleError)
+    expect(() => pay("5000.01", [year({ unpaid: "5000.00" })])).toThrow(
       /outstanding balance/
     )
   })
@@ -298,22 +304,20 @@ describe("Test B: carry-forward into 2026-27", () => {
 })
 
 describe("Test C: ₹1,000 later paid against the old ₹2,000", () => {
-  const lines = allocateWithComponents("1000.00", [
-    year({ unpaid: "2000.00", appliedBefore: "3000.00" }),
-    year({
-      assessmentDemandId: "d-2026",
-      assessmentYearCode: Y2.code,
-      assessmentYearName: Y2.name,
-      unpaid: "4000.00",
-      components: {
-        propertyTax: "2500.00",
-        waterTax: "1500.00",
-        drainageTax: "0.00",
-        penalty: "0.00",
-        interest: "0.00",
-      },
-    }),
-  ])
+  const lines = pay(
+    "1000.00",
+    [
+      year({ unpaid: "2000.00", balances: bucketsOf({ propertyTax: "2000.00" }) }),
+      year({
+        assessmentDemandId: "d-2026",
+        assessmentYearCode: Y2.code,
+        assessmentYearName: Y2.name,
+        unpaid: "4000.00",
+        balances: bucketsOf({ propertyTax: "2500.00", waterTax: "1500.00" }),
+      }),
+    ],
+    { propertyTax: "1000.00" }
+  )
 
   it("reduces 2025-26 property tax, not the new year", () => {
     expect(lines.lines).toHaveLength(1)
@@ -348,7 +352,8 @@ describe("Test C: ₹1,000 later paid against the old ₹2,000", () => {
 
 describe("Test D: full payment", () => {
   it("₹5,000 against ₹5,000 leaves ₹0", () => {
-    const result = allocateWithComponents("5000.00", [year({ unpaid: "5000.00" })])
+    const result = pay("5000.00", [year({ unpaid: "5000.00" })])
+    expect(bucketTotal(result.lines[0]!.buckets)).toBe("5000.00")
     expect(result.outstandingAfter).toBe("0.00")
     const html = renderReceiptHtml(
       snapshot({ amountReceived: "5000.00", remaining: "0.00" })

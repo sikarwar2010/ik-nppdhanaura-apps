@@ -103,6 +103,7 @@ export type PropertyTaxDues = {
     authoritative: boolean
     grossEligibleDemand: string
     publishedDemandId: string | null
+    taxPosition?: { outstanding: Record<string, string> }
   }
 }
 
@@ -110,6 +111,7 @@ export type CreatePropertyTaxPayment = {
   surveyId: string
   payerMobile: string
   payerEmail?: string
+  taxKind?: "PROPERTY_TAX" | "WATER_TAX" | "COMBINED"
 }
 
 export type PropertyTaxPaymentStart = {

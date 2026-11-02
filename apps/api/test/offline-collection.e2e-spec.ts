@@ -17,6 +17,8 @@ import { AuditService } from "../src/audit/audit.service"
 import type { AuthUser } from "../src/auth/auth.decorators"
 import { PermissionGuard } from "../src/auth/permission.guard"
 import { CollectionsController } from "../src/collections/collections.controller"
+import type { CollectTaxDto } from "../src/collections/collections.dto"
+import { PaymentSettlementService } from "../src/collections/payment-settlement.service"
 import { CollectionsService } from "../src/collections/collections.service"
 import { DemandsController } from "../src/demands/demands.controller"
 import { DemandsService } from "../src/demands/demands.service"
@@ -79,9 +81,15 @@ suite("offline collection on a real database", () => {
     })
   }
 
-  const collect = (amount: string, key: string, y = Y1, surveyId = ram.id) =>
+  const collect = (
+    amount: string,
+    key: string,
+    y = Y1,
+    surveyId = ram.id,
+    tax: Pick<CollectTaxDto, "taxKind" | "parts"> = { taxKind: "PROPERTY_TAX" }
+  ) =>
     collections.collect(
-      { surveyId, assessmentYearId: y.id, amount, paymentMode: "CASH", counterCode: "IT-1" },
+      { surveyId, assessmentYearId: y.id, amount, paymentMode: "CASH", counterCode: "IT-1", ...tax },
       clerk,
       key
     )
@@ -92,7 +100,12 @@ suite("offline collection on a real database", () => {
     await prisma.$connect()
     const audit = new AuditService(prisma)
     demands = new DemandsService(prisma, audit, new TaxConfigsService(prisma, audit))
-    collections = new CollectionsService(prisma, demands, audit)
+    collections = new CollectionsService(
+      prisma,
+      demands,
+      audit,
+      new PaymentSettlementService(demands)
+    )
     const admin = await prisma.user.findFirstOrThrow({ orderBy: { createdAt: "asc" } })
     clerk = {
       id: admin.id,
@@ -153,16 +166,21 @@ suite("offline collection on a real database", () => {
   let firstPaymentId = ""
 
   it("A: ₹3,000 of ₹5,000 is posted once with a receipt, ₹2,000 stays outstanding", async () => {
+    const split = {
+      taxKind: "COMBINED" as const,
+      parts: { waterTax: "2000.00", propertyTax: "1000.00" },
+    }
     const preview = await collections.previewCollection({
       surveyId: ram.id,
       assessmentYearId: Y1.id,
       amount: "3000.00",
+      ...split,
     })
     expect(preview.outstandingAfter).toBe("2000.00")
     expect(preview.paymentStatus).toBe("PARTIALLY_PAID")
     expect(await prisma.payment.count({ where: { surveyId: ram.id } })).toBe(0) // preview saved nothing
 
-    const result = await collect("3000.00", `it-${run}-a`)
+    const result = await collect("3000.00", `it-${run}-a`, Y1, ram.id, split)
     firstPaymentId = result.paymentId
     expect(result.status).toBe("SUCCESS")
     expect(result.amount).toBe("3000.00")
@@ -206,9 +224,20 @@ suite("offline collection on a real database", () => {
   })
 
   it("E: the same request twice, or two at once, posts one payment and one receipt", async () => {
-    const again = await collect("3000.00", `it-${run}-a`)
+    const again = await collect("3000.00", `it-${run}-a`, Y1, ram.id, {
+      taxKind: "COMBINED",
+      parts: { waterTax: "2000.00", propertyTax: "1000.00" },
+    })
     expect(again.created).toBe(false)
     expect(again.paymentId).toBe(firstPaymentId)
+
+    // The same key cannot be reused to ask for different taxes.
+    await expect(
+      collect("3000.00", `it-${run}-a`, Y1, ram.id, {
+        taxKind: "COMBINED",
+        parts: { waterTax: "1000.00", propertyTax: "2000.00" },
+      })
+    ).rejects.toMatchObject({ status: 409 })
 
     const key = `it-${run}-e`
     const [one, two] = await Promise.all([collect("500.00", key), collect("500.00", key)])
@@ -278,7 +307,7 @@ suite("offline collection on a real database", () => {
 
   it("D and J: full payment leaves ₹0 and every view agrees", async () => {
     await expect(collect("5000.01", `it-${run}-over`, Y2)).rejects.toMatchObject({ status: 400 })
-    const result = await collect("5000.00", `it-${run}-d`, Y2)
+    const result = await collect("5000.00", `it-${run}-d`, Y2, ram.id, {})
     expect(result.remaining).toBe("0.00")
     const quote = await collections.quote(ram.id, Y2.id, clerk)
     const ledger = await collections.ledger({ surveyId: ram.id }, clerk)
@@ -349,7 +378,7 @@ suite("offline collection on a real database", () => {
       expect(layout.clipped).toBe(0)
       expect(layout.emblem).toBe(true)
       expect(layout.sheetMm).toBeLessThanOrEqual(283) // two copies on one A4 page (297 − 2×7 mm)
-      for (const text of ["नगर पालिका परिषद", "Property Tax Receipt", "Authorised signatory", "प्राप्त राशि"]) {
+      for (const text of ["नगर पालिका परिषद", "Combined Tax Receipt", "Authorised signatory", "प्राप्त राशि"]) {
         expect(layout.text).toContain(text)
       }
     } finally {

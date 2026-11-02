@@ -185,8 +185,30 @@ async function main() {
     ],
     ["demand-notice", noticeHtml(), "table, .card, section"],
   ]
-  const expectedPages: Record<string, number> = { "receipt-long": 2 }
+  const expectedPages: Record<string, number> = { "receipt-long": 2, "receipt-combined-arrears": 2 }
   docs.push(["receipt-long", renderReceiptHtml(longAllocation, { office }), ".copy"])
+  const taxLine = (label: string, labelHi: string, bucket: "propertyTax" | "waterTax", before: string, paid: string, after: string, status: "PAID" | "PARTIALLY_PAID" | "UNPAID") =>
+    ({ bucket, label, labelHi, before, paid, after, status })
+  const propertyOnly = {
+    ...receipt,
+    allocations: receipt.allocations?.slice(0, 1),
+    amountReceived: "2400.00",
+    totalPayable: "4200.00",
+    remaining: "1800.00",
+    taxKind: "PROPERTY_TAX" as const,
+    taxSummary: [
+      taxLine("Property tax", "संपत्ति कर", "propertyTax", "2400.00", "2400.00", "0.00", "PAID"),
+      taxLine("Water tax", "जल कर", "waterTax", "1800.00", "0.00", "1800.00", "UNPAID"),
+    ],
+  }
+  docs.push(["receipt-property-only", renderReceiptHtml(propertyOnly, { office }), ".copy"])
+  docs.push(["receipt-water-only", renderReceiptHtml({ ...propertyOnly, taxKind: "WATER_TAX" }, { office }), ".copy"])
+  docs.push(["receipt-combined", renderReceiptHtml({ ...propertyOnly, taxKind: "COMBINED" }, { office }), ".copy"])
+  docs.push([
+    "receipt-combined-arrears",
+    renderReceiptHtml({ ...longAllocation, taxKind: "COMBINED", taxSummary: propertyOnly.taxSummary }, { office }),
+    ".copy",
+  ])
   const browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: 794, height: 1123 } })
   let failed = false

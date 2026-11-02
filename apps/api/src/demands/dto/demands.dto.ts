@@ -160,6 +160,11 @@ export class CreateAdjustmentDto {
   @MinLength(3)
   reason!: string
 
+  /** The tax this credit or debit belongs to. */
+  @IsOptional()
+  @IsIn(["propertyTax", "waterTax", "drainageTax", "charges", "historical"])
+  taxBucket?: "propertyTax" | "waterTax" | "drainageTax" | "charges" | "historical"
+
   @IsOptional()
   @IsString()
   reversesAdjustmentId?: string

@@ -58,21 +58,25 @@ test("A: guided partial payment — ₹3,000 of ₹5,000, receipt issued, ₹2,0
   await page.getByLabel("Search property / संपत्ति खोजें").fill(propertyId!)
   await page.getByRole("list", { name: "Matching properties" }).getByRole("button").first().click()
 
-  await expect(page.getByText("Outstanding now")).toBeVisible()
+  await expect(page.getByRole("term").filter({ hasText: "Outstanding now" })).toBeVisible()
   await expect(page.getByText("₹5,000.00").first()).toBeVisible()
   await page.getByRole("button", { name: /Details are correct/ }).click()
+
+  // Choose the tax: a combined payment splits between both.
+  await page.getByRole("radio", { name: /Combined payment/ }).check()
+  await page.getByRole("button", { name: "Enter payment" }).click()
 
   // Client checks before anything is sent.
   await page.getByRole("button", { name: /Review allocation/ }).click()
   await expect(page.getByText(/Enter the amount received/)).toBeVisible()
-  await page.getByLabel(/Amount received/).fill("5000.01")
+  await page.getByRole("textbox", { name: /Water tax/ }).fill("2000.01")
   await page.getByRole("button", { name: /Review allocation/ }).click()
-  await expect(page.getByText(/Above the outstanding/)).toBeVisible()
+  await expect(page.getByText(/Amounts are not moved between taxes/)).toBeVisible()
 
-  await expect(page.getByRole("list", { name: "Tax categories due" })).toContainText("Water tax")
   // A time later than now is refused before review.
   await page.getByLabel(/Payment time/).fill("23:59")
-  await page.getByLabel(/Amount received/).fill("3000")
+  await page.getByRole("textbox", { name: /Water tax/ }).fill("2000")
+  await page.getByRole("textbox", { name: /Property tax/ }).fill("1000")
   await page.getByRole("button", { name: /Review allocation/ }).click()
   if (new Date().getUTCHours() * 60 + new Date().getUTCMinutes() + 330 < 23 * 60 + 59) {
     await expect(page.getByText(/cannot be later than now/)).toBeVisible()
@@ -82,7 +86,7 @@ test("A: guided partial payment — ₹3,000 of ₹5,000, receipt issued, ₹2,0
   const review = page.getByRole("region", { name: /Review & post/ })
   await expect(review.getByText("Remaining after payment")).toBeVisible()
   await expect(review.getByText("₹2,000.00").first()).toBeVisible()
-  await expect(review.getByText("Partially paid / आंशिक")).toBeVisible()
+  await expect(review.getByText("Partially paid / आंशिक").first()).toBeVisible()
   const row = review.getByRole("row", { name: /2193-2194/ })
   await expect(row).toContainText("₹1,000.00") // property tax
   await expect(row).toContainText("₹2,000.00") // water tax
@@ -122,8 +126,52 @@ test("ledger shows the payment, the ₹2,000 balance and agrees with the engine"
   await expect(payment).toContainText("₹2,000.00")
   await expect(page.getByText(/Years still unpaid: 2193-2194 \(₹2,000.00\)/)).toBeVisible()
 
-  await page.getByLabel("Tax").selectOption("waterTax")
+  await page.getByLabel("Tax", { exact: true }).selectOption("waterTax")
   await expect(page.getByRole("row", { name: /Payment \/ भुगतान/ })).toContainText("Water ₹2,000.00")
+})
+
+test("the ledger and year-end show each tax on its own", async ({ page }) => {
+  await page.goto(ledgerUrl)
+  const position = page.getByRole("region", { name: /Tax-wise position/ })
+  await expect(position.getByRole("row", { name: /Property tax/ }).first()).toContainText("₹2,000.00")
+  await expect(position.getByRole("row", { name: /Water tax/ }).first()).toContainText("₹0.00")
+  await page.goto("/collections/year-end")
+  await expect(page.getByText("Carried forward per tax")).toBeVisible()
+})
+
+test("a single-tax payment cannot touch the other tax, and is reflected everywhere", async ({ page }) => {
+  await page.goto("/collections")
+  await page.getByLabel("Search property / संपत्ति खोजें").fill(propertyId!)
+  await page.getByRole("list", { name: "Matching properties" }).getByRole("button").first().click()
+  await page.getByRole("button", { name: /Details are correct/ }).click()
+  // Water tax was cleared by the combined payment, so it cannot be chosen.
+  await expect(page.getByRole("radio", { name: /Water tax payment/ })).toBeDisabled()
+  await page.getByRole("radio", { name: /Property tax payment/ }).check()
+  await page.getByRole("button", { name: "Enter payment" }).click()
+  await expect(page.getByRole("textbox", { name: /Water tax/ })).toHaveCount(0)
+  await page.getByRole("textbox", { name: /Property tax/ }).fill("500")
+  await page.getByRole("button", { name: /Review allocation/ }).click()
+  const review = page.getByRole("region", { name: /Review & post/ })
+  await expect(review.getByText("Remaining after payment")).toBeVisible()
+  await review.getByRole("button", { name: /Post payment of ₹500.00/ }).click()
+  await page.getByRole("dialog").getByRole("button", { name: /Confirm and post ₹500.00/ }).click()
+  await expect(page.getByRole("region", { name: /Receipt/ }).getByText(/Payment posted/)).toBeVisible()
+  const consumer = page.waitForResponse((res) => res.url().includes("copy=consumer") && res.status() === 200)
+  await page.getByRole("button", { name: "Consumer copy" }).click()
+  expect((await (await consumer).json()).data.html).toContain("Property Tax Receipt")
+})
+
+test("website sync shows the event from the posted payments and matches the ledger", async ({ page }) => {
+  await page.goto("/collections/website-sync")
+  await expect(page.getByRole("cell", { name: "Payment posted" }).first()).toBeVisible()
+  await page.getByRole("button", { name: "Run check" }).click()
+  await expect(page.getByText(/website figure matches the ledger/)).toBeVisible()
+})
+
+test("production reset opens for a Super Admin but stays off, and clears nothing", async ({ page }) => {
+  await page.goto("/settings/production-reset")
+  await expect(page.getByText(/final step is switched off/)).toBeVisible()
+  await expect(page.getByRole("button", { name: "Clear these test transactions" })).toBeDisabled()
 })
 
 test("year-end preview reconciles without closing anything", async ({ page }) => {
@@ -132,9 +180,18 @@ test("year-end preview reconciles without closing anything", async ({ page }) =>
   await expect(page.getByText("Reconciles").first()).toBeVisible()
 })
 
-const PAGES = ["/collections", "/collections/receipts", "/collections/dues", "/collections/year-end"]
+const PAGES = [
+  "/collections",
+  "/collections/online",
+  "/collections/receipts",
+  "/collections/dues",
+  "/collections/year-end",
+  "/collections/website-sync",
+  "/settings/production-reset",
+]
 
 test("collection pages fit 360–1440 px without horizontal page scroll", async ({ page }) => {
+  test.setTimeout(180_000) // 8 routes at 5 widths
   for (const width of [360, 390, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     for (const route of [...PAGES, ledgerUrl.replace(/^https?:\/\/[^/]+/, "")]) {

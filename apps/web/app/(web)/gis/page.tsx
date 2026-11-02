@@ -157,6 +157,9 @@ function Totals({
   if (data.disclosure.collections) {
     tiles.push({ label: t("gis.collected"), value: inr(totals.collected), sub: yearLabel })
     tiles.push({ label: t("gis.outstanding"), value: inr(totals.outstanding), sub: yearLabel })
+    tiles.push({ label: t("gis.propertyTaxCollected"), value: inr(totals.propertyTaxCollected), sub: yearLabel })
+    tiles.push({ label: t("gis.waterTaxCollected"), value: inr(totals.waterTaxCollected), sub: yearLabel })
+    tiles.push({ label: t("gis.drainageTaxCollected"), value: inr(totals.drainageTaxCollected), sub: yearLabel })
   }
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -257,6 +260,8 @@ function WardCard({ t, ward, disclose }: { t: T; ward: WardStat; disclose: boole
           <>
             <Figure label={t("gis.collected")} value={inr(ward.collected)} />
             <Figure label={t("gis.outstanding")} value={inr(ward.outstanding)} />
+            <Figure label={t("gis.propertyTaxCollected")} value={inr(ward.propertyTaxCollected)} />
+            <Figure label={t("gis.waterTaxCollected")} value={inr(ward.waterTaxCollected)} />
           </>
         ) : null}
       </dl>

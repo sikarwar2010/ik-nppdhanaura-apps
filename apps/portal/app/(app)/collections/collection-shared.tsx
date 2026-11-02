@@ -43,6 +43,7 @@ const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secon
   PAID: { label: "Paid / भुगतान", variant: "default" },
   PENDING: { label: "Pending / लंबित", variant: "secondary" },
   SUCCESS: { label: "Settled / जमा", variant: "default" },
+  SENT: { label: "Sent / भेजा गया", variant: "default" },
   POSTED: { label: "Posted / दर्ज", variant: "default" },
   REVERSED: { label: "Reversed / निरस्त", variant: "destructive" },
   REFUNDED: { label: "Reversed / निरस्त", variant: "destructive" },
@@ -159,6 +160,120 @@ function addParts(a: string, b: string): string {
   const pb = toPaise(b.replace("-", "")) ?? 0n
   const total = pa + pb
   return `${total / 100n}.${String(total % 100n).padStart(2, "0")}`
+}
+
+export const TAX_BUCKETS = ["propertyTax", "waterTax", "drainageTax", "charges", "historical"] as const
+export type TaxBucket = (typeof TAX_BUCKETS)[number]
+export type BucketAmounts = Record<TaxBucket, string>
+
+export const BUCKET_LABELS: Record<TaxBucket, string> = {
+  propertyTax: "Property tax / संपत्ति कर",
+  waterTax: "Water tax / जल कर",
+  drainageTax: "Drainage tax / नाली कर",
+  charges: "Interest & other charges / ब्याज व अन्य प्रभार",
+  historical: "Earlier balance, no tax split / पूर्व शेष",
+}
+
+export type TaxPosition = {
+  arrears: BucketAmounts
+  current: BucketAmounts
+  outstanding: BucketAmounts
+  paid: BucketAmounts
+  total: string
+  years: Array<{
+    assessmentYearCode: string
+    assessmentYearName: string
+    verified: boolean
+    ledger: { demand: BucketAmounts; rebate: BucketAmounts; credits: BucketAmounts; debits: BucketAmounts; paid: BucketAmounts; balance: BucketAmounts; total: string }
+  }>
+}
+
+export type TaxSummaryLine = {
+  bucket: TaxBucket
+  label: string
+  labelHi: string
+  before: string
+  paid: string
+  after: string
+  status: "PAID" | "PARTIALLY_PAID" | "UNPAID"
+}
+
+/** Buckets worth showing: anything owed, due or paid. Empty rows would only add noise. */
+export function activeBuckets(position: TaxPosition): TaxBucket[] {
+  const nonZero = (value: string) => (toPaise(value.replace("-", "")) ?? 0n) > 0n
+  return TAX_BUCKETS.filter(
+    (key) =>
+      key === "propertyTax" ||
+      key === "waterTax" ||
+      nonZero(position.outstanding[key]) ||
+      nonZero(position.paid[key])
+  )
+}
+
+/** Arrears, current demand and balance for each tax, kept apart. */
+export function TaxPositionTable({ position, caption }: { position: TaxPosition; caption: string }) {
+  return (
+    <div className="relative overflow-x-auto rounded-lg border">
+      <table className="w-full min-w-[560px] text-sm">
+        <caption className="sr-only">{caption}</caption>
+        <thead className="bg-muted/50 text-xs text-muted-foreground">
+          <tr>
+            <th scope="col" className="p-2 text-left font-medium">Tax / कर</th>
+            <th scope="col" className="p-2 text-right font-medium">Previous-year arrears</th>
+            <th scope="col" className="p-2 text-right font-medium">Current year due</th>
+            <th scope="col" className="p-2 text-right font-medium">Paid so far</th>
+            <th scope="col" className="p-2 text-right font-medium">Outstanding now</th>
+          </tr>
+        </thead>
+        <tbody>
+          {activeBuckets(position).map((key) => (
+            <tr key={key} className="border-t">
+              <th scope="row" className="p-2 text-left font-medium">{BUCKET_LABELS[key]}</th>
+              <td className="p-2 text-right tabular-nums">{inr(position.arrears[key])}</td>
+              <td className="p-2 text-right tabular-nums">{inr(position.current[key])}</td>
+              <td className="p-2 text-right tabular-nums">{inr(position.paid[key])}</td>
+              <td className="p-2 text-right font-semibold tabular-nums">{inr(position.outstanding[key])}</td>
+            </tr>
+          ))}
+          <tr className="border-t bg-muted/30">
+            <th scope="row" colSpan={4} className="p-2 text-left font-semibold">Total outstanding / कुल बकाया</th>
+            <td className="p-2 text-right font-semibold tabular-nums">{inr(position.total)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+/** Each tax before and after one payment. */
+export function TaxSummaryTable({ lines, caption }: { lines: TaxSummaryLine[]; caption: string }) {
+  return (
+    <div className="relative overflow-x-auto rounded-lg border">
+      <table className="w-full min-w-[520px] text-sm">
+        <caption className="sr-only">{caption}</caption>
+        <thead className="bg-muted/50 text-xs text-muted-foreground">
+          <tr>
+            <th scope="col" className="p-2 text-left font-medium">Tax / कर</th>
+            <th scope="col" className="p-2 text-right font-medium">Due before</th>
+            <th scope="col" className="p-2 text-right font-medium">This payment</th>
+            <th scope="col" className="p-2 text-right font-medium">Balance after</th>
+            <th scope="col" className="p-2 text-left font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((line) => (
+            <tr key={line.bucket} className="border-t">
+              <th scope="row" className="p-2 text-left font-medium">{line.label} / {line.labelHi}</th>
+              <td className="p-2 text-right tabular-nums">{inr(line.before)}</td>
+              <td className="p-2 text-right font-semibold tabular-nums">{inr(line.paid)}</td>
+              <td className="p-2 text-right tabular-nums">{inr(line.after)}</td>
+              <td className="p-2"><StatusBadge status={line.status} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
 }
 
 /** Year-by-year, tax-by-tax table for a payment (preview or posted). */

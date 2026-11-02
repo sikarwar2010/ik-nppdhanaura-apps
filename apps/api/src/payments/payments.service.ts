@@ -1,9 +1,10 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common"
+import { Injectable, NotFoundException } from "@nestjs/common"
 import { PaymentMode, PaymentStatus, Prisma } from "@prisma/client"
 import { randomUUID } from "node:crypto"
 
 import { AuditService } from "../audit/audit.service"
-import { DemandsService } from "../demands/demands.service"
+import { PaymentSettlementService } from "../collections/payment-settlement.service"
+import type { TaxPlan } from "../demands/tax-ledger"
 import { PrismaService } from "../prisma/prisma.service"
 import {
   redactSensitivePaymentPayload,
@@ -82,13 +83,12 @@ function citizenReturnRedirectUrl(merchTxnId: string | undefined) {
 
 @Injectable()
 export class PaymentsService {
-  private readonly logger = new Logger(PaymentsService.name)
   private provider: PaymentGatewayProvider
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
-    private readonly demands: DemandsService
+    private readonly settlement: PaymentSettlementService
   ) {
     const mode = process.env.PAYMENT_PROVIDER ?? "sandbox"
     this.provider =
@@ -104,6 +104,7 @@ export class PaymentsService {
     payerMobile: string
     payerEmail?: string
     assessmentYearId?: string
+    taxPlan?: TaxPlan
   }) {
     return this.createOnlinePayment(input, null)
   }
@@ -117,6 +118,7 @@ export class PaymentsService {
       payerMobile?: string
       payerEmail?: string
       assessmentYearId?: string
+      taxPlan?: TaxPlan
     },
     collectedById: string | null
   ) {
@@ -137,6 +139,7 @@ export class PaymentsService {
         payerEmail: input.payerEmail,
         collectedById: collectedById ?? undefined,
         refundableAmount: input.amount,
+        taxPlan: input.taxPlan as unknown as Prisma.InputJsonValue | undefined,
       },
     })
 
@@ -439,17 +442,18 @@ export class PaymentsService {
         data: { processed: true },
       })
 
-      return { callback: processedCallback, payment: updatedPayment }
+      // In the same transaction as the status: a verified payment is never
+      // left "successful" without its ledger entry. A database failure rolls
+      // everything back and the gateway's retry processes it again.
+      const posted =
+        success && effectiveStatus === PaymentStatus.SUCCESS
+          ? await this.postToLedger(tx, updatedPayment)
+          : updatedPayment
+
+      return { callback: processedCallback, payment: posted }
     })
 
     if (success && statusChanged) {
-      try {
-        await this.demands.tryAllocateTaggedPayment(payment.id)
-      } catch (err) {
-        this.logger.warn(
-          `Tagged payment ${payment.id} was not allocated: ${String(err)}`
-        )
-      }
       await this.audit.log({
         action: "PAYMENT_SUCCESS",
         entity: "Payment",
@@ -536,32 +540,67 @@ export class PaymentsService {
       },
     })
 
-    const updated = await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: result.success
-          ? PaymentStatus.SUCCESS
-          : payment.status === PaymentStatus.PENDING
-            ? PaymentStatus.PENDING
-            : payment.status,
-        atomTxnId: result.atomTxnId ?? payment.atomTxnId,
-        ...(result.success && !payment.receiptNumber
-          ? {
-              receiptNumber: `RCP-${payment.merchTxnId}`,
-              collectionDate: payment.collectionDate ?? new Date(),
-            }
-          : {}),
-      },
-    })
-    if (result.success) {
-      try {
-        await this.demands.tryAllocateTaggedPayment(updated.id)
-      } catch (err) {
-        this.logger.warn(
-          `Tagged payment ${updated.id} was not allocated: ${String(err)}`
-        )
-      }
+    // The gateway's own amount must match before money is recognised.
+    const amountOk =
+      this.provider.name !== "atom-ndps" ||
+      (result.amount !== undefined &&
+        amountsMatchWithinTolerance(Number(payment.amount), result.amount))
+    if (result.success && !amountOk) {
+      await this.rejectWebhook("Gateway amount does not match payment amount", {
+        payload: { merchTxnId: payment.merchTxnId, requeryAmount: result.amount },
+        merchTxnId: payment.merchTxnId,
+        paymentId: payment.id,
+        code: "AMOUNT_MISMATCH",
+      })
+      return payment
     }
-    return updated
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: result.success
+            ? PaymentStatus.SUCCESS
+            : payment.status === PaymentStatus.PENDING
+              ? PaymentStatus.PENDING
+              : payment.status,
+          atomTxnId: result.atomTxnId ?? payment.atomTxnId,
+          ...(result.success && !payment.receiptNumber
+            ? {
+                receiptNumber: `RCP-${payment.merchTxnId}`,
+                collectionDate: payment.collectionDate ?? new Date(),
+              }
+            : {}),
+        },
+      })
+      return result.success ? this.postToLedger(tx, updated) : updated
+    })
+  }
+
+  /**
+   * Allocates a verified gateway payment. Money the gateway already took cannot
+   * be refused, so anything that no longer fits its chosen tax stays unallocated
+   * and shows up on the online transactions page; it is never moved to another tax.
+   */
+  private async postToLedger<T extends { id: string; assessmentYearId: string | null; surveyId: string | null; gateway: string | null }>(
+    tx: Prisma.TransactionClient,
+    payment: T
+  ) {
+    if (payment.gateway === "sandbox") return payment
+    if (!payment.surveyId || !payment.assessmentYearId) return payment
+    const demand = await tx.assessmentDemand.findFirst({
+      where: {
+        surveyId: payment.surveyId,
+        assessmentYearId: payment.assessmentYearId,
+        status: "PUBLISHED",
+      },
+      select: { assessmentYear: { select: { code: true } } },
+    })
+    if (!demand) return payment
+    return this.settlement.settle(tx, payment.id, {
+      actor: null,
+      yearCode: demand.assessmentYear.code,
+      strict: false,
+    })
   }
 }

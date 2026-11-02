@@ -115,6 +115,11 @@ export const NAV_ITEMS: NavItem[] = [
         exact: true,
       },
       {
+        title: "Online Transactions",
+        href: "/collections/online",
+        permission: "demand:read",
+      },
+      {
         title: "Payment Receipts",
         href: "/collections/receipts",
         permission: "demand:read",
@@ -134,6 +139,11 @@ export const NAV_ITEMS: NavItem[] = [
         href: "/collections/year-end",
         permission: "demand:read",
       },
+      {
+        title: "Website Sync",
+        href: "/collections/website-sync",
+        permission: "report:read",
+      },
     ],
   },
   {
@@ -145,6 +155,7 @@ export const NAV_ITEMS: NavItem[] = [
       "permission:read",
       "audit:read",
       "settings:update",
+      "system:production-reset",
     ],
     children: [
       {
@@ -174,6 +185,11 @@ export const NAV_ITEMS: NavItem[] = [
         title: "System Settings",
         href: "/settings/system",
         permission: "settings:update",
+      },
+      {
+        title: "Production Reset",
+        href: "/settings/production-reset",
+        permission: "system:production-reset",
       },
     ],
   },
@@ -221,6 +237,9 @@ const NAV_TITLE_KEYS: Record<string, MessageKey> = {
   "Customer Ledger": "nav.customerLedger",
   "Outstanding Dues": "nav.outstandingDues",
   "Year-End Closing": "nav.yearEndClosing",
+  "Online Transactions": "nav.onlineTransactions",
+  "Website Sync": "nav.websiteSync",
+  "Production Reset": "nav.productionReset",
   Settings: "nav.settings",
   Users: "nav.users",
   Roles: "nav.roles",

@@ -151,6 +151,7 @@ const DEPARTMENT_ADMIN_DENIED = new Set([
   "role:update",
   "role:delete",
   "survey:bulk-delete",
+  "system:production-reset",
 ])
 
 /** Department Admin gets operational access, not user/role write or ward wipe. */
